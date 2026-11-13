@@ -1,0 +1,10 @@
+{
+  "installCommand": "bun install",
+  "buildCommand": "bun run build",
+  "rewrites": [
+    {
+      "source": "/((?!api/|icons/|manifest\\.webmanifest|sw\\.js|workbox-.*|assets/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

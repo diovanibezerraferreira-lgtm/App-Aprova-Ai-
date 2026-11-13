@@ -1,0 +1,69 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Test connection doc (used for healthchecks)
+    match /test/{docId} {
+      allow read: if true;
+    }
+
+    // Protected financial fields that only the backend Admin SDK may modify
+    function doesNotModifyFinancialFields() {
+      let protectedFields = ['isPremium', 'plan', 'subscriptionStatus', 'subscriptionId', 'asaasCustomerId', 'subscriptionDueDate', 'lastPaymentDate', 'paymentMethod'];
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(protectedFields);
+    }
+
+    function validInitialFinancialState() {
+      // Clients creating their own document cannot set isPremium to true, plan to premium, or assign active subscriptions
+      return (!('isPremium' in request.resource.data) || request.resource.data.isPremium == false)
+          && (!('plan' in request.resource.data) || request.resource.data.plan == 'gratuito')
+          && (!('subscriptionStatus' in request.resource.data) || request.resource.data.subscriptionStatus == null || request.resource.data.subscriptionStatus == 'NONE');
+    }
+
+    // User Profile Document
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && validInitialFinancialState();
+      allow update: if isOwner(userId) && isValidId(userId) && doesNotModifyFinancialFields();
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      // User Answer Subcollection
+      match /answers/{questionId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(questionId);
+        allow list: if isOwner(userId) && isValidId(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(questionId);
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(questionId);
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(questionId);
+      }
+
+      // User Simulado Subcollection
+      match /simulados/{simuladoId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(simuladoId);
+        allow list: if isOwner(userId) && isValidId(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(simuladoId);
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(simuladoId);
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(simuladoId);
+      }
+    }
+  }
+}
