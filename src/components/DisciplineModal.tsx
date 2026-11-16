@@ -18,45 +18,45 @@ export const DisciplineModal: React.FC<DisciplineModalProps> = ({
   if (!discipline) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col">
         
         {/* Header */}
-        <div className="bg-[#0B1F3A] text-white p-6 relative">
+        <div className="bg-[#0B1F3A] text-white p-4 sm:p-6 relative shrink-0">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1 rounded-full text-slate-300 hover:text-white hover:bg-white/10"
+            className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 p-1 rounded-full text-slate-300 hover:text-white hover:bg-white/10"
             aria-label="Fechar"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-semibold mb-2">
-            <span>OAB 1ª Fase · Peso: ~{discipline.oabWeight} questões</span>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-xs font-semibold mb-2 max-w-[calc(100%-2.25rem)]">
+            <span className="truncate">OAB 1ª Fase · Peso: ~{discipline.oabWeight} questões</span>
           </div>
 
-          <h3 className="text-xl font-bold font-serif text-white">
+          <h3 className="text-lg sm:text-xl font-bold font-serif text-white pr-6 break-words">
             {discipline.name}
           </h3>
-          <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+          <p className="text-xs text-slate-300 mt-1 leading-relaxed break-words">
             {discipline.description}
           </p>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 min-w-0">
           
           {/* Key Topics */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2 flex items-center gap-1.5">
-              <Award className="w-4 h-4 text-[#D4AF37]" />
+              <Award className="w-4 h-4 text-[#D4AF37] shrink-0" />
               Temas com Maior Incidência na FGV:
             </h4>
             <div className="space-y-1.5">
               {discipline.keyTopics.map((topic, idx) => (
-                <div key={idx} className="flex items-start gap-2 text-xs text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                <div key={idx} className="flex items-start gap-2 text-xs text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-100 min-w-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] mt-1.5 shrink-0" />
-                  <span>{topic}</span>
+                  <span className="min-w-0 break-words">{topic}</span>
                 </div>
               ))}
             </div>
@@ -65,14 +65,14 @@ export const DisciplineModal: React.FC<DisciplineModalProps> = ({
           {/* Key Statutes */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2 flex items-center gap-1.5">
-              <Scale className="w-4 h-4 text-[#0B1F3A]" />
+              <Scale className="w-4 h-4 text-[#0B1F3A] shrink-0" />
               Legislação e Súmulas Essenciais:
             </h4>
             <div className="flex flex-wrap gap-1.5">
               {discipline.keyArticles.map((art, idx) => (
                 <span
                   key={idx}
-                  className="px-2.5 py-1 rounded bg-[#0B1F3A]/5 border border-[#0B1F3A]/15 text-slate-800 text-xs font-medium"
+                  className="px-2.5 py-1 rounded bg-[#0B1F3A]/5 border border-[#0B1F3A]/15 text-slate-800 text-xs font-medium break-words"
                 >
                   {art}
                 </span>

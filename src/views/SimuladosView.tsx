@@ -311,18 +311,18 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
   // -------------------------------------------------------------
   if (screen === 'setup') {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+      <div className="w-full max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 animate-fade-in">
         {/* Title Header */}
         <div className="border-b border-slate-200 pb-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#0B1F3A] flex items-center justify-center text-[#D4AF37] shadow-md">
+          <div className="flex items-start sm:items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-[#0B1F3A] flex items-center justify-center text-[#D4AF37] shadow-md shrink-0">
               <Clock className="w-5 h-5" />
             </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold font-serif text-[#0B1F3A]">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-3xl font-bold font-serif text-[#0B1F3A] break-words">
                 Simulador Oficial OAB & Desafios Temáticos
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              <p className="text-xs sm:text-sm text-slate-500 mt-0.5 break-words">
                 Treine com cronômetro real, marcação de questões para revisão e distribuição oficial das 20 disciplinas da prova.
               </p>
             </div>
@@ -330,33 +330,33 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
         </div>
 
         {/* Featured Big Card: Official 80-Question Exam */}
-        <div className="bg-gradient-to-br from-[#0B1F3A] via-[#122b4d] to-[#0B1F3A] rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-[#D4AF37]/30 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#0B1F3A] via-[#122b4d] to-[#0B1F3A] rounded-3xl p-5 sm:p-8 text-white shadow-xl border border-[#D4AF37]/30 relative overflow-hidden">
           <div className="absolute -right-8 -bottom-8 w-48 h-48 bg-[#D4AF37]/10 rounded-full blur-2xl" />
-          <div className="max-w-3xl space-y-4 relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-bold uppercase tracking-wider">
-              <Award className="w-3.5 h-3.5" />
-              <span>Simulação Real Oficial</span>
+          <div className="max-w-3xl space-y-4 relative z-10 min-w-0">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-bold uppercase tracking-wider max-w-full">
+              <Award className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Simulação Real Oficial</span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-bold font-serif text-white">
+            <h2 className="text-xl sm:text-3xl font-bold font-serif text-white break-words">
               Simulado Oficial 1ª Fase OAB (80 Questões)
             </h2>
 
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed break-words">
               Reprodução idêntica do exame da FGV: 80 questões balanceadas exatamente com o peso oficial de cada disciplina (8 de Ética, 6 de Constitucional, Civil, Proc. Civil, Penal e Proc. Penal, 5 de Trabalho, Proc. do Trabalho, Administrativo e Tributário, 4 de Empresarial e 2 de cada matéria transversal).
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-300 pt-2">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 text-xs font-semibold text-slate-300 pt-2">
               <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg border border-white/15">
-                <Clock className="w-4 h-4 text-[#D4AF37]" />
+                <Clock className="w-4 h-4 text-[#D4AF37] shrink-0" />
                 <span>300 minutos (5 horas de prova)</span>
               </div>
               <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg border border-white/15">
-                <BarChart3 className="w-4 h-4 text-[#D4AF37]" />
+                <BarChart3 className="w-4 h-4 text-[#D4AF37] shrink-0" />
                 <span>Meta de Aprovação: 40 acertos (50%)</span>
               </div>
               <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg border border-white/15">
-                <Flag className="w-4 h-4 text-[#D4AF37]" />
+                <Flag className="w-4 h-4 text-[#D4AF37] shrink-0" />
                 <span>Marcar para revisar habilitado</span>
               </div>
             </div>
@@ -364,9 +364,9 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
             <div className="pt-4">
               <button
                 onClick={() => handleStartSimulado(SIMULADO_PRESETS[0])}
-                className="px-6 py-3 bg-[#D4AF37] hover:bg-[#c59f2a] text-[#0B1F3A] font-extrabold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+                className="w-full sm:w-auto px-5 sm:px-6 py-3 bg-[#D4AF37] hover:bg-[#c59f2a] text-[#0B1F3A] font-extrabold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
               >
-                <Play className="w-4 h-4 fill-current" />
+                <Play className="w-4 h-4 fill-current shrink-0" />
                 <span>Iniciar Simulado Oficial (80 Questões)</span>
               </button>
             </div>
@@ -451,11 +451,11 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
             {SIMULADO_PRESETS.filter(p => presetCategoryFilter === 'all' || p.category === presetCategoryFilter).map(preset => (
               <div
                 key={preset.id}
-                className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-[#D4AF37] shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 hover:border-[#D4AF37] shadow-sm hover:shadow-md transition-all flex flex-col justify-between min-w-0"
               >
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] bg-[#0B1F3A]/5 text-[#0B1F3A] px-2.5 py-0.5 rounded-full font-bold truncate">
+                <div className="space-y-2.5 min-w-0">
+                  <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
+                    <span className="text-[11px] bg-[#0B1F3A]/5 text-[#0B1F3A] px-2.5 py-0.5 rounded-full font-bold truncate max-w-full">
                       {preset.level}
                     </span>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -471,16 +471,16 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                     </div>
                   </div>
 
-                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                  <h3 className="text-sm font-bold text-slate-900 leading-snug break-words">
                     {preset.title}
                   </h3>
 
-                  <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                  <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed break-words">
                     {preset.description}
                   </p>
                 </div>
 
-                <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+                <div className="pt-4 mt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs font-bold text-slate-700">
                     {preset.questionCount} Questões
                   </span>
@@ -498,23 +498,23 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
         </div>
 
         {/* Custom Simulado Builder */}
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 space-y-6 shadow-sm">
+        <div className="bg-white p-4 sm:p-8 rounded-3xl border border-slate-200 space-y-6 shadow-sm min-w-0">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-            <Award className="w-5 h-5 text-[#D4AF37]" />
+            <Award className="w-5 h-5 text-[#D4AF37] shrink-0" />
             <h2 className="text-base font-bold text-[#0B1F3A]">
               Personalizar Simulado à Sua Medida
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div className="min-w-0">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
                 Disciplina
               </label>
               <select
                 value={selectedDiscipline}
                 onChange={e => setSelectedDiscipline(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+                className="w-full min-w-0 max-w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
               >
                 <option value="todas">Todas as Disciplinas (Geral OAB)</option>
                 {OAB_DISCIPLINES.map(d => (
@@ -525,14 +525,14 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
               </select>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
                 Dificuldade
               </label>
               <select
                 value={customDifficulty}
                 onChange={e => setCustomDifficulty(e.target.value as any)}
-                className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+                className="w-full min-w-0 max-w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
               >
                 <option value="todas">Todas as Dificuldades (Mesclado)</option>
                 <option value="Fácil">Fácil (Fundamentos & Conceitos)</option>
@@ -541,14 +541,14 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
               </select>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
                 Quantidade de Questões
               </label>
               <select
                 value={customQuestionCount}
                 onChange={e => setCustomQuestionCount(Number(e.target.value))}
-                className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+                className="w-full min-w-0 max-w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
               >
                 <option value={10}>10 questões (Treino Rápido)</option>
                 <option value={20}>20 questões (Sprint Diário)</option>
@@ -557,14 +557,14 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
               </select>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
                 Tempo Limite
               </label>
               <select
                 value={customTimeMinutes}
                 onChange={e => setCustomTimeMinutes(Number(e.target.value))}
-                className="w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+                className="w-full min-w-0 max-w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
               >
                 <option value={15}>15 minutos</option>
                 <option value={30}>30 minutos</option>
@@ -579,7 +579,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
           <div className="pt-2 flex justify-end">
             <button
               onClick={() => handleStartSimulado()}
-              className="px-6 py-3 bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] font-bold text-xs rounded-xl shadow transition-all flex items-center gap-2"
+              className="w-full sm:w-auto px-6 py-3 bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4 fill-current" />
               <span>Iniciar Simulado Customizado</span>
@@ -608,18 +608,18 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
     });
 
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
+      <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6 animate-fade-in">
         {/* Sticky Control Bar with Timer & Status */}
-        <div className="sticky top-16 z-30 bg-[#0B1F3A] text-white p-4 rounded-2xl shadow-xl border border-[#D4AF37]/30 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <div className="sticky top-[68px] sm:top-16 z-30 bg-[#0B1F3A] text-white p-3 sm:p-4 rounded-2xl shadow-xl border border-[#D4AF37]/30 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-mono font-bold text-xs sm:text-sm border transition-colors ${
+              className={`flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg font-mono font-bold text-xs sm:text-sm border transition-colors ${
                 isWarning
                   ? 'bg-rose-950/80 border-rose-500 text-rose-300 animate-pulse'
                   : 'bg-white/10 border-white/20 text-[#D4AF37]'
               }`}
             >
-              <Clock className="w-4 h-4" />
+              <Clock className="w-4 h-4 shrink-0" />
               <span>{formatTimer(secondsRemaining)}</span>
             </div>
 
@@ -633,7 +633,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
             </button>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-slate-300">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-slate-300">
             <div>
               Respondidas: <strong className="text-white">{answeredCount}</strong> / {activeQuestions.length}
             </div>
@@ -647,14 +647,14 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
 
           <button
             onClick={() => setShowSubmitModal(true)}
-            className="px-4 py-2 bg-gradient-to-r from-[#D4AF37] to-[#C59F2A] hover:from-[#E6C86E] hover:to-[#D4AF37] text-[#0B1F3A] font-extrabold text-xs rounded-lg shadow transition-all"
+            className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-[#D4AF37] to-[#C59F2A] hover:from-[#E6C86E] hover:to-[#D4AF37] text-[#0B1F3A] font-extrabold text-xs rounded-lg shadow transition-all text-center"
           >
             Finalizar Simulado
           </button>
         </div>
 
         {/* Question Navigation Matrix */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3 min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
             <div className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
               <ListFilter className="w-3.5 h-3.5 text-[#0B1F3A]" />
@@ -662,7 +662,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
             </div>
 
             {/* Filter buttons */}
-            <div className="flex items-center gap-1 text-[11px]">
+            <div className="flex flex-wrap items-center gap-1 text-[11px]">
               <button
                 onClick={() => setNavFilter('all')}
                 className={`px-2 py-0.5 rounded font-semibold transition-colors ${
@@ -723,24 +723,24 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
 
         {/* Active Question Card */}
         {currentQuestion && (
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-8 space-y-5 sm:space-y-6 min-w-0">
             {/* Question Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-1 rounded-md bg-[#0B1F3A] text-[#D4AF37] font-bold uppercase tracking-wider">
+            <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 text-xs text-slate-500 border-b border-slate-100 pb-3">
+              <div className="flex flex-wrap items-center gap-2 min-w-0">
+                <span className="px-2.5 py-1 rounded-md bg-[#0B1F3A] text-[#D4AF37] font-bold uppercase tracking-wider shrink-0">
                   Questão {currentIndex + 1} de {activeQuestions.length}
                 </span>
-                <span className="font-semibold text-slate-700">
+                <span className="font-semibold text-slate-700 break-words">
                   {OAB_DISCIPLINES.find(d => d.id === currentQuestion.disciplineId)?.name || currentQuestion.disciplineId}
                 </span>
-                <span className="text-slate-300">·</span>
-                <span className="text-slate-500">{currentQuestion.subject}</span>
+                <span className="text-slate-300 hidden sm:inline">·</span>
+                <span className="text-slate-500 break-words">{currentQuestion.subject}</span>
               </div>
 
               {/* Toggle Flag / Marcar para revisar button */}
               <button
                 onClick={() => handleToggleFlag(currentIndex)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 ${
                   flaggedQuestions[currentIndex]
                     ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-xs'
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
@@ -752,7 +752,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
             </div>
 
             {/* Statement */}
-            <p className="text-sm sm:text-base text-slate-900 leading-relaxed whitespace-pre-line font-normal">
+            <p className="text-sm sm:text-base text-slate-900 leading-relaxed whitespace-pre-line font-normal break-words">
               {currentQuestion.statement}
             </p>
 
@@ -764,7 +764,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                   <button
                     key={option.id}
                     onClick={() => handleSelectOption(option.id)}
-                    className={`w-full p-4 rounded-xl border text-left transition-all flex items-start gap-3.5 ${
+                    className={`w-full p-3 sm:p-4 rounded-xl border text-left transition-all flex items-start gap-2.5 sm:gap-3.5 min-w-0 ${
                       isSelected
                         ? 'border-[#0B1F3A] bg-[#0B1F3A]/5 ring-1.5 ring-[#0B1F3A]'
                         : 'border-slate-200 hover:border-slate-400 bg-white'
@@ -777,7 +777,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                     >
                       {option.id}
                     </span>
-                    <span className="text-xs sm:text-sm text-slate-800 leading-snug flex-1">
+                    <span className="text-xs sm:text-sm text-slate-800 leading-snug flex-1 min-w-0 break-words">
                       {option.text}
                     </span>
                   </button>
@@ -786,11 +786,11 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
             </div>
 
             {/* Bottom Navigation */}
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+            <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
               <button
                 onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
                 disabled={currentIndex === 0}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 disabled:opacity-40 flex items-center gap-1.5 transition-colors"
+                className="px-3 sm:px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 disabled:opacity-40 flex items-center gap-1.5 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span>Questão Anterior</span>
@@ -799,7 +799,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
               <button
                 onClick={() => setCurrentIndex(prev => Math.min(activeQuestions.length - 1, prev + 1))}
                 disabled={currentIndex === activeQuestions.length - 1}
-                className="px-5 py-2.5 bg-[#0B1F3A] text-white hover:bg-[#16365C] rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition-colors disabled:opacity-40"
+                className="px-4 sm:px-5 py-2.5 bg-[#0B1F3A] text-white hover:bg-[#16365C] rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition-colors disabled:opacity-40"
               >
                 <span>Próxima Questão</span>
                 <ChevronRight className="w-4 h-4" />
@@ -810,29 +810,29 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
 
         {/* Confirmation Modal before Submit */}
         {showSubmitModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
-            <div className="bg-white max-w-md w-full rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
+            <div className="bg-white max-w-md w-full rounded-3xl p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl border border-slate-200 my-4 max-h-[92vh] overflow-y-auto">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-lg font-bold text-slate-900">Entregar Simulado?</h3>
                   <p className="text-xs text-slate-500">Revise seu progresso antes de concluir a prova.</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center">
-                <div>
-                  <span className="block text-xl font-bold text-emerald-600">{answeredCount}</span>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center">
+                <div className="min-w-0">
+                  <span className="block text-lg sm:text-xl font-bold text-emerald-600">{answeredCount}</span>
                   <span className="text-[11px] text-slate-500 font-medium">Respondidas</span>
                 </div>
-                <div>
-                  <span className="block text-xl font-bold text-rose-500">{unansweredCount}</span>
+                <div className="min-w-0">
+                  <span className="block text-lg sm:text-xl font-bold text-rose-500">{unansweredCount}</span>
                   <span className="text-[11px] text-slate-500 font-medium">Em Branco</span>
                 </div>
-                <div>
-                  <span className="block text-xl font-bold text-amber-600">{flaggedCount}</span>
+                <div className="min-w-0">
+                  <span className="block text-lg sm:text-xl font-bold text-amber-600">{flaggedCount}</span>
                   <span className="text-[11px] text-slate-500 font-medium">Marcadas</span>
                 </div>
               </div>
@@ -844,7 +844,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 pt-2">
                 <button
                   onClick={() => setShowSubmitModal(false)}
                   className="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
@@ -896,56 +896,56 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
         : activeQuestions.map((_, i) => i);
 
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+      <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 animate-fade-in">
         {/* Results Banner */}
         <div
-          className={`p-6 sm:p-10 rounded-3xl text-white shadow-xl relative overflow-hidden ${
+          className={`p-5 sm:p-10 rounded-3xl text-white shadow-xl relative overflow-hidden ${
             isApproved
               ? 'bg-gradient-to-br from-[#0B1F3A] via-[#16365C] to-[#0B1F3A]'
               : 'bg-gradient-to-br from-slate-900 via-[#1E293B] to-slate-900'
           }`}
         >
-          <div className="max-w-3xl space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#D4AF37] text-xs font-semibold">
-              <Award className="w-4 h-4" />
-              <span>Gabarito e Desempenho Oficial</span>
+          <div className="max-w-3xl space-y-4 min-w-0">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#D4AF37] text-xs font-semibold max-w-full">
+              <Award className="w-4 h-4 shrink-0" />
+              <span className="truncate">Gabarito e Desempenho Oficial</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-bold font-serif text-white">
+            <h1 className="text-2xl sm:text-4xl font-bold font-serif text-white break-words">
               {isApproved ? 'Aprovado! Excelente Desempenho' : 'Em Desenvolvimento · Continue Firme'}
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed break-words">
               {isApproved
                 ? `Você alcançou ${percent}% de aproveitamento (${correct} acertos de ${total} questões). A marca mínima exigida na 1ª Fase da OAB é de 50%. Parabéns!`
                 : `Você atingiu ${percent}% de aproveitamento (${correct} acertos de ${total} questões). A pontuação de corte da 1ª Fase da OAB é de 50%. Revise o gabarito comentado abaixo.`}
             </p>
 
-            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/10 max-w-md">
-              <div>
-                <span className="block text-2xl sm:text-3xl font-extrabold text-[#D4AF37] tabular-nums">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4 border-t border-white/10 max-w-md">
+              <div className="min-w-0">
+                <span className="block text-xl sm:text-3xl font-extrabold text-[#D4AF37] tabular-nums">
                   {percent}%
                 </span>
-                <span className="text-xs text-slate-300">Aproveitamento</span>
+                <span className="text-[11px] sm:text-xs text-slate-300">Aproveitamento</span>
               </div>
-              <div>
-                <span className="block text-2xl sm:text-3xl font-extrabold text-white tabular-nums">
+              <div className="min-w-0">
+                <span className="block text-xl sm:text-3xl font-extrabold text-white tabular-nums">
                   {correct}/{total}
                 </span>
-                <span className="text-xs text-slate-300">Acertos</span>
+                <span className="text-[11px] sm:text-xs text-slate-300">Acertos</span>
               </div>
-              <div>
-                <span className="block text-2xl sm:text-3xl font-extrabold text-white tabular-nums">
+              <div className="min-w-0">
+                <span className="block text-xl sm:text-3xl font-extrabold text-white tabular-nums">
                   {Math.round(latestResult.timeSpentSeconds / 60)} min
                 </span>
-                <span className="text-xs text-slate-300">Tempo Gasto</span>
+                <span className="text-[11px] sm:text-xs text-slate-300">Tempo Gasto</span>
               </div>
             </div>
 
             <div className="pt-2 flex flex-wrap gap-3">
               <button
                 onClick={() => setScreen('setup')}
-                className="px-5 py-2.5 bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] font-extrabold text-xs rounded-xl shadow transition-colors flex items-center gap-1.5"
+                className="w-full sm:w-auto px-5 py-2.5 bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] font-extrabold text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-1.5"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Realizar Novo Simulado</span>
@@ -956,10 +956,10 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
 
         {/* Breakdown by Discipline Card */}
         {disciplineBreakdown.length > 1 && (
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
               <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-[#0B1F3A]" />
+                <BarChart3 className="w-4 h-4 text-[#0B1F3A] shrink-0" />
                 <span>Desempenho por Disciplina</span>
               </h2>
               <span className="text-xs text-slate-500">{disciplineBreakdown.length} matérias avaliadas</span>
@@ -967,11 +967,11 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {disciplineBreakdown.map(item => (
-                <div key={item.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-800 truncate">{item.name}</span>
+                <div key={item.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 min-w-0">
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <span className="font-bold text-slate-800 truncate min-w-0">{item.name}</span>
                     <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 ${
                         item.pct >= 70
                           ? 'bg-emerald-100 text-emerald-800'
                           : item.pct >= 50
@@ -1007,15 +1007,15 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
         {/* Detailed Review Section */}
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-[#0B1F3A]" />
-              <h2 className="text-lg font-bold font-serif text-[#0B1F3A]">
+            <div className="flex items-center gap-2 min-w-0">
+              <BookOpen className="w-5 h-5 text-[#0B1F3A] shrink-0" />
+              <h2 className="text-lg font-bold font-serif text-[#0B1F3A] break-words">
                 Revisão e Fundamentação Questão a Questão
               </h2>
             </div>
 
             {/* Filter buttons */}
-            <div className="flex items-center gap-1.5 text-xs">
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
               <button
                 onClick={() => setResultFilter('wrong')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
@@ -1052,7 +1052,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
           </div>
 
           {displayIndices.length === 0 ? (
-            <div className="p-8 text-center bg-emerald-50 border border-emerald-200 rounded-3xl text-emerald-900 space-y-2">
+            <div className="p-6 sm:p-8 text-center bg-emerald-50 border border-emerald-200 rounded-3xl text-emerald-900 space-y-2">
               <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
               <p className="font-bold text-sm">Nenhuma questão para exibir neste filtro!</p>
               <p className="text-xs text-emerald-700">
@@ -1073,19 +1073,19 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                 return (
                   <div
                     key={idx}
-                    className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4"
+                    className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 min-w-0"
                   >
-                    <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 border-b border-slate-100 pb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[#0B1F3A]">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 border-b border-slate-100 pb-2">
+                      <div className="flex flex-wrap items-center gap-2 min-w-0">
+                        <span className="font-bold text-[#0B1F3A] shrink-0">
                           Questão {idx + 1}
                         </span>
-                        <span className="text-slate-300">·</span>
-                        <span className="font-semibold text-slate-700 uppercase">
+                        <span className="text-slate-300 hidden sm:inline">·</span>
+                        <span className="font-semibold text-slate-700 uppercase break-words">
                           {questionObj.disciplineId} · {questionObj.subject}
                         </span>
                         {flaggedQuestions[idx] && (
-                          <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-bold flex items-center gap-1">
+                          <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-bold flex items-center gap-1 shrink-0">
                             <Flag className="w-2.5 h-2.5 fill-current" />
                             Marcada
                           </span>
@@ -1093,7 +1093,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                       </div>
 
                       <span
-                        className={`font-bold flex items-center gap-1 ${
+                        className={`font-bold flex items-center gap-1 shrink-0 ${
                           isCorrect ? 'text-emerald-600' : 'text-rose-600'
                         }`}
                       >
@@ -1111,13 +1111,13 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                       </span>
                     </div>
 
-                    <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium whitespace-pre-line">
+                    <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium whitespace-pre-line break-words">
                       {questionObj.statement}
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       <div
-                        className={`p-3.5 rounded-xl border ${
+                        className={`p-3.5 rounded-xl border min-w-0 ${
                           isCorrect
                             ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                             : 'bg-rose-50 border-rose-200 text-rose-900'
@@ -1126,28 +1126,28 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                         <span className="font-bold block mb-1">
                           Sua Resposta: Letra {answerItem?.selectedOptionId || '(Em branco)'}
                         </span>
-                        <p className="text-[11px] leading-snug">
+                        <p className="text-[11px] leading-snug break-words">
                           {markedOption ? markedOption.text : 'Não respondida no tempo de prova'}
                         </p>
                       </div>
 
-                      <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900">
+                      <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 min-w-0">
                         <span className="font-bold block mb-1">
                           Gabarito Oficial: Letra {questionObj.correctOptionId}
                         </span>
-                        <p className="text-[11px] leading-snug text-emerald-800">
+                        <p className="text-[11px] leading-snug text-emerald-800 break-words">
                           {correctOption ? correctOption.text : ''}
                         </p>
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-2">
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-2 min-w-0">
                       <div className="font-bold text-[#0B1F3A] flex items-center gap-1.5">
-                        <BookOpen className="w-3.5 h-3.5 text-[#D4AF37]" />
+                        <BookOpen className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                         <span>Comentário & Explicação:</span>
                       </div>
-                      <p className="leading-relaxed">{questionObj.explanation}</p>
-                      <p className="text-[11px] text-[#0B1F3A] font-semibold pt-1 border-t border-slate-200">
+                      <p className="leading-relaxed break-words">{questionObj.explanation}</p>
+                      <p className="text-[11px] text-[#0B1F3A] font-semibold pt-1 border-t border-slate-200 break-words">
                         Fundamento Legal: {questionObj.legalFoundation}
                       </p>
                     </div>

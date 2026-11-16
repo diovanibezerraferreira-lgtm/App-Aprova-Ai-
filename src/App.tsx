@@ -60,7 +60,7 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-[#D4AF37]/25 selection:text-[#0B1F3A]">
+    <div className="min-h-screen w-full max-w-full overflow-x-clip bg-slate-50 text-slate-900 flex flex-col selection:bg-[#D4AF37]/25 selection:text-[#0B1F3A]">
       {/* Top Executive Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -71,7 +71,7 @@ function AppContent() {
       />
 
       {/* Main View Area */}
-      <main className="flex-1 pb-16 lg:pb-0">
+      <main className="flex-1 w-full min-w-0 pb-20 lg:pb-0">
         {activeTab === 'inicio' && (
           <HomeView
             onSelectTab={setActiveTab}

@@ -166,27 +166,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const consoleUrl = getFirebaseConsoleAuthUrl();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col">
         
         {/* Header */}
-        <div className="bg-[#0B1F3A] text-white p-6 relative shrink-0">
+        <div className="bg-[#0B1F3A] text-white p-4 sm:p-6 relative shrink-0">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1 rounded-full text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+            className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 p-1 rounded-full text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
             aria-label="Fechar"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-2 mb-2">
-            <Scale className="w-5 h-5 text-[#D4AF37]" />
+          <div className="flex items-center gap-2 mb-2 pr-6">
+            <Scale className="w-5 h-5 text-[#D4AF37] shrink-0" />
             <span className="font-serif font-bold text-base tracking-wide text-white">
               APROVA DIREITO
             </span>
           </div>
 
-          <h2 className="text-xl font-bold font-serif text-white">
+          <h2 className="text-lg sm:text-xl font-bold font-serif text-white">
             {mode === 'login' && 'Entrar na sua Conta'}
             {mode === 'signup' && 'Criar Conta de Estudos'}
             {mode === 'forgot' && 'Recuperar Senha'}
@@ -223,7 +223,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
 
         {/* Scrollable Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
           
           {errorMsg && (
             <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
@@ -370,7 +370,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <select
                   value={studyFocus}
                   onChange={e => setStudyFocus(e.target.value as UserProfile['studyFocus'])}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+                  className="w-full min-w-0 max-w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
                 >
                   <option value="OAB 1ª Fase">Exame de Ordem - OAB 1ª Fase</option>
                   <option value="OAB 2ª Fase">Exame de Ordem - OAB 2ª Fase (Peças)</option>

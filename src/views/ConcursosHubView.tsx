@@ -60,33 +60,33 @@ export const ConcursosHubView: React.FC<ConcursosHubViewProps> = ({ onSelectTab 
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 sm:space-y-10">
       
       {/* Header */}
       <div className="border-b border-slate-200 pb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#0B1F3A] flex items-center justify-center text-[#D4AF37]">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-[#0B1F3A] flex items-center justify-center text-[#D4AF37] shrink-0">
             <Landmark className="w-4 h-4" />
           </div>
-          <h1 className="text-2xl font-bold font-serif text-[#0B1F3A]">
+          <h1 className="text-xl sm:text-2xl font-bold font-serif text-[#0B1F3A] break-words">
             Carreiras Jurídicas & Concursos Públicos
           </h1>
         </div>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-slate-500 mt-1 break-words">
           Panorama das principais carreiras do universo jurídico, disciplinas essenciais e estratégias de estudo.
         </p>
       </div>
 
       {/* Careers Grid */}
-      <div className="space-y-6">
+      <div className="space-y-5 sm:space-y-6">
         {careers.map(car => (
           <div
             key={car.id}
-            className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow space-y-4"
+            className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-8 shadow-sm hover:shadow-md transition-shadow space-y-4 min-w-0"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="text-lg font-bold font-serif text-[#0B1F3A]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="min-w-0">
+                <h3 className="text-base sm:text-lg font-bold font-serif text-[#0B1F3A] break-words">
                   {car.title}
                 </h3>
                 <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full font-semibold inline-block mt-1">
@@ -95,36 +95,36 @@ export const ConcursosHubView: React.FC<ConcursosHubViewProps> = ({ onSelectTab 
               </div>
               <button
                 onClick={() => onSelectTab('questoes')}
-                className="px-4 py-2 bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] font-bold text-xs rounded-lg transition-colors flex items-center gap-1.5 self-start sm:self-auto"
+                className="w-full sm:w-auto px-4 py-2 bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] font-bold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5 self-start sm:self-auto shrink-0"
               >
                 <span>Treinar Questões</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed break-words">
               {car.description}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 text-xs">
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5">
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5 min-w-0">
                 <span className="font-bold text-[#0B1F3A] block">
                   Disciplinas com Maior Peso no Certame:
                 </span>
                 <div className="flex flex-wrap gap-1">
                   {car.coreSubjects.map((s, i) => (
-                    <span key={i} className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 text-[11px]">
+                    <span key={i} className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 text-[11px] break-words">
                       {s}
                     </span>
                   ))}
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5">
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5 min-w-0">
                 <span className="font-bold text-[#0B1F3A] block">
                   Etapas do Concurso:
                 </span>
-                <p className="text-slate-600 text-[11px] leading-relaxed">
+                <p className="text-slate-600 text-[11px] leading-relaxed break-words">
                   {car.stages}
                 </p>
               </div>

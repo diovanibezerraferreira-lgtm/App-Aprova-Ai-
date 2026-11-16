@@ -73,7 +73,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   // If visitor is not logged in, show protected account prompt
   if (!currentUser) {
     return (
-      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6">
+      <div className="w-full max-w-xl mx-auto px-3 sm:px-4 py-12 sm:py-16 text-center space-y-6">
         <div className="w-16 h-16 rounded-2xl bg-[#0B1F3A] flex items-center justify-center text-[#D4AF37] mx-auto shadow-lg">
           <Lock className="w-8 h-8" />
         </div>
@@ -104,7 +104,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
         <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs flex items-center justify-center gap-2 max-w-md mx-auto">
           <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>Autenticação segura via Firebase Authentication & Firestore</span>
+          <span className="break-words">Autenticação segura via Firebase Authentication & Firestore</span>
         </div>
       </div>
     );
@@ -125,59 +125,59 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         : 'Recente');
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+    <div className="w-full max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 animate-fade-in">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#0B1F3A] flex items-center justify-center text-[#D4AF37]">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-[#0B1F3A] flex items-center justify-center text-[#D4AF37] shrink-0">
               <User className="w-4 h-4" />
             </div>
-            <h1 className="text-2xl font-bold font-serif text-[#0B1F3A]">
+            <h1 className="text-xl sm:text-2xl font-bold font-serif text-[#0B1F3A] break-words">
               Meu Perfil & Conta de Estudos
             </h1>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 mt-1 break-words">
             Seus dados cadastrais, plano e preferências sincronizados no Firebase.
           </p>
         </div>
 
         <button
           onClick={handleLogout}
-          className="self-start sm:self-auto px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+          className="self-start sm:self-auto px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0"
         >
           <LogOut className="w-3.5 h-3.5" />
           <span>Sair da conta</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
         
         {/* Left Column: Profile Card & Plan (1 col) */}
-        <div className="space-y-4">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center space-y-3">
+        <div className="space-y-4 min-w-0">
+          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm text-center space-y-3 min-w-0">
             <div className="w-16 h-16 rounded-full bg-[#0B1F3A] text-[#D4AF37] font-serif font-bold text-2xl flex items-center justify-center mx-auto border-2 border-[#D4AF37] shadow-inner">
               {name ? name.charAt(0).toUpperCase() : 'A'}
             </div>
-            <div>
-              <h2 className="text-base font-bold text-slate-900">{name || 'Aluno'}</h2>
+            <div className="min-w-0">
+              <h2 className="text-base font-bold text-slate-900 break-words">{name || 'Aluno'}</h2>
               <p className="text-xs text-slate-500 break-all">{currentUser.email}</p>
             </div>
-            <div className="inline-block px-3 py-1 bg-slate-100 text-[#0B1F3A] text-xs rounded-full font-bold">
+            <div className="inline-block px-3 py-1 bg-slate-100 text-[#0B1F3A] text-xs rounded-full font-bold max-w-full truncate">
               {studyFocus}
             </div>
 
             <div className="pt-3 border-t border-slate-100 text-left text-xs text-slate-600 space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-1.5">
                 <span className="text-slate-400">Data de cadastro:</span>
                 <span className="font-semibold text-slate-800">{creationDate}</span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-1.5">
                 <span className="text-slate-400">Data de criação:</span>
                 <span className="font-semibold text-slate-800">{creationDate}</span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-1.5">
                 <span className="text-slate-400">Plano atual:</span>
                 {userProfile?.isPremium ? (
                   <span className="font-bold text-[#0B1F3A] bg-[#D4AF37]/25 px-2 py-0.5 rounded inline-flex items-center gap-1">
@@ -191,7 +191,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 )}
               </div>
               {userProfile?.subscriptionStatus && userProfile.subscriptionStatus !== 'NONE' && (
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-1.5">
                   <span className="text-slate-400">Assinatura:</span>
                   <span className="font-semibold text-slate-700">
                     {userProfile.subscriptionStatus === 'ACTIVE'
@@ -208,7 +208,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
 
           {/* Plan Showcase Card */}
-          <div className="bg-white p-6 rounded-2xl border border-[#D4AF37]/50 shadow-sm space-y-3">
+          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-[#D4AF37]/50 shadow-sm space-y-3 min-w-0">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Plano do Aluno
@@ -251,7 +251,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         </div>
 
         {/* Right Column: Edit Settings Form (2 cols) */}
-        <div className="md:col-span-2 bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <div className="md:col-span-2 bg-white p-5 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6 min-w-0">
           <h2 className="text-base font-bold font-serif text-[#0B1F3A] border-b border-slate-100 pb-3">
             Preferências e Metas de Estudo
           </h2>
@@ -259,7 +259,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <form onSubmit={handleSave} className="space-y-4">
             {savedSuccess && (
               <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium rounded-lg flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-600" />
+                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>Perfil e metas atualizados com sucesso no Firestore!</span>
               </div>
             )}
@@ -273,7 +273,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 required
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+                className="w-full min-w-0 max-w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
               />
             </div>
 
@@ -285,7 +285,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 type="email"
                 disabled
                 value={currentUser.email || ''}
-                className="w-full px-3 py-2 text-sm border border-slate-200 bg-slate-50 text-slate-500 rounded-lg cursor-not-allowed"
+                className="w-full min-w-0 max-w-full px-3 py-2 text-sm border border-slate-200 bg-slate-50 text-slate-500 rounded-lg cursor-not-allowed"
               />
               <span className="text-[11px] text-slate-400 mt-1 block">
                 Para alterar seu e-mail de acesso, entre em contato com o suporte.
@@ -299,7 +299,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <select
                 value={studyFocus}
                 onChange={e => setStudyFocus(e.target.value as UserProfile['studyFocus'])}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+                className="w-full min-w-0 max-w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
               >
                 <option value="OAB 1ª Fase">Exame de Ordem - OAB 1ª Fase</option>
                 <option value="OAB 2ª Fase">Exame de Ordem - OAB 2ª Fase (Peças)</option>
@@ -317,14 +317,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 max={100}
                 value={dailyGoal}
                 onChange={e => setDailyGoal(Number(e.target.value))}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+                className="w-full min-w-0 max-w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
               />
               <span className="text-[11px] text-slate-400 mt-1 block">
                 Sua meta será sincronizada com o Painel de Desempenho.
               </span>
             </div>
 
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+            <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={handleLogout}
@@ -337,7 +337,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <button
                 type="submit"
                 disabled={saving}
-                className="px-6 py-2.5 bg-[#0B1F3A] hover:bg-[#16365C] disabled:bg-slate-400 text-[#D4AF37] font-bold text-xs rounded-lg shadow transition-colors flex items-center gap-2"
+                className="w-full sm:w-auto px-6 py-2.5 bg-[#0B1F3A] hover:bg-[#16365C] disabled:bg-slate-400 text-[#D4AF37] font-bold text-xs rounded-lg shadow transition-colors flex items-center justify-center gap-2"
               >
                 {saving ? (
                   <span className="inline-block animate-spin rounded-full h-3.5 w-3.5 border-2 border-[#D4AF37] border-t-transparent" />

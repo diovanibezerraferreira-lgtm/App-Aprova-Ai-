@@ -954,5 +954,728 @@ export const LEGAL_BRIEFS: LegalBrief[] = [
       "clientNeeds": "Elaborar Embargos de Terceiro com pedido de tutela liminar urgente de manutenção de posse e suspensão dos atos executivos sobre o bem, invocando a Súmula 84 do STJ e o art. 678 do CPC/15."
     },
     "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA ... VARA CÍVEL DA COMARCA DE ...\n\nDISTRIBUIÇÃO POR DEPENDÊNCIA AOS AUTOS DA EXECUÇÃO DE TÍTULO EXTRAJUDICIAL Nº ...\n\nJULIANA, brasileira, divorciada, servidora pública, inscrita no CPF sob o nº ..., portadora do RG nº ..., endereço eletrônico ..., residente e domiciliada na Rua ..., nº ..., apto. 42, Edifício ..., nesta Cidade/UF, CEP ..., por seu advogado subscrito, constituído nos termos do instrumento de procuração anexo (doc. 01), com endereço profissional na Rua ..., onde recebe intimações, vem, com o devido acatamento, perante Vossa Excelência, com fulcro nos artigos 674 a 681 do Código de Processo Civil e Súmula 84 do Superior Tribunal de Justiça, opor os presentes\n\nEMBARGOS DE TERCEIRO COM PEDIDO LIMINAR DE SUSPENSÃO DE CONSTRIÇÃO\n\nem face de BANCO ALFA S/A, instituição financeira de direito privado, inscrita no CNPJ sob o nº ..., com sede na Avenida ..., nº ..., Cidade/UF, exequente nos autos da Ação de Execução de Título Extrajudicial acima referenciada, movida em desfavor de GUSTAVO, pelos motivos fáticos e jurídicos que passa a expor:\n\nI - DO CABIMENTO E DISTRIBUIÇÃO POR DEPENDÊNCIA\nNos termos do art. 674 do CPC, quem, não sendo parte no processo, sofrer constrição ou ameaça de constrição sobre bens que possua ou sobre os quais tenha direito incompatível com o ato constritivo, poderá requerer seu desfazimento ou sua inibição por meio de embargos de terceiro.\nOutrossim, em obediência ao art. 676 do diploma processual, os embargos são distribuídos por dependência ao juízo que ordenou a constrição e autuados em apartado.\nA Embargante é terceira juridicamente estranha à lide executiva executada pelo Banco Alfa contra o executado Gustavo, sendo a real legítima proprietária e possuidora de boa-fé do bem penhorado.\n\nII - DA TEMPESTIVIDADE\nPreleciona o art. 675 do CPC que os embargos podem ser opostos a qualquer tempo no cumprimento de sentença ou no processo de execução, até 5 (cinco) dias depois da adjudicação, da alienação por iniciativa particular ou da arrematação, mas sempre antes da assinatura da respectiva carta.\nNo caso concreto, o bem fora apenas penhorado, encontrando-se a hasta pública designada para data futura, restando patente a tempestividade dos presentes embargos.\n\nIII - DOS FATOS E DA POSSE DE BOA-FÉ ANTERIOR À DÍVIDA\nEm 15 de março de 2021, a Embargante adquiriu legitimamente de Gustavo o apartamento nº 42 do Edifício ..., matriculado sob o nº ... no Cartório de Registro de Imóveis desta Comarca, mediante Contrato Particular de Promessa de Compra e Venda com quitação integral do preço de R$ 320.000,00, conforme comprovantes bancários e reconhecimento de firmas contemporâneos (docs. 03 e 04).\nImediatamente após a celebração da transação, a Embargante imitiu-se na posse direta do imóvel residencial, onde estabeleceu a moradia própria de sua família, adimplindo com pontualidade todas as taxas de condomínio e impostos prediais (IPTU) desde então (docs. 05 e 06).\nEntretanto, em outubro de 2024, o Banco Embargado ajuizou execução executiva contra o vendedor Gustavo lastreada em cédula de crédito bancário inadimplida no ano de 2023 (ou seja, contraída mais de 2 anos após a venda do bem).\nNos referidos autos executivos, o Embargado postulou e obteve a penhora daquele apartamento ao constatar que o registro imobiliário ainda figurava em nome do executado Gustavo, culminando na designação iminente de leilão judicial.\n\nIV - DO DIREITO E DA APLICAÇÃO DA SÚMULA 84 DO STJ\nO art. 674, § 1º do CPC/15 assegura expressamente a defesa da posse pelo terceiro possuidor:\n\"§ 1º Os embargos podem ser de terceiro proprietário, inclusive fiduciário, ou possuidor.\"\nRessalte-se que a ausência de registro formal do contrato de compra e venda no fólio real não é óbice à defesa possessória contra credor do alienante, ex vi da consagrada Súmula nº 84 do Superior Tribunal de Justiça:\n\"Súmula 84 do STJ: É admissível a oposição de embargos de terceiro fundados em alegação de posse advinda do compromisso de compra e venda de imóvel, ainda que desprovido do registro.\"\nA aquisição operou-se anos antes da constituição do débito executado, demonstrando de forma irretorquível a absoluta boa-fé da Embargante e a inexistência de fraude à execução (Súmula 375 do STJ).\n\nV - DA MEDIDA LIMINAR DE SUSPENSÃO DA EXECUÇÃO SOBRE O BEM (ART. 678 DO CPC)\nEstando suficientemente demonstrada a qualidade de terceira e a posse justa exercida pela Embargante, o art. 678 do CPC impõe a concessão da tutela liminar para determinar a suspensão imediata dos atos de expropriação sobre o imóvel:\n\"Art. 678. A decisão que reconhecer suficientemente provada a posse determinará a suspensão das medidas constritivas sobre os bens litigiosos objeto dos embargos, bem como a manutenção ou a reintegração provisória na posse, se o embargante a houver requerido e oferecido caução, da qual poderá ser dispensado se não puder prestá-la.\"\nO perigo da demora é evidente, haja vista a iminência de alienação em praça pública de bem de família da Embargante.\n\nVI - DOS PEDIDOS\nPor todo o exposto, requer a Embargante se digne Vossa Excelência a:\na) Conceder, inaudita altera parte, a MEDIDA LIMINAR de manutenção da Embargante na posse do imóvel penhorado, determinando a IMEDIATA SUSPENSÃO de todos os atos constritivos e expropriatórios nos autos da Execução nº ..., notadamente cancelando a hasta pública designada (art. 678 do CPC);\nb) A citação do Embargado, na pessoa de seu patrono constituído nos autos principais da execução (art. 677, § 3º do CPC), para que, querendo, apresente contestação no prazo de 15 (quinze) dias;\nc) Ao final, julgar TOTALMENTE PROCEDENTES os presentes Embargos de Terceiro, confirmando a liminar e DETERMINANDO O DEFINITIVO LEVANTAMENTO DA PENHORA incidente sobre o apartamento nº 42 do Edifício ..., expedindo-se o competente mandado de cancelamento de penhora ao Cartório de Registro de Imóveis;\nd) A condenação do Embargado nas custas e despesas processuais, bem como em honorários advocatícios sucumbenciais (art. 85, § 2º do CPC e Súmula 303 do STJ);\ne) A concessão dos benefícios da Justiça Gratuita, ante a declaração de hipossuficiência anexa.\n\nProtesta provar o alegado por todos os meios em direito permitidos, notadamente prova documental e testemunhal.\n\nDá-se à causa o valor de R$ 320.000,00 (valor do bem penhorado objeto da constrição).\n\nTermos em que,\nPede e espera deferimento.\n\nComarca/UF, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "acao-anulatoria-debito-fiscal",
+    "title": "Ação Anulatória de Débito Fiscal c/c Tutela de Urgência",
+    "area": "Direito Tributário",
+    "subject": "Petições Iniciais",
+    "legalBasis": "Art. 38 da Lei nº 6.830/80 (LEF); Arts. 151, V, 156 e 173 do CTN; Art. 300 do CPC/15.",
+    "legalDeadlines": "5 (cinco) anos contados da constituição definitiva do crédito tributário (Decreto nº 20.910/32).",
+    "jurisdiction": "Vara da Fazenda Pública Estadual/Municipal ou Vara Federal da Seção Judiciária do domicílio do contribuinte ou sede da Fazenda.",
+    "overview": "A Ação Anulatória de Débito Fiscal visa desconstituir lançamento tributário eivado de ilegalidade ou inconstitucionalidade (decadência, prescrição, imunidade, base de cálculo incorreta), antes ou depois de inscrito em Dívida Ativa, desde que ainda não garantida execução fiscal por embargos. Com a tutela de urgência (art. 151, V, do CTN), suspende-se a exigibilidade do crédito tributário.",
+    "structureGuide": [
+      {
+        "step": "1. Endereçamento ao Juízo Fazendário",
+        "description": "Identificar o ente tributante (União, Estado ou Município) para endereçar à Vara Federal ou à Vara da Fazenda Pública competente.",
+        "practicalTip": "Tributos federais (IR, IPI, CSLL) -> Justiça Federal; ICMS/IPVA/ITCMD -> Vara da Fazenda Estadual; ISS/IPTU/ITBI -> Vara da Fazenda Municipal."
+      },
+      {
+        "step": "2. Fatos e Lançamento Impugnado",
+        "description": "Descrever o auto de infração ou notificação de lançamento, a inscrição em dívida ativa (CDA) e a urgência na obtenção de certidão positiva com efeitos de negativa (art. 206 do CTN).",
+        "practicalTip": "Demonstrar o vício formal ou material do lançamento fiscal."
+      },
+      {
+        "step": "3. Tutela de Urgência para Suspensão (Art. 151, V, CTN)",
+        "description": "Preencher probabilidade do direito e perigo de dano (impedimento de certidões negativas e risco de protesto/execução).",
+        "practicalTip": "Alternativamente ao pedido liminar sem garantia, pode-se mencionar o depósito do montante integral (art. 151, II, CTN)."
+      },
+      {
+        "step": "4. Mérito Tributário e Pedidos",
+        "description": "Sustentar decadência (art. 150, § 4º ou art. 173, I, CTN), imunidade, não incidência ou nulidade, requerendo anulação definitiva da CDA e honorários.",
+        "practicalTip": "Pedir expressamente a expedição de Certidão Positiva com Efeitos de Negativa (CPEND) enquanto durar a suspensão."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Tributário",
+      "problemStatement": "O Município de Porto Alegre lançou IPTU em janeiro de 2026 referente ao exercício fiscal de 2019 contra a Associação Beneficente Esperança, entidade assistencial sem fins lucrativos que cumpre integralmente todos os requisitos do art. 14 do CTN. O imóvel objeto da cobrança é utilizado exclusivamente como sede da instituição para atendimento gratuito de crianças. A associação foi notificada do débito inscrito em Dívida Ativa e ficou impedida de renovar sua Certidão Negativa para celebrar convênio público.",
+      "clientNeeds": "Propor Ação Anulatória de Débito Fiscal com pedido de tutela de urgência perante a Vara da Fazenda Pública Municipal, sustentando a imunidade tributária (art. 150, VI, 'c', CF/88 e Súmula Vinculante 52) e a decadência do lançamento (art. 173, I, CTN)."
+    },
+    "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA ... VARA DA FAZENDA PÚBLICA DA COMARCA DE PORTO ALEGRE / ESTADO DO RIO GRANDE DO SUL\n\nASSOCIAÇÃO BENEFICENTE ESPERANÇA, pessoa jurídica de direito privado sem fins lucrativos, inscrita no CNPJ sob o nº ..., com sede na Rua ..., nº ..., Bairro ..., Porto Alegre/RS, endereço eletrônico ..., por seu advogado infra-assinado, conforme procuração anexa (Doc. 01), com escritório na Rua ..., onde recebe intimações, vem, respeitosamente, perante Vossa Excelência, com fulcro no art. 38 da Lei nº 6.830/80 e nos arts. 319 e 300 do Código de Processo Civil, propor a presente\n\nAÇÃO ANULATÓRIA DE DÉBITO FISCAL C/C PEDIDO DE TUTELA PROVISÓRIA DE URGÊNCIA\n\nem face do MUNICÍPIO DE PORTO ALEGRE, pessoa jurídica de direito público interno, representado por sua Procuradoria-Geral, com endereço na Rua ..., nº ..., Centro, Porto Alegre/RS, pelas razões de fato e de direito a seguir aduzidas:\n\nI - DOS FATOS\nA Autora é entidade beneficente de assistência social sem fins lucrativos, regularmente constituída, cumprindo rigorosamente todos os requisitos legais elencados no art. 14 do Código Tributário Nacional, conforme estatuto social e demonstrativos contábeis anexos (Docs. 02 e 03).\nNão obstante sua condição constitucional de entidade imune, foi surpreendida em janeiro de 2026 com notificação de lançamento e inscrição em Dívida Ativa de IPTU relativo ao exercício fiscal de 2019 (CDA nº ...), no valor atualizado de R$ 48.000,00, incidente sobre o imóvel de sua propriedade onde funciona exclusivamente sua sede assistencial.\nEm decorrência dessa cobrança indevida, a Autora teve obstada a emissão de sua Certidão Negativa de Débitos Municipais, o que inviabiliza iminente renovação de convênio assistencial junto ao Poder Público.\n\nII - DO DIREITO\n1. Da Decadência do Crédito Tributário (Art. 173, I, do CTN)\nO IPTU é tributo sujeito a lançamento de ofício, aplicando-se a regra decadencial do art. 173, I, do CTN: o direito de a Fazenda Pública constituir o crédito extingue-se após 5 (cinco) anos, contados do primeiro dia do exercício seguinte àquele em que o lançamento poderia ter sido efetuado.\nConsiderando que o fato gerador ocorreu em 1º de janeiro de 2019, o quinquênio decadencial iniciou-se em 1º de janeiro de 2020 e expirou em 31 de dezembro de 2024. Efetuado o lançamento apenas em janeiro de 2026, o crédito encontra-se irremediavelmente extinto pela decadência (art. 156, V, do CTN).\n\n2. Da Imunidade Tributária das Entidades de Assistência Social (Art. 150, VI, 'c', da CF/88)\nAinda que superada a decadência, a Constituição Federal veda expressamente ao Município instituir impostos sobre patrimônio, renda ou serviços das instituições de assistência social sem fins lucrativos que atendam aos requisitos da lei (art. 14 do CTN), sendo o imóvel utilizado nas finalidades essenciais da entidade (Súmula Vinculante 52 do STF).\n\nIII - DA TUTELA PROVISÓRIA DE URGÊNCIA (ART. 300 DO CPC E ART. 151, V, DO CTN)\nPresentes os requisitos legais: a probabilidade do direito exsurge de plano pela simples contagem objetiva do prazo decadencial e pela comprovação documental do estatuto imune; o perigo de dano decorre da iminência de protesto da CDA, ajuizamento de execução fiscal e impedimento imediato da expedição de certidão de regularidade fiscal indispensável à continuidade do atendimento gratuito de crianças.\nNos termos do art. 151, inciso V, do CTN, a concessão da tutela antecipada suspende a exigibilidade do crédito tributário e assegura o direito à Certidão Positiva com Efeitos de Negativa (art. 206 do CTN).\n\nIV - DOS PEDIDOS\nAnte o exposto, requer a Vossa Excelência:\na) A concessão de TUTELA PROVISÓRIA DE URGÊNCIA, inaudita altera parte, para suspender a exigibilidade do crédito tributário consubstanciado na CDA nº ... (art. 151, V, CTN), determinando ao Réu que se abstenha de inscrever a Autora em cadastros restritivos e emita, de imediato, Certidão Positiva com Efeitos de Negativa de Débitos (art. 206 do CTN);\nb) A citação do Município Réu, na pessoa de seu Procurador, para contestar a ação no prazo legal;\nc) No mérito, a TOTAL PROCEDÊNCIA dos pedidos para declarar a nulidade do lançamento fiscal e desconstituir definitivamente o crédito tributário de IPTU de 2019, ante a decadência e a imunidade constitucional;\nd) A condenação do Réu ao pagamento de custas processuais e honorários advocatícios na forma do art. 85, § 3º, do CPC.\n\nDá-se à causa o valor de R$ 48.000,00 (quarenta e oito mil reais).\n\nNestes termos,\nPede deferimento.\n\nPorto Alegre/RS, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "embargos-execucao-fiscal",
+    "title": "Embargos à Execução Fiscal (Lei nº 6.830/80)",
+    "area": "Direito Tributário",
+    "subject": "Defesas & Respostas",
+    "legalBasis": "Art. 16 da Lei nº 6.830/80 (LEF); Art. 174 do CTN; Art. 917 do CPC/15.",
+    "legalDeadlines": "30 (trinta) dias contados do depósito, da juntada da prova da fiança bancária/seguro garantia ou da intimação da penhora (art. 16, I a III, da LEF).",
+    "jurisdiction": "Juízo da Execução Fiscal (Vara da Fazenda Pública ou Vara Federal onde tramita o executivo fiscal), distribuídos por dependência.",
+    "overview": "Os Embargos à Execução Fiscal constituem a defesa típica do executado na Lei de Execuções Fiscais, exigindo como regra a prévia garantia do juízo (depósito, fiança, seguro-garantia ou penhora). Permitem ampla dilação probatória para discutir prescrição, nulidade da CDA, excesso de execução ou inconstitucionalidade da exação.",
+    "structureGuide": [
+      {
+        "step": "1. Endereçamento por Dependência e Garantia do Juízo",
+        "description": "Distribuir por dependência ao juízo da Execução Fiscal, demonstrando a garantia integral do juízo (penhora efetivada ou seguro-garantia).",
+        "practicalTip": "Explicitar a data da intimação da penhora para comprovar a tempestividade do prazo de 30 dias corridos."
+      },
+      {
+        "step": "2. Pedido de Efeito Suspensivo (Art. 919, § 1º, CPC)",
+        "description": "Comprovar que a garantia é integral, a relevância da fundamentação e o risco de grave dano de difícil reparação caso os bens sejam leiloados.",
+        "practicalTip": "Na LEF, aplica-se subsidiariamente o art. 919, § 1º, do CPC (Tema 526 STJ)."
+      },
+      {
+        "step": "3. Prejudiciais de Mérito e Nulidades da CDA",
+        "description": "Arguir prescrição originária (art. 174 do CTN), prescrição intercorrente (art. 40, § 4º, LEF) ou ausência de requisitos do art. 2º, § 5º, da LEF.",
+        "practicalTip": "Citar a Súmula 106 do STJ apenas se não houver culpa do Fisco; havendo inércia fazendária, o crédito prescreve."
+      },
+      {
+        "step": "4. Pedidos Finais",
+        "description": "Atribuição de efeito suspensivo, intimação da Fazenda para impugnação (30 dias), extinção da execução fiscal, liberação da penhora e honorários.",
+        "practicalTip": "Em embargos à execução fiscal, é cabível a condenação da Fazenda em honorários advocatícios autônomos."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Tributário",
+      "problemStatement": "A empresa Metalúrgica Sul Ltda. sofreu penhora sobre máquinas industriais em Execução Fiscal movida pela União para cobrança de CSLL declarada em DCTF com vencimento em 10/03/2018. A execução fiscal foi ajuizada em abril de 2024 e o despacho citatório proferido em maio de 2024. Intimada da penhora há 12 dias, a executada contrata advogado para defender seu patrimônio, destacando ainda que a CDA não discrimina a origem nem o índice de correção monetária aplicado.",
+      "clientNeeds": "Opor Embargos à Execução Fiscal com pedido de efeito suspensivo perante a Vara Federal competente, arguindo prescrição tributária (art. 174 do CTN e Súmula 436 do STJ) e nulidade da CDA por iliquidez (art. 202 do CTN)."
+    },
+    "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ FEDERAL DA ... VARA FEDERAL DE EXECUÇÕES FISCAIS DA SEÇÃO JUDICIÁRIA DE CURITIBA / PR\n\nDISTRIBUIÇÃO POR DEPENDÊNCIA AOS AUTOS DA EXECUÇÃO FISCAL Nº 5001122-33.2024.4.04.7000\n\nMETALÚRGICA SUL LTDA., pessoa jurídica de direito privado, inscrita no CNPJ sob o nº ..., com sede na Avenida Industrial, nº ..., Curitiba/PR, endereço eletrônico ..., por seu advogado constituído pelo mandato anexo (Doc. 01), com escritório na Rua ..., onde recebe intimações, vem, tempestivamente, à presença de Vossa Excelência, com fundamento no art. 16 da Lei nº 6.830/80 e no art. 919, § 1º, do Código de Processo Civil, opor os presentes\n\nEMBARGOS À EXECUÇÃO FISCAL COM PEDIDO DE EFEITO SUSPENSIVO\n\nem face da FAZENDA NACIONAL (UNIÃO), representada pela Procuradoria-Geral da Fazenda Nacional, já qualificada nos autos da execução fiscal em epígrafe, pelos fundamentos de fato e de direito a seguir expostos:\n\nI - DA TEMPESTIVIDADE E DA GARANTIA DO JUÍZO\nA Embargante foi intimada da lavratura do auto de penhora sobre seu maquinário industrial há exatamente 12 (doze) dias, encontrando-se dentro do prazo legal de 30 (trinta) dias previsto no art. 16, inciso III, da Lei nº 6.830/80.\nO juízo executivo encontra-se integralmente garantido pela constrição avaliada em R$ 150.000,00 (auto anexo), preenchendo o requisito de admissibilidade previsto no art. 16, § 1º, da LEF.\n\nII - DO EFEITO SUSPENSIVO (ART. 919, § 1º, DO CPC)\nConsoante entendimento consolidado pelo STJ, os embargos à execução fiscal não possuem efeito suspensivo automático, mas impõe-se sua concessão quando preenchidos os requisitos do art. 919, § 1º, do CPC: relevância dos fundamentos (prescrição manifesta), risco de dano grave de difícil reparação (imobilização e leilão de maquinário essencial à atividade fabril) e garantia integral do juízo.\n\nIII - PREJUDICIAL DE MÉRITO: DA PRESCRIÇÃO DO CRÉDITO TRIBUTÁRIO\nConsoante o art. 174, caput, do CTN, a ação para a cobrança do crédito tributário prescreve em 5 (cinco) anos, contados da data da sua constituição definitiva.\nEm se tratando de tributo sujeito a lançamento por homologação declarado pelo contribuinte em DCTF, a entrega da declaração constitui definitivamente o crédito tributário (Súmula 436 do STJ), fluindo o prazo prescricional a partir da data do vencimento da obrigação (10/03/2018).\nLogo, o lustro prescricional exauriu-se em 10/03/2023. Como a execução fiscal somente foi proposta em abril de 2024 e o despacho citatório proferido em maio de 2024, operou-se integralmente a prescrição antes mesmo da causa interruptiva prevista no art. 174, parágrafo único, I, do CTN.\n\nIV - DA NULIDADE DA CERTIDÃO DE DÍVIDA ATIVA (ART. 202 DO CTN E ART. 2º, § 5º, DA LEF)\nSubsidiariamente, a CDA que aparelha a execução é nula de pleno direito, pois omite a forma de calcular os juros de mora e os critérios objetivos da atualização monetária, impossibilitando o exercício pleno do contraditório e da ampla defesa (art. 202, II, do CTN).\n\nV - DOS PEDIDOS\nAnte o exposto, requer a Embargante a Vossa Excelência:\na) A concessão de EFEITO SUSPENSIVO aos presentes Embargos à Execução Fiscal (art. 919, § 1º, CPC), sustando-se qualquer ato de alienação judicial do maquinário penhorado até julgamento definitivo;\nb) A intimação da Fazenda Nacional, por seu Procurador, para que apresente impugnação no prazo de 30 (trinta) dias (art. 17 da Lei nº 6.830/80);\nc) No mérito, o ACOLHIMENTO E TOTAL PROCEDÊNCIA dos Embargos para reconhecer a prescrição do crédito tributário (art. 156, V, do CTN) ou, subsidiariamente, declarar a nulidade da CDA, com a consequente extinção da Execução Fiscal nº ... e imediato levantamento da penhora;\nd) A condenação da Embargada ao pagamento de honorários advocatícios sucumbenciais, nos moldes do art. 85, § 3º, do CPC.\n\nDá-se aos Embargos o valor de R$ 150.000,00 (cento e cinquenta mil reais).\n\nTermos em que,\nPede deferimento.\n\nCuritiba/PR, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "excecao-pre-executividade-tributario",
+    "title": "Exceção de Pré-Executividade em Execução Fiscal",
+    "area": "Direito Tributário",
+    "subject": "Defesas & Respostas",
+    "legalBasis": "Súmula 393 do STJ; Art. 5º, XXXV e LV, da CF/88; Art. 803 e art. 485, § 3º, do CPC/15.",
+    "legalDeadlines": "Não possui prazo preclusivo peremptório; pode ser apresentada a qualquer momento nos próprios autos da execução fiscal enquanto não houver coisa julgada.",
+    "jurisdiction": "Dirigida por simples petição ao próprio Juízo onde tramita a Execução Fiscal (sem autuação em apartado).",
+    "overview": "A Exceção de Pré-Executividade é um meio atípico e célere de defesa nos próprios autos da Execução Fiscal, dispensando garantia do juízo (penhora ou depósito), cabível exclusivamente para matérias de ordem pública cognoscíveis de ofício pelo juiz e que não demandem dilação probatória (Súmula 393 do STJ), como ilegitimidade passiva de sócio, prescrição, decadência e pagamento comprovado documentalmente.",
+    "structureGuide": [
+      {
+        "step": "1. Petição Direta nos Autos da Execução",
+        "description": "Endereçar diretamente ao juiz da Execução Fiscal com o número do processo principal, sem necessidade de distribuição por dependência.",
+        "practicalTip": "Não há custas iniciais nem necessidade de garantia do juízo."
+      },
+      {
+        "step": "2. Demonstração do Cabimento (Súmula 393 STJ)",
+        "description": "Explicar que a matéria é cognoscível de ofício e comprovada de plano por prova documental pré-constituída, sem dilação probatória.",
+        "practicalTip": "Transcrever a Súmula 393 do STJ: 'A exceção de pré-executividade é admissível na execução fiscal relativamente às matérias conhecíveis de ofício que não demandem dilação probatória.'"
+      },
+      {
+        "step": "3. Mérito de Ordem Pública (Ilegitimidade de Sócio / Prescrição / Pagamento)",
+        "description": "Demonstrar o vício evidente, por exemplo, redirecionamento indevido contra sócio sem prova de infração à lei ou dissolução irregular (Súmulas 430 e 435 do STJ).",
+        "practicalTip": "Mencionar que o mero inadimplemento de tributo não gera responsabilidade solidária do sócio (Súmula 430 STJ)."
+      },
+      {
+        "step": "4. Pedidos e Honorários",
+        "description": "Requerer o acolhimento da exceção, exclusão do polo passivo ou extinção da execução e condenação da Fazenda em honorários advocatícios (Súmula 153/STJ analógica / Tema STJ).",
+        "practicalTip": "Pedir a suspensão de bloqueios via SISBAJUD ou exclusão imediata do nome do excipiente."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Tributário",
+      "problemStatement": "Marcos era sócio-administrador da empresa Alfa Comércio Ltda. até 2020, quando se retirou regularmente mediante alteração contratual registrada na Junta Comercial, deixando a sociedade em pleno funcionamento no mesmo endereço. Em 2025, a Fazenda Estadual redirecionou execução fiscal de ICMS referente a fatos geradores de 2023 contra Marcos, alegando que 'a empresa não pagou o débito tributário'. Marcos não possui bens penhorados e não tem recursos para garantir a execução de R$ 200.000,00.",
+      "clientNeeds": "Apresentar Exceção de Pré-Executividade nos próprios autos da Execução Fiscal demonstrando a ilegitimidade passiva de Marcos por prova documental pré-constituída (Súmulas 393 e 430 do STJ e art. 135, III, CTN), sem garantia do juízo."
+    },
+    "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA ... VARA DA FAZENDA PÚBLICA DA COMARCA DE SÃO PAULO / SP\n\nExecução Fiscal nº 1009988-11.2024.8.26.0053\n\nMARCOS, brasileiro, casado, administrador, portador do RG nº ..., inscrito no CPF sob o nº ..., endereço eletrônico ..., residente e domiciliado na Rua ..., nº ..., São Paulo/SP, por seu advogado que esta subscreve (procuração anexa - Doc. 01), vem, respeitosamente, à presença de Vossa Excelência, nos autos da Execução Fiscal em epígrafe movida pela FAZENDA DO ESTADO DE SÃO PAULO, opor a presente\n\nEXCEÇÃO DE PRÉ-EXECUTIVIDADE\n\npelas razões de fato e de direito a seguir delineadas:\n\nI - DO CABIMENTO E DA DISPENSA DE GARANTIA DO JUÍZO (SÚMULA 393 DO STJ)\nConsoante entendimento pacificado na Súmula nº 393 do Superior Tribunal de Justiça, \"a exceção de pré-executividade é admissível na execução fiscal relativamente às matérias conhecíveis de ofício que não demandem dilação probatória\".\nA legitimidade ad causam constitui condição da ação e matéria de ordem pública cognoscível de ofício a qualquer tempo e grau de jurisdição (art. 485, VI e § 3º, do CPC). Ademais, a comprovação fática decorre de simples exame da alteração contratual registrada na JUCESP e da própria CDA anexa, prescindindo de dilação probatória.\n\nII - DA ILEGITIMIDADE PASSIVA DO EXCIPIENTE (ART. 135, III, DO CTN)\nO Estado exequente pleiteou e obteve o redirecionamento do executivo fiscal de ICMS relativo ao exercício de 2023 contra o Excipiente com fundamento exclusivo no não pagamento do tributo pela pessoa jurídica.\nTodavia, a pretensão fazendária esbarra em dois óbices jurídicos intransponíveis:\n1. Retirada regular anterior ao fato gerador: Conforme Alteração Contratual registrada na Junta Comercial em 2020 (Doc. 02), o Excipiente retirou-se regularmente da sociedade há mais de três anos antes da ocorrência do fato gerador de 2023, não exercendo qualquer ato de gerência no período cobrado;\n2. Ausência de responsabilidade pessoal pelo mero inadimplemento (Súmula 430 do STJ): Ainda que sócio fosse à época, o art. 135, III, do CTN exige prova de atos praticados com excesso de poderes ou infração de lei, contrato social ou estatutos. A Súmula 430 do STJ é taxativa: \"O inadimplemento da obrigação tributária pela sociedade não gera, por si só, a responsabilidade solidária do sócio-gerente\". Tampouco houve dissolução irregular (Súmula 435 do STJ), visto que a sociedade permanece em regular funcionamento.\n\nIII - DOS PEDIDOS\nDiante do exposto, requer o Excipiente a Vossa Excelência:\na) O recebimento e processamento da presente Exceção de Pré-Executividade, independentemente de garantia do juízo, na forma da Súmula 393 do STJ;\nb) A intimação da Fazenda Pública Estadual para manifestação no prazo legal;\nc) O integral ACOLHIMENTO da Exceção para reconhecer a ILEGITIMIDADE PASSIVA ad causam do Excipiente MARCOS, determinando sua imediata exclusão do polo passivo da Execução Fiscal e a suspensão de qualquer medida constritiva (SISBAJUD/RENAJUD) contra seu patrimônio;\nd) A condenação da Fazenda Exequente ao pagamento de honorários advocatícios sucumbenciais ao patrono do Excipiente, conforme jurisprudência consolidada do STJ (art. 85, § 3º, CPC).\n\nNestes termos,\nPede deferimento.\n\nSão Paulo/SP, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "repeticao-indebito-tributario",
+    "title": "Ação de Repetição de Indébito Tributário",
+    "area": "Direito Tributário",
+    "subject": "Petições Iniciais",
+    "legalBasis": "Arts. 165 a 169 do CTN; Súmula 546 do STF; Art. 166 do CTN (tributos indiretos); Art. 319 do CPC.",
+    "legalDeadlines": "5 (cinco) anos contados da data da extinção do crédito tributário pelo pagamento antecipado ou pagamento indevido (art. 168, I, do CTN e LC 118/2005).",
+    "jurisdiction": "Vara da Fazenda Pública Estadual/Municipal ou Vara Federal do domicílio do autor ou sede da Fazenda.",
+    "overview": "A Ação de Repetição de Indébito Tributário tem natureza condenatória e objetiva a restituição de tributo recolhido indevidamente ou em valor maior que o devido, seja por erro de cálculo, ilegalidade ou declaração de inconstitucionalidade. Em tributos indiretos (como ICMS e IPI), exige a prova de que não houve repasse do encargo financeiro ou autorização do contribuinte de fato (art. 166 do CTN).",
+    "structureGuide": [
+      {
+        "step": "1. Endereçamento e Legitimidade",
+        "description": "Endereçar à Vara da Fazenda Pública ou Vara Federal, demonstrando os DARFs/guias de pagamento e o cumprimento do art. 166 do CTN se aplicável.",
+        "practicalTip": "Demonstrar o prazo prescricional de 5 anos a contar de cada pagamento indevido (tese dos 'cinco anos da LC 118/05')."
+      },
+      {
+        "step": "2. Demonstração da Inconstitucionalidade ou Ilegalidade",
+        "description": "Apontar com clareza por que o pagamento é indevido (ex.: cobrança de ITCMD sobre doação sem lei complementar ou inclusão do ICMS na base do PIS/COFINS).",
+        "practicalTip": "Citar eventual tese de repercussão geral do STF ou recurso repetitivo do STJ."
+      },
+      {
+        "step": "3. Atualização Monetária e Juros (SELIC)",
+        "description": "Requerer a restituição atualizada pela taxa SELIC desde o pagamento indevido (Tema 905 STJ / EC 113/2021) ou juros a partir do trânsito em julgado conforme o ente.",
+        "practicalTip": "Lembrar a Súmula 162 e Súmula 188 do STJ, observando a aplicabilidade da taxa SELIC pela EC 113/2021."
+      },
+      {
+        "step": "4. Pedidos Condenatórios",
+        "description": "Citação do ente público, condenação à restituição dos valores pagos nos últimos 5 anos em dinheiro/precatório ou compensação, e honorários.",
+        "practicalTip": "Requerer que a liquidação seja feita por simples cálculo aritmético."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Tributário",
+      "problemStatement": "João recebeu em 2023 doação em dinheiro de um tio residente no exterior (França) no valor de R$ 200.000,00. Para evitar autuação, recolheu aos cofres do Estado de Minas Gerais o valor de R$ 10.000,00 a título de ITCMD com base em lei estadual ordinária. Posteriormente, descobriu que o STF julgou o Tema 825 (RE 851.108), fixando que é vedado aos Estados instituir ITCMD quando o doador tiver domicílio no exterior sem edição de Lei Complementar federal. João deseja recuperar o valor pago.",
+      "clientNeeds": "Propor Ação de Repetição de Indébito Tributário perante a Vara da Fazenda Pública Estadual de Belo Horizonte, com base no art. 165, I, do CTN e Tema 825 do STF, postulando a restituição dos R$ 10.000,00 corrigidos."
+    },
+    "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA ... VARA DA FAZENDA PÚBLICA ESTADUAL DA COMARCA DE BELO HORIZONTE / ESTADO DE MINAS GERAIS\n\nJOÃO, brasileiro, solteiro, arquiteto, portador do RG nº ..., inscrito no CPF sob o nº ..., endereço eletrônico ..., residente e domiciliado na Rua ..., nº ..., Bairro ..., Belo Horizonte/MG, por seu advogado infra-assinado (procuração anexa - Doc. 01), com escritório na Rua ..., onde recebe intimações, vem, respeitosamente, à presença de Vossa Excelência, com fulcro nos artigos 165, inciso I, e 168, inciso I, do Código Tributário Nacional e art. 319 do Código de Processo Civil, propor a presente\n\nAÇÃO DE REPETIÇÃO DE INDÉBITO TRIBUTÁRIO\n\nem face do ESTADO DE MINAS GERAIS, pessoa jurídica de direito público interno, representado pela Advocacia-Geral do Estado, com sede na Rua ..., nº ..., Belo Horizonte/MG, pelas razões de fato e de direito a seguir expostas:\n\nI - DOS FATOS E DA TEMPESTIVIDADE\nNo ano de 2023, o Autor recebeu doação em pecúnia no valor de R$ 200.000,00 de seu tio, cidadão residente e domiciliado na França. Em razão de exigência da legislação estadual ordinária mineira, recolheu aos cofres do Estado Réu, por meio de DAE devidamente quitado em 15/06/2023 (Doc. 02), a quantia de R$ 10.000,00 a título de Imposto sobre Transmissão Causa Mortis e Doação (ITCMD).\nConsiderando que o pagamento ocorreu em 2023, a presente demanda é rigorosamente tempestiva, encontrando-se dentro do prazo prescricional quinquenal estatuído no art. 168, I, do CTN.\n\nII - DO DIREITO À RESTITUIÇÃO DO INDÉBITO (ART. 165, I, DO CTN E TEMA 825 DO STF)\nA cobrança e o recolhimento perpetrados pelo Estado Réu revelam-se manifestamente inconstitucionais.\nO art. 155, § 1º, inciso III, alínea 'a', da Constituição Federal determina expressamente que a competência estadual para instituir o ITCMD dependerá de LEI COMPLEMENTAR FEDERAL quando o doador tiver domicílio ou residência no exterior.\nAo julgar o Recurso Extraordinário nº 851.108 (Tema 825 de Repercussão Geral), o Supremo Tribunal Federal assentou tese vinculante definitiva: \"É vedado aos Estados e ao Distrito Federal instituir o ITCMD nas hipóteses referidas no art. 155, § 1º, III, da Constituição Federal sem a edição da lei complementar exigida pelo referido dispositivo constitucional\".\nOutrossim, tratando-se o ITCMD de tributo direto que não comporta transferência do encargo econômico a terceiros, é inaplicável a restrição do art. 166 do CTN, cabendo integral restituição ao Autor nos termos do art. 165, I, do CTN.\nSobre o montante a ser repetido deverá incidir correção monetária e juros pela taxa SELIC, nos termos da Emenda Constitucional nº 113/2021 e da jurisprudência dos Tribunais Superiores.\n\nIII - DOS PEDIDOS\nAnte o exposto, requer o Autor a Vossa Excelência:\na) A citação do Estado de Minas Gerais, por sua Procuradoria, para que apresente contestação no prazo legal;\nb) Ao final, seja julgado TOTALMENTE PROCEDENTE o pedido para condenar o Réu a restituir ao Autor a quantia de R$ 10.000,00 (dez mil reais) paga indevidamente a título de ITCMD, devidamente atualizada e acrescida dos encargos legais (taxa SELIC), apuráveis por simples cálculo aritmético;\nc) A condenação do Réu ao pagamento das custas processuais em reembolso e honorários advocatícios sucumbenciais na forma do art. 85, § 3º, do CPC.\n\nManifesta desinteresse na audiência de conciliação (art. 319, VII, CPC), por tratar-se de direito indisponível da Fazenda Pública.\n\nDá-se à causa o valor de R$ 10.000,00 (dez mil reais).\n\nTermos em que,\nPede deferimento.\n\nBelo Horizonte/MG, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "acao-popular-constitucional",
+    "title": "Ação Popular com Pedido Liminar (Lei nº 4.717/65)",
+    "area": "Direito Constitucional",
+    "subject": "Ações Constitucionais",
+    "legalBasis": "Art. 5º, LXXIII, da CF/88; Lei nº 4.717/65 (arts. 1º, 5º, § 4º e 6º).",
+    "legalDeadlines": "5 (cinco) anos contados da publicação do ato lesivo impugnado (art. 21 da Lei nº 4.717/65).",
+    "jurisdiction": "Juízo de 1º grau (Vara da Fazenda Pública ou Vara Federal, conforme a origem do ato lesivo ao patrimônio público).",
+    "overview": "A Ação Popular é remédio constitucional exclusivo do cidadão (eleitor em pleno gozo dos direitos políticos, comprovado pelo título eleitoral) destinado a anular ato lesivo ao patrimônio público, à moralidade administrativa, ao meio ambiente e ao patrimônio histórico e cultural. Possui isenção de custas e ônus de sucumbência, salvo comprovada má-fé.",
+    "structureGuide": [
+      {
+        "step": "1. Legitimidade Ativa do Cidadão",
+        "description": "Qualificar o autor como cidadão brasileiro eleitor e mencionar expressamente a juntada de cópia do título de eleitor (art. 1º, § 3º, da Lei nº 4.717/65).",
+        "practicalTip": "Apenas pessoa natural eleitora pode propor Ação Popular (Súmula 365 do STF: pessoa jurídica não tem legitimidade)."
+      },
+      {
+        "step": "2. Litisconsórcio Passivo Necessário (Art. 6º)",
+        "description": "Incluir no polo passivo a pessoa jurídica de direito público/privado lesada, as autoridades/agentes que praticaram o ato e os beneficiários diretos do ato lesivo.",
+        "practicalTip": "O litisconsórcio passivo é obrigatório na Ação Popular!"
+      },
+      {
+        "step": "3. Medida Liminar de Suspensão (Art. 5º, § 4º)",
+        "description": "Demonstrar fumus boni iuris (ilegalidade/imoralidade e lesividade ao erário) e periculum in mora (dano iminente de recursos públicos).",
+        "practicalTip": "Pedir a suspensão imediata do contrato, licitação ou pagamento lesivo."
+      },
+      {
+        "step": "4. Pedidos Finais e Isenção de Custas",
+        "description": "Anulação do ato lesivo, condenação solidária dos responsáveis ao ressarcimento de perdas e danos ao erário, intimação do MP e isenção constitucional de custas.",
+        "practicalTip": "Não esquecer de requerer a citação de todos os réus e intimação do Ministério Público (art. 7º, I, 'a')."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Constitucional",
+      "problemStatement": "O Prefeito do Município de Rio Claro/RJ celebrou contrato administrativo sem licitação (dispensa fora das hipóteses legais) com a empresa Construtora Leste Ltda., pertencente ao seu irmão, no valor de R$ 2.500.000,00, com sobrepreço de 40% em relação ao mercado, para reforma de uma praça que sequer foi iniciada. Maria, cidadã brasileira regularmente inscrita na Justiça Eleitoral e domiciliada no município, procura advogado para impedir o pagamento imediato previsto para a próxima semana.",
+      "clientNeeds": "Propor Ação Popular com pedido liminar perante o Juízo da Fazenda Pública Estadual, anexando o título de eleitor, contra o Município, o Prefeito e a empresa beneficiária, visando suspender o pagamento e anular o contrato lesivo."
+    },
+    "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA ... VARA CÍVEL / FAZENDA PÚBLICA DA COMARCA DE RIO CLARO / ESTADO DO RIO DE JANEIRO\n\nMARIA, brasileira, solteira, professora, cidadã em pleno gozo de seus direitos políticos, inscrita no CPF sob o nº ..., portadora do Título de Eleitor nº ... (cópia anexa - Doc. 01), residente e domiciliada na Rua ..., nº ..., Rio Claro/RJ, por seu advogado infra-assinado (procuração anexa - Doc. 02), com escritório na Rua ..., onde recebe intimações, vem, respeitosamente, perante Vossa Excelência, com fundamento no art. 5º, inciso LXXIII, da Constituição da República de 1988, e na Lei nº 4.717/65, propor a presente\n\nAÇÃO POPULAR COM PEDIDO DE MEDIDA LIMINAR\n\nem face de:\n1) MUNICÍPIO DE RIO CLARO/RJ, pessoa jurídica de direito público interno, representado pelo seu Procurador-Geral, com sede na Praça ..., nº ..., Centro, Rio Claro/RJ;\n2) PREFEITO MUNICIPAL DE RIO CLARO/RJ (Fulano de Tal), brasileiro, agente político, com endereço funcional na sede da Prefeitura Municipal;\n3) CONSTRUTORA LESTE LTDA., pessoa jurídica de direito privado, inscrita no CNPJ sob o nº ..., com sede na Avenida ..., nº ..., Rio Claro/RJ, beneficiária direta do ato lesivo;\npelas razões de fato e de direito a seguir expostas:\n\nI - DA LEGITIMIDADE ATIVA E DO POLO PASSIVO (ART. 1º E ART. 6º DA LEI Nº 4.717/65)\nA Autora é cidadã brasileira com plena capacidade eleitoral ativa, conforme comprovado pela juntada do título de eleitor exigido pelo art. 1º, § 3º, da Lei nº 4.717/65.\nEm estrita observância ao art. 6º do referido diploma legal, integram o polo passivo o ente público lesado, a autoridade que praticou o ato impugnado e a sociedade empresária beneficiária direta.\n\nII - DOS FATOS\nEm ..., o Segundo Réu (Prefeito Municipal) contratou diretamente, mediante ilícita dispensa de licitação, a Terceira Ré (Construtora Leste Ltda.), cujo quadro societário é composto por seu irmão, pelo valor global de R$ 2.500.000,00, com comprovado superfaturamento de 40% acima da tabela oficial de engenharia, para reforma de praça pública. Ademais, o pagamento da primeira parcela milionária está agendado para os próximos dias sem que sequer tenham sido iniciadas as obras.\n\nIII - DO DIREITO: OFENSA À MORALIDADE ADMINISTRATIVA E LESIVIDADE AO ERÁRIO\nO ato administrativo impugnado é nulo de pleno direito (art. 2º, 'b', 'c' e 'e', da Lei nº 4.717/65), por violação frontal aos princípios da legalidade, impessoalidade, moralidade administrativa e eficiência (art. 37, caput e XXI, da CF/88) e à Lei de Licitações (Lei nº 14.133/21).\nAdemais, resta evidente a dupla exigência constitucional do art. 5º, LXXIII: a ilegalidade manifesta da dispensa direcionada a parente e a lesividade efetiva ao patrimônio público municipal decorrente do sobrepreço de 40%.\n\nIV - DA MEDIDA LIMINAR DE SUSPENSÃO DO ATO LESIVO (ART. 5º, § 4º, DA LEI Nº 4.717/65)\nA fumaça do bom direito decorre da contratação direta fraudulenta com parente em evidente nepotismo e sobrepreço documentalmente comprovado. O perigo da demora é iminente diante da liberação financeira agendada para a próxima semana, que acarretará prejuízo irreversível aos cofres municipais.\n\nV - DOS PEDIDOS\nAnte todo o exposto, requer a Autora a Vossa Excelência:\na) A concessão de MEDIDA LIMINAR, inaudita altera parte, com base no art. 5º, § 4º, da Lei nº 4.717/65, para determinar a imediata suspensão dos efeitos do contrato administrativo nº ... e sustar qualquer pagamento à Terceira Ré, sob pena de multa diária;\nb) A citação de todos os Réus para que contestem no prazo legal de 20 (vinte) dias (art. 7º, IV, da Lei nº 4.717/65);\nc) A intimação do digno representante do Ministério Público para acompanhamento do feito (art. 7º, I, 'a');\nd) No mérito, a TOTAL PROCEDÊNCIA dos pedidos para declarar a NULIDADE do contrato administrativo impugnado, condenando solidariamente o Prefeito Municipal e a Construtora Leste Ltda. a ressarcirem integralmente eventuais prejuízos causados ao erário municipal (art. 11 da Lei nº 4.717/65), além de custas e honorários advocatícios;\ne) A isenção de custas e preparo à Autora popular, salvo comprovada má-fé, por expressa garantia do art. 5º, LXXIII, da CF/88.\n\nDá-se à causa o valor de R$ 2.500.000,00.\n\nNestes termos,\nPede deferimento.\n\nRio Claro/RJ, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "habeas-data-constitucional",
+    "title": "Habeas Data com Pedido Liminar (Lei nº 9.507/97)",
+    "area": "Direito Constitucional",
+    "subject": "Remédios Constitucionais",
+    "legalBasis": "Art. 5º, LXXII, da CF/88; Lei nº 9.507/97 (arts. 7º e 8º); Súmula 2 do STJ.",
+    "legalDeadlines": "Não há prazo decadencial, mas exige prova da prévia recusa administrativa ou decurso de mais de 10 dias (acesso) ou 15 dias (retificação) sem resposta.",
+    "jurisdiction": "Depende da autoridade coatora (STF para Presidente/Mesa; STJ para Ministro; TRF/Juiz Federal para órgãos federais; Juízo Estadual para órgãos estaduais/municipais).",
+    "overview": "O Habeas Data é garantia constitucional personalíssima destinada a assegurar o conhecimento de informações relativas à pessoa do impetrante constantes de registros ou bancos de dados de entidades governamentais ou de caráter público, bem como para a retificação ou anotação de dados. Por força da Súmula 2 do STJ, exige a comprovação da prévia recusa administrativa (interesse de agir).",
+    "structureGuide": [
+      {
+        "step": "1. Competência Jurisdicional Conforme Autoridade",
+        "description": "Identificar o órgão detentor do banco de dados (federal, estadual ou entidade de proteção ao crédito de caráter público) para fixar o juízo competente.",
+        "practicalTip": "Secretário de Estado ou órgão estadual sem foro privilegiado -> Vara da Fazenda Pública Estadual."
+      },
+      {
+        "step": "2. Prova Pré-Constituída da Recusa (Súmula 2 STJ)",
+        "description": "Anexar o protocolo do requerimento administrativo e a negativa expressa ou decurso de prazo sem resposta (art. 8º, parágrafo único, da Lei nº 9.507/97).",
+        "practicalTip": "Sem prova da recusa administrativa prévia, falta interesse de agir!"
+      },
+      {
+        "step": "3. Natureza Personalíssima da Informação",
+        "description": "Demonstrar que os dados buscados ou a retificar pertencem à própria esfera pessoal do impetrante (não a terceiros).",
+        "practicalTip": "Se o dado for de terceiro ou certidão de interesse coletivo, o remédio seria Mandado de Segurança, não Habeas Data."
+      },
+      {
+        "step": "4. Pedidos e Gratuidade Constitucional",
+        "description": "Requerer a notificação do coator (10 dias), oitiva do MP (5 dias), procedência para exibição/retificação dos dados e gratuidade (art. 5º, LXXVII, CF/88).",
+        "practicalTip": "O Habeas Data é constitucionalmente gratuito (não há pagamento de custas)."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Constitucional",
+      "problemStatement": "Carlos requereu administrativamente junto à Secretaria de Segurança Pública do Estado da Bahia acesso integral aos registros pessoais e anotações cadastrais mantidas em seu nome nos bancos de dados estaduais de antecedentes internos. Passados 20 dias do protocolo formal, recebeu ofício negando expressamente o fornecimento sob a alegação genérica de 'sigilo administrativo interno'. Carlos procura advogado para ter acesso aos seus próprios dados.",
+      "clientNeeds": "Impetrar Habeas Data perante a Vara da Fazenda Pública competente, anexando a prova da recusa administrativa (Súmula 2 STJ e art. 8º da Lei 9.507/97), para compelir o órgão a exibir os dados pessoais de Carlos."
+    },
+    "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA ... VARA DA FAZENDA PÚBLICA DA COMARCA DE SALVADOR / ESTADO DA BAHIA\n\nCARLOS, brasileiro, casado, engenheiro civil, portador do RG nº ..., inscrito no CPF sob o nº ..., endereço eletrônico ..., residente e domiciliado na Rua ..., nº ..., Salvador/BA, por seu advogado infra-assinado (procuração anexa - Doc. 01), com escritório na Rua ..., onde recebe intimações, vem, respeitosamente, à presença de Vossa Excelência, com fundamento no art. 5º, inciso LXXII, alínea 'a', da Constituição Federal de 1988, e na Lei nº 9.507/97, impetrar o presente\n\nHABEAS DATA COM PEDIDO DE TUTELA DE URGÊNCIA\n\nem face do DIRETOR DO INSTITUTO DE IDENTIFICAÇÃO DA SECRETARIA DE SEGURANÇA PÚBLICA DO ESTADO DA BAHIA, autoridade pública com endereço funcional na Avenida ..., nº ..., Salvador/BA, vinculado ao Estado da Bahia, pelos fatos e fundamentos jurídicos a seguir expostos:\n\nI - DO CABIMENTO E DA PROVA DA RECUSA ADMINISTRATIVA (SÚMULA 2 DO STJ)\nEm ..., o Impetrante protocolizou requerimento administrativo formal junto ao órgão público coator solicitando cópia integral e acesso a todas as informações pessoais e anotações cadastrais vinculadas ao seu nome e CPF constantes nos bancos de dados oficiais da Secretaria (Doc. 02).\nConforme comprova a resposta escrita anexada (Doc. 03), a autoridade coatora indeferiu expressamente o pedido após 20 dias de tramitação, invocando genericamente um pretenso \"sigilo administrativo\".\nResta integralmente atendido o requisito específico de admissibilidade do art. 8º, parágrafo único, I, da Lei nº 9.507/97 e da Súmula nº 2 do Superior Tribunal de Justiça, configurando o legítimo interesse de agir.\n\nII - DO DIREITO PERSONALÍSSIMO À INFORMAÇÃO (ART. 5º, LXXII, 'A', DA CF/88)\nA Constituição da República consagra o direito fundamental de todo cidadão de conhecer as informações relativas à sua própria pessoa mantidas em registros públicos ou bancos de dados governamentais (autodeterminação informativa).\nA recusa imotivada viola frontalmente o núcleo essencial da garantia constitucional e o princípio da publicidade administrativa (art. 37, caput, da CF/88), uma vez que não se trata de informação imprescindível à segurança da sociedade ou do Estado, tampouco de dados de terceiros, mas exclusivamente da esfera jurídica do próprio Impetrante.\n\nIII - DOS PEDIDOS\nAnte todo o exposto, requer o Impetrante a Vossa Excelência:\na) A isenção constitucional de custas processuais, com fulcro no art. 5º, inciso LXXVII, da Constituição Federal e no art. 21 da Lei nº 9.507/97;\nb) A notificação da autoridade coatora, entregando-lhe a segunda via da petição inicial e cópias dos documentos, para que apresente informações no prazo improrrogável de 10 (dez) dias (art. 9º da Lei nº 9.507/97);\nc) A oitiva do representante do Ministério Público no prazo de 5 (cinco) dias (art. 12 da Lei nº 9.507/97);\nd) Ao final, a concessão definitiva da ordem de Habeas Data, determinando que o órgão coator disponibilize imediatamente ao Impetrante, em dia e hora designados por este Juízo (art. 13 da Lei nº 9.507/97), certidão ou cópia integral de todos os registros pessoais existentes em seu nome.\n\nDá-se à causa o valor meramente fiscal de R$ 1.000,00 (mil reais).\n\nNestes termos,\nPede deferimento.\n\nSalvador/BA, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "roc-mandado-seguranca-constitucional",
+    "title": "Recurso Ordinário Constitucional em Mandado de Segurança",
+    "area": "Direito Constitucional",
+    "subject": "Recursos",
+    "legalBasis": "Art. 105, II, 'b', ou Art. 102, II, 'a', da CF/88; Arts. 1.027 e 1.028 do CPC/15; Art. 18 da Lei nº 12.016/09.",
+    "legalDeadlines": "15 (quinze) dias úteis a contar da intimação do acórdão denegatório proferido em única instância pelo Tribunal (art. 1.003, § 5º, CPC).",
+    "jurisdiction": "Interposição perante o Presidente do Tribunal local (TJ ou TRF) com razões dirigidas ao STJ (ou ao STF se julgado por Tribunal Superior).",
+    "overview": "O Recurso Ordinário Constitucional (ROC) é o meio recursal cabível contra acórdão proferido em única instância pelos Tribunais de Justiça ou TRFs que DENEGA a ordem em Mandado de Segurança, Habeas Data ou Mandado de Injunção originários (art. 105, II, 'b', CF/88). Funciona como uma verdadeira apelação ao STJ, permitindo amplo reexame de fatos, provas documentais e direito.",
+    "structureGuide": [
+      {
+        "step": "1. Peça de Interposição (Presidente do TJ/TRF)",
+        "description": "Endereçar ao Desembargador Presidente do Tribunal recorrido, juntando o preparo e requerendo a intimação do recorrido para contrarrazões e remessa ao STJ.",
+        "practicalTip": "Lembrar que no ROC a admissibilidade e intimação para contrarrazões ocorrem na origem (art. 1.028, § 2º, CPC)."
+      },
+      {
+        "step": "2. Peça de Razões (Superior Tribunal de Justiça - STJ)",
+        "description": "Endereçar ao Colendo Superior Tribunal de Justiça, demonstrando tratar-se de acórdão denegatório de MS de competência originária do TJ/TRF.",
+        "practicalTip": "Se o acórdão concedeu a segurança, o recurso da Fazenda será REsp/RE, jamais ROC!"
+      },
+      {
+        "step": "3. Tempestividade e Cabimento (Art. 105, II, 'b', CF)",
+        "description": "Explicitar o prazo de 15 dias úteis, o preparo recursal e o enquadramento perfeito na hipótese constitucional.",
+        "practicalTip": "No ROC não se aplicam as Súmulas 7 do STJ ou 279 do STF (ampla devolutividade)."
+      },
+      {
+        "step": "4. Mérito e Reforma do Acórdão",
+        "description": "Demonstrar o direito líquido e certo violado pela autoridade coatora e pedir o conhecimento e provimento integral para conceder a segurança.",
+        "practicalTip": "Indicar que não há condenação em honorários advocatícios no Mandado de Segurança (art. 25 da Lei nº 12.016/09 e Súmula 512 STF)."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Constitucional",
+      "problemStatement": "Ana foi aprovada em 1º lugar (dentro do único cargo previsto no edital) para o cargo de Procuradora do Estado, cuja nomeação cabia ao Governador do Estado. Embora o edital previsse apenas 1 vaga imediata e o concurso tenha expirado na semana passada, o Governador deixou de nomeá-la sem qualquer justificativa de fato superveniente. Ana impetrou Mandado de Segurança originário no Tribunal de Justiça estadual, que denegou a segurança por maioria entendendo haver 'mera discricionariedade administrativa'.",
+      "clientNeeds": "Interpor Recurso Ordinário Constitucional (ROC) perante o Presidente do Tribunal de Justiça com razões ao Superior Tribunal de Justiça (STJ), invocando o direito subjetivo à nomeação de candidato aprovado dentro das vagas do edital (Tema 161 do STF e Súmula 15 STF)."
+    },
+    "fullDraft": "[FOLHA 01 - INTERPOSIÇÃO]\n\nEXCELENTÍSSIMO SENHOR DOUTOR DESEMBARGADOR PRESIDENTE DO EGRÉGIO TRIBUNAL DE JUSTIÇA DO ESTADO ...\n\nMandado de Segurança Originário nº ...\n\nANA, já devidamente qualificada nos autos do Mandado de Segurança em epígrafe, impetrado contra ato do EXMO. SR. GOVERNADOR DO ESTADO, por seu advogado infra-assinado, vem, tempestivamente, à presença de Vossa Excelência, inconformada com o v. acórdão denegatório da segurança, interpor o presente\n\nRECURSO ORDINÁRIO CONSTITUCIONAL\n\ncom fulcro no art. 105, inciso II, alínea 'b', da Constituição Federal de 1988, c/c arts. 1.027, II, 'a', e 1.028 do Código de Processo Civil.\nInforma que junta o comprovante do recolhimento do preparo recursal devido ao STJ (Doc. 01).\nRequer a intimação da parte recorrida (Estado) para apresentar contrarrazões no prazo de 15 dias úteis (art. 1.028, § 2º, CPC) e, findo o prazo, a remessa dos autos ao Colendo Superior Tribunal de Justiça.\n\nNestes termos,\nPede deferimento.\n\nCapital/UF, data...\nADVOGADO(A)...\nOAB/... nº ...\n\n--------------------------------------------------------------------------------\n[FOLHA 02 - RAZÕES RECURSAIS]\n\nCOLENDO SUPERIOR TRIBUNAL DE JUSTIÇA\nEGRÉGIA TURMA\nÍNCLITOS MINISTROS\n\nRecorrente: Ana\nRecorrido: Estado ...\nOrigem: Tribunal de Justiça do Estado ...\n\nRAZÕES DO RECURSO ORDINÁRIO CONSTITUCIONAL\n\nI - DO CABIMENTO E DA TEMPESTIVIDADE\nO presente recurso é plenamente cabível com base no art. 105, II, 'b', da CF/88, porquanto interposto contra acórdão proferido em única instância pelo Egrégio Tribunal de Justiça local que denegou a ordem em Mandado de Segurança originário, dentro do prazo legal de 15 dias úteis.\n\nII - DO MÉRITO: DO DIREITO LÍQUIDO E CERTO À NOMEAÇÃO (TEMA 161 DO STF)\nA Recorrente obteve a 1ª colocação em concurso público para cargo de Procurador do Estado cujo edital previa expressamente 1 (uma) vaga imediata. Contudo, o prazo de validade do certame expirou sem que o Governador promovesse sua nomeação ou apresentasse qualquer situação excepcional superveniente devidamente motivada.\nEm julgamento de repercussão geral (RE 598.099 - Tema 161), o Supremo Tribunal Federal consolidou entendimento vinculante de que o candidato aprovado dentro do número de vagas previstas no edital possui DIREITO SUBJETIVO À NOMEAÇÃO, não constituindo mera discricionariedade do administrador.\nA prova pré-constituída (edital, homologação da classificação em 1º lugar e término do prazo de validade) comprova de plano a ilegalidade e o abuso de poder praticados pela autoridade coatora.\n\nIII - DOS PEDIDOS\nAnte o exposto, requer a Recorrente a este Colendo Superior Tribunal de Justiça:\na) O CONHECIMENTO e integral PROVIMENTO do Recurso Ordinário Constitucional para reformar o acórdão recorrido e CONCEDER A SEGURANÇA pleiteada, determinando a imediata nomeação e posse da Recorrente no cargo de Procuradora do Estado;\nb) A condenação da autoridade/ente ao pagamento das custas em reembolso, descabendo honorários sucumbenciais nos termos da Súmula 512 do STF e do art. 25 da Lei nº 12.016/09.\n\nTermos em que,\nPede provimento.\n\nBrasília/DF, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "consignacao-pagamento-trabalhista",
+    "title": "Ação de Consignação em Pagamento Trabalhista",
+    "area": "Direito do Trabalho",
+    "subject": "Petições Iniciais",
+    "legalBasis": "Arts. 539 a 549 do CPC/15 c/c Art. 769 da CLT; Art. 335 do Código Civil; Art. 477, §§ 6º e 8º, da CLT.",
+    "legalDeadlines": "Deve ser ajuizada dentro do prazo de 10 (dez) dias contados do término do contrato de trabalho para elidir a multa do art. 477, § 8º, da CLT.",
+    "jurisdiction": "Vara do Trabalho do último local da prestação de serviços pelo empregado (art. 651 da CLT).",
+    "overview": "A Ação de Consignação em Pagamento Trabalhista é proposta pelo empregador quando o ex-empregado recusa-se injustificadamente a receber as verbas rescisórias e documentos da rescisão, encontra-se em local incerto ou desapareceu após abandono/dispensa, permitindo ao empregador liberar-se da obrigação e afastar a incidência da multa do art. 477, § 8º, da CLT.",
+    "structureGuide": [
+      {
+        "step": "1. Endereçamento à Vara do Trabalho (Art. 651 CLT)",
+        "description": "Endereçar ao Juiz do Trabalho do local da prestação dos serviços.",
+        "practicalTip": "AO JUÍZO DA ... VARA DO TRABALHO DE ..."
+      },
+      {
+        "step": "2. Qualificação das Partes (Consignante e Consignatário)",
+        "description": "Qualificar a empresa empregadora como Consignante e o trabalhador como Consignatário.",
+        "practicalTip": "Informar todos os dados trabalhistas (admissão, função, último salário e data do término do contrato)."
+      },
+      {
+        "step": "3. Mora do Credor e Depósito em 5 Dias (Art. 542, I, CPC)",
+        "description": "Demonstrar as tentativas frustradas de pagamento (telegrama/notificação) e requerer autorização para depósito judicial das verbas em 5 dias.",
+        "practicalTip": "Especificar discriminadamente cada parcela do Termo de Rescisão (TRCT) e as guias (TRCT, CD/SD)."
+      },
+      {
+        "step": "4. Pedidos Liberatórios",
+        "description": "Citação do consignatário para levantar o valor ou contestar, quitação final das verbas consignadas e isenção da multa do art. 477, § 8º, da CLT.",
+        "practicalTip": "Requerer que seja declarada extinta a obrigação quanto às parcelas depositadas."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Trabalho",
+      "problemStatement": "A empresa Supermercados Avenida Ltda. dispensou sem justa causa o empregado Lucas no dia 01/04/2026 em Porto Velho/RO. Convocou-o por telegrama com AR para comparecer no 8º dia para receber R$ 8.400,00 líquidos relativos às verbas rescisórias e retirar guias do seguro-desemprego e chave do FGTS, mas Lucas não compareceu nem forneceu conta bancária para transferência. Faltando 2 dias para vencer o prazo decenal do art. 477, § 6º, da CLT, a empresa procura advogado.",
+      "clientNeeds": "Propor Ação de Consignação em Pagamento perante a Vara do Trabalho de Porto Velho/RO requerendo o depósito judicial imediato da quantia de R$ 8.400,00 e entrega das guias rescisórias para afastar a multa do art. 477, § 8º, da CLT."
+    },
+    "fullDraft": "AO JUÍZO DA ... VARA DO TRABALHO DE PORTO VELHO / ESTADO DE RONDÔNIA\n\nSUPERMERCADOS AVENIDA LTDA., pessoa jurídica de direito privado, inscrita no CNPJ sob o nº ..., com sede na Avenida ..., nº ..., Porto Velho/RO, endereço eletrônico ..., por seu advogado constituído pelo instrumento de mandato anexo (Doc. 01), com escritório na Rua ..., onde recebe notificações, vem, respeitosamente, perante Vossa Excelência, com fundamento nos arts. 539 e seguintes do Código de Processo Civil, aplicados subsidiariamente por força do art. 769 da CLT, e art. 335, I, do Código Civil, propor a presente\n\nAÇÃO DE CONSIGNAÇÃO EM PAGAMENTO\n\nem face de LUCAS, brasileiro, estado civil ..., profissão: operador de caixa, portador do RG nº ..., inscrito no CPF sob o nº ..., CTPS nº ..., residente e domiciliado na Rua ..., nº ..., Porto Velho/RO, pelas razões de fato e de direito a seguir expostas:\n\nI - DOS FATOS E DO CABIMENTO\nO Consignatário foi admitido pela Consignante em ..., exercendo a função de operador de caixa na cidade de Porto Velho/RO, percebendo último salário mensal de R$ 2.100,00, tendo sido dispensado sem justa causa no dia 01/04/2026.\nApuradas todas as verbas rescisórias no montante líquido de R$ 8.400,00 (conforme Termo de Rescisão do Contrato de Trabalho anexo - Doc. 02), a empresa notificou expressamente o empregado por meio de telegrama com Aviso de Recebimento (Doc. 03) para recebimento das parcelas e retirada das guias do Seguro-Desemprego e chave de conectividade do FGTS.\nContudo, o Consignatário quedou-se inerte, recusando-se injustificadamente a comparecer ou informar dados bancários para transferência antes do escoamento do prazo legal de 10 dias previsto no art. 477, § 6º, da CLT.\n\nII - DO DIREITO E DA ELISÃO DA MULTA DO ART. 477, § 8º, DA CLT\nNos termos do art. 335, I, do Código Civil e art. 539 do CPC, ocorrendo mora do credor ou recusa injustificada no recebimento do pagamento, cabe ao devedor requerer em juízo a consignação da quantia devida com efeito liberatório.\nA presente medida judicial é ajuizada tempestivamente dentro do prazo de 10 (dez) dias contados do término contratual (art. 477, § 6º, da CLT), afastando qualquer caracterização de mora patronal e a incidência da multa estatuída no art. 477, § 8º, da CLT.\n\nIII - DOS PEDIDOS\nAnte o exposto, requer a Consignante a Vossa Excelência:\na) Seja autorizado o imediato depósito judicial, no prazo de 5 (cinco) dias (art. 542, I, do CPC), da quantia líquida de R$ 8.400,00, bem como o depósito em Secretaria das guias TRCT, CD/SD (Seguro-Desemprego) e chave de movimentação do FGTS;\nb) A notificação/citação do Consignatário para levantar o depósito efetuado e retirar as guias ou apresentar contestação no prazo legal, sob pena de revelia e confissão;\nc) Ao final, seja julgada TOTALMENTE PROCEDENTE a presente Ação de Consignação em Pagamento, declarando-se extinta a obrigação referente às verbas rescisórias discriminadas no TRCT anexo e afastando a multa do art. 477, § 8º, da CLT;\nd) A condenação do Consignatário ao pagamento de custas processuais e honorários advocatícios sucumbenciais, nos termos do art. 791-A da CLT.\n\nDá-se à causa o valor de R$ 8.400,00 (oito mil e quatrocentos reais).\n\nNestes termos,\nPede deferimento.\n\nPorto Velho/RO, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "embargos-execucao-trabalhista",
+    "title": "Embargos à Execução Trabalhista (Art. 884 da CLT)",
+    "area": "Direito do Trabalho",
+    "subject": "Defesas & Respostas",
+    "legalBasis": "Art. 884 da CLT; Art. 879, § 2º, da CLT; Art. 883-A da CLT.",
+    "legalDeadlines": "5 (cinco) dias úteis contados da garantia integral da execução ou da intimação da penhora (art. 884 c/c art. 775 da CLT).",
+    "jurisdiction": "Juízo da Vara do Trabalho onde tramita a execução trabalhista (autos principais).",
+    "overview": "Os Embargos à Execução Trabalhista são o meio de defesa do executado na fase de cumprimento/execução trabalhista após garantido o juízo mediante depósito ou penhora de bens. No art. 884, § 1º, da CLT, sua matéria de defesa restringe-se ao cumprimento da decisão/acordo, quitação ou prescrição da dívida, além de excesso de execução nos cálculos homologados (se não precluso).",
+    "structureGuide": [
+      {
+        "step": "1. Endereçamento e Garantia Integral do Juízo",
+        "description": "Endereçar ao Juízo da Vara do Trabalho nos mesmos autos da reclamação em fase de execução, comprovando o depósito recursal/garantia ou a penhora.",
+        "practicalTip": "Sem garantia integral do juízo (exceto Fazenda Pública e entidades filantrópicas - art. 884, § 6º, CLT), os embargos não são conhecidos."
+      },
+      {
+        "step": "2. Tempestividade em 5 Dias Úteis",
+        "description": "Comprovar o protocolo dentro de 5 dias úteis da intimação da penhora ou do depósito de garantia (art. 775 da CLT).",
+        "practicalTip": "Os prazos na CLT contam-se em dias úteis desde a Reforma Trabalhista (Lei 13.467/17)."
+      },
+      {
+        "step": "3. Excesso de Execução / Prescrição / Quitação",
+        "description": "Demonstrar objetivamente o erro de cálculo, a inclusão de parcela não deferida no título executivo (ofensa à coisa julgada) ou prescrição intercorrente (art. 11-A CLT).",
+        "practicalTip": "Apontar exatamente qual o valor correto entendido como devido (memória de cálculo anexa)."
+      },
+      {
+        "step": "4. Pedidos Finais",
+        "description": "Recebimento dos embargos, intimação do exequente para resposta em 5 dias e acolhimento para retificar a conta e liberar o saldo excedente.",
+        "practicalTip": "Da decisão que julga os Embargos à Execução caberá Agravo de Petição (art. 897, 'a', CLT)."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Trabalho",
+      "problemStatement": "Na execução da Reclamação Trabalhista movida por Pedro contra a Empresa Beta Ltda., a executada efetuou depósito integral garantindo a execução de R$ 90.000,00 há 3 dias úteis. Ao examinar os cálculos do perito contábil que foram homologados de plano sem prévia intimação das partes (desrespeito ao art. 879, § 2º, CLT), verificou-se a inclusão de horas extras que haviam sido julgadas improcedentes no acórdão transitado em julgado, gerando excesso de R$ 28.000,00.",
+      "clientNeeds": "Opor Embargos à Execução Trabalhista no prazo de 5 dias úteis perante a Vara do Trabalho, demonstrando a garantia do juízo e a violação à coisa julgada com excesso de execução de R$ 28.000,00."
+    },
+    "fullDraft": "AO JUÍZO DA ... VARA DO TRABALHO DE GOIÂNIA / ESTADO DE GOIÁS\n\nReclamação Trabalhista em Fase de Execução nº 0010555-22.2023.5.18.0001\n\nEMPRESA BETA LTDA., já devidamente qualificada nos autos da Reclamação Trabalhista em epígrafe, que lhe move PEDRO, por seu advogado infra-assinado, vem, tempestivamente, perante Vossa Excelência, com fulcro no art. 884 da Consolidação das Leis do Trabalho, opor os presentes\n\nEMBARGOS À EXECUÇÃO\n\npelas razões fáticas e jurídicas a seguir articuladas:\n\nI - DA TEMPESTIVIDADE E DA GARANTIA DO JUÍZO\nA Embargante garantiu integralmente a execução mediante guia de depósito judicial no montante de R$ 90.000,00 (comprovante anexo - Doc. 01) há apenas 3 (três) dias úteis, revelando-se rigorosamente tempestivos os presentes embargos à luz do prazo quinquenal em dias úteis previsto nos arts. 884 e 775 da CLT.\n\nII - DA NÃO PRECLUSÃO (ART. 879, § 2º, DA CLT)\nO juízo homologou os cálculos periciais sem prévia intimação das partes para impugnação no prazo comum de 8 dias, consoante determina imperativamente o art. 879, § 2º, da CLT. Assim, inexiste preclusão para discussão do excesso nesta sede.\n\nIII - DO MÉRITO: DO EXCESSO DE EXECUÇÃO E VIOLAÇÃO À COISA JULGADA\nConforme dispõe o art. 879, § 1º, da CLT, na liquidação não se poderá modificar, ou inovar, a sentença liquidanda nem discutir matéria pertinente à causa principal.\nO v. acórdão transitado em julgado deu provimento ao recurso patronal para EXCLUIR da condenação as horas extras e respectivos reflexos (fls. ...).\nTodavia, o cálculo homologado apurou equivocadamente a referida rubrica já afastada pelo título judicial, gerando excesso manifesto de R$ 28.000,00 (vinte e oito mil reais), conforme demonstra a planilha retificada anexa (Doc. 02), segundo a qual o valor líquido realmente devido importa em R$ 62.000,00.\n\nIV - DOS PEDIDOS\nDiante do exposto, requer a Embargante a Vossa Excelência:\na) O recebimento e regular processamento dos presentes Embargos à Execução;\nb) A intimação do Exequente/Embargado para, querendo, apresentar impugnação no prazo legal de 5 (cinco) dias úteis (art. 884, caput, da CLT);\nc) Ao final, seja julgada TOTALMENTE PROCEDENTE a pretensão deduzida nestes Embargos para reconhecer o excesso de execução de R$ 28.000,00 por violação à coisa julgada, retificando-se a conta liquidanda para o valor correto de R$ 62.000,00 e determinando-se a devolução do saldo excedente depositado pela Embargante.\n\nNestes termos,\nPede deferimento.\n\nGoiânia/GO, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "agravo-peticao-trabalhista",
+    "title": "Agravo de Petição Trabalhista (Art. 897, 'a', CLT)",
+    "area": "Direito do Trabalho",
+    "subject": "Recursos",
+    "legalBasis": "Art. 897, alínea 'a' e § 1º, da CLT; Arts. 899 e 775 da CLT; Súmula 416 do TST.",
+    "legalDeadlines": "8 (oito) dias úteis contados da publicação da decisão proferida na fase de execução trabalhista.",
+    "jurisdiction": "Interposição ao Juiz da Vara do Trabalho (a quo), com razões endereçadas ao Tribunal Regional do Trabalho (TRT) competente (ad quem).",
+    "overview": "O Agravo de Petição é o recurso cabível por excelência contra as decisões definitivas ou terminativas do juiz na fase de execução trabalhista (como a sentença que julga Embargos à Execução, Impugnação à Sentença de Liquidação ou Exceção de Pré-Executividade acolhida). Possui pressuposto específico essencial no art. 897, § 1º, da CLT: a delimitação justificada das matérias e dos valores impugnados.",
+    "structureGuide": [
+      {
+        "step": "1. Petição de Interposição ao Juiz da Execução",
+        "description": "Endereçar ao Juízo da Vara do Trabalho, comprovando garantia do juízo e delimitando justificadamente os valores e matérias impugnadas (art. 897, § 1º, CLT).",
+        "practicalTip": "Citar expressamente a delimitação dos valores impugnados para autorizar a execução imediata da parte incontroversa."
+      },
+      {
+        "step": "2. Folha de Razões ao TRT",
+        "description": "Endereçar ao Egrégio Tribunal Regional do Trabalho da respectiva Região.",
+        "practicalTip": "EGRÉGIO TRIBUNAL REGIONAL DO TRABALHO DA ... REGIÃO"
+      },
+      {
+        "step": "3. Tempestividade, Garantia e Delimitação (§ 1º)",
+        "description": "Demonstrar o prazo de 8 dias úteis, ausência de custas prévias (custas de execução pagas ao final - art. 789-A CLT) e delimitação matemática.",
+        "practicalTip": "Sem delimitação justificada dos valores quando se discute cálculos, o Agravo não é conhecido!"
+      },
+      {
+        "step": "4. Mérito e Reforma",
+        "description": "Sustentar a reforma da decisão agravada (ex.: afastar penhora sobre bem de família - Lei nº 8.009/90, ou reconhecer prescrição intercorrente - art. 11-A CLT).",
+        "practicalTip": "Pedir o conhecimento e total provimento do Agravo de Petição."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Trabalho",
+      "problemStatement": "Em execução trabalhista definitiva movida por Joana contra a empresa Comercial Alfa e redirecionada contra o sócio Ricardo, determinou-se a penhora do único imóvel residencial no qual Ricardo mora com sua esposa e dois filhos menores. Ricardo opôs Embargos à Execução alegando a impenhorabilidade do bem de família (Lei nº 8.009/90), porém o Juiz do Trabalho julgou os embargos improcedentes sob o fundamento de que 'o crédito trabalhista tem natureza alimentar e supera o bem de família'. A decisão foi publicada há 4 dias úteis.",
+      "clientNeeds": "Interpor Agravo de Petição ao TRT competente por meio do juízo da Vara do Trabalho, no prazo de 8 dias úteis, delimitando a matéria/valor (valor total do imóvel constrito) e requerendo a desconstituição da penhora do bem de família (Lei nº 8.009/90)."
+    },
+    "fullDraft": "[FOLHA 01 - INTERPOSIÇÃO]\n\nAO JUÍZO DA ... VARA DO TRABALHO DE FLORIANÓPOLIS / ESTADO DE SANTA CATARINA\n\nProcesso nº 0002244-10.2022.5.12.0001\n\nRICARDO, já qualificado nos autos da Reclamação Trabalhista em fase de execução movida por JOANA, por seu advogado infra-assinado, vem, tempestivamente, perante Vossa Excelência, inconformado com a decisão que julgou improcedentes seus Embargos à Execução, interpor o presente\n\nAGRAVO DE PETIÇÃO\n\ncom fundamento no art. 897, alínea 'a' e § 1º, da Consolidação das Leis do Trabalho.\nEm cumprimento ao disposto no art. 897, § 1º, da CLT, o Agravante delimita justificadamente a matéria objeto do recurso (impenhorabilidade absoluta do bem de família) e os valores impugnados (integralidade da constrição avaliada em R$ 450.000,00 sobre o imóvel matriculado sob o nº ...), restando o juízo garantido pela própria penhora.\nInformando que as custas na fase de execução são recolhidas ao final (art. 789-A da CLT), requer a intimação da agravada para contraminuta no prazo legal e, após, a remessa dos autos ao Egrégio Tribunal Regional do Trabalho da 12ª Região.\n\nNestes termos,\nPede deferimento.\n\nFlorianópolis/SC, data...\nADVOGADO(A)...\nOAB/... nº ...\n\n--------------------------------------------------------------------------------\n[FOLHA 02 - RAZÕES RECURSAIS]\n\nEGRÉGIO TRIBUNAL REGIONAL DO TRABALHO DA 12ª REGIÃO\nCOLENDA TURMA\n\nAgravante: Ricardo\nAgravada: Joana\nOrigem: ... Vara do Trabalho de Florianópolis/SC\n\nRAZÕES DO AGRAVO DE PETIÇÃO\n\nI - DOS PRESSUPOSTOS DE ADMISSIBILIDADE\nO presente Agravo de Petição é tempestivo (interposto no prazo de 8 dias úteis), encontra o juízo garantido pela própria penhora questionada e delimita expressamente a matéria (impenhorabilidade de bem de família) e o valor integral constrito (R$ 450.000,00), atendendo ao art. 897, § 1º, da CLT.\n\nII - DO MÉRITO: DA IMPENHORABILIDADE ABSOLUTA DO BEM DE FAMÍLIA (LEI Nº 8.009/90)\nA decisão agravada afastou a proteção legal do bem de família sob a premissa equivocada de que a natureza alimentar do crédito trabalhista superaria a Lei nº 8.009/90.\nEntretanto, o art. 3º da Lei nº 8.009/90 contém rol taxativo das exceções à impenhorabilidade do bem de família residencial — do qual foi expressamente revogado o inciso I (que tratava de créditos de trabalhadores da própria residência) e no qual NÃO figura qualquer exceção genérica para créditos trabalhistas de empresas.\nA jurisprudência uníssona do Tribunal Superior do Trabalho (TST) é firme no sentido de que o único imóvel residencial onde reside o sócio executado com sua família é absolutamente impenhorável, ainda que o crédito exequendo tenha natureza trabalhista e alimentar, tratando-se de garantia constitucional à moradia (art. 6º da CF/88).\nOs documentos anexos (certidão negativa de outros imóveis no CRI e comprovantes de residência familiar) atestam cabalmente que o bem constrito constitui a única moradia do Agravante e de seus dependentes.\n\nIII - DOS PEDIDOS\nAnte o exposto, requer o Agravante a este Egrégio Tribunal:\na) O CONHECIMENTO e integral PROVIMENTO do presente Agravo de Petição para reformar a decisão de primeiro grau, reconhecendo a impenhorabilidade absoluta do bem de família e determinando o imediato levantamento da penhora sobre o imóvel matriculado sob o nº ...\n\nNestes termos,\nPede provimento.\n\nFlorianópolis/SC, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "recurso-revista-trabalhista",
+    "title": "Recurso de Revista Trabalhista (Art. 896 da CLT)",
+    "area": "Direito do Trabalho",
+    "subject": "Recursos",
+    "legalBasis": "Art. 896, alíneas 'a' e 'c', § 1º-A e Art. 896-A da CLT; Súmula 297 e Súmula 337 do TST.",
+    "legalDeadlines": "8 (oito) dias úteis contados da intimação do acórdão proferido pelo TRT (art. 896 c/c art. 775 da CLT).",
+    "jurisdiction": "Interposição perante o Presidente do Tribunal Regional do Trabalho (TRT) recorrido, com razões endereçadas ao Tribunal Superior do Trabalho (TST).",
+    "overview": "O Recurso de Revista é recurso de natureza extraordinária dirigido ao TST contra acórdão proferido por TRT em Recurso Ordinário (ou em Agravo de Petição apenas por violação direta à CF/88). Exige estritos pressupostos específicos de admissibilidade do art. 896, § 1º-A, da CLT: indicação do trecho do acórdão que consubstancia o prequestionamento, demonstração analítica das violações/divergências e indicação da transcendência (art. 896-A).",
+    "structureGuide": [
+      {
+        "step": "1. Peça de Interposição (Presidente do TRT)",
+        "description": "Endereçar ao Desembargador Presidente do TRT recorrido, juntando custas e depósito recursal complementar.",
+        "practicalTip": "EXCELENTÍSSIMO SENHOR DOUTOR DESEMBARGADOR PRESIDENTE DO TRT DA ... REGIÃO"
+      },
+      {
+        "step": "2. Pressupostos Intrínsecos (§ 1º-A e Art. 896-A)",
+        "description": "Indicar o trecho exato do acórdão prequestionado (art. 896, § 1º-A, I), demonstrar a transcendência (econômica, política, social ou jurídica) e fazer o cotejo analítico.",
+        "practicalTip": "Sem a transcrição do trecho prequestionado no acórdão regional, o Recurso de Revista não é admitido!"
+      },
+      {
+        "step": "3. Hipóteses de Cabimento (Art. 896, 'a' e 'c')",
+        "description": "Apontar divergência jurisprudencial válida entre TRTs/SDI-1 (alínea 'a' e Súmula 337) ou violação literal à lei federal/CF/Súmula do TST (alínea 'c').",
+        "practicalTip": "Lembrar que no rito sumaríssimo o cabimento restringe-se a violação direta da CF, súmula do TST ou súmula vinculante do STF (art. 896, § 9º)."
+      },
+      {
+        "step": "4. Pedidos ao Colendo TST",
+        "description": "Requerer o reconhecimento da transcendência, conhecimento do Recurso de Revista e provimento para reformar o acórdão regional.",
+        "practicalTip": "Jamais pedir reexame de fatos e provas no TST (óbice da Súmula 126 do TST)."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Trabalho",
+      "problemStatement": "Em Recurso Ordinário interposto no rito ordinário, o TRT da 2ª Região manteve a condenação da empregadora Indústria Oeste S/A ao pagamento do adicional de periculosidade a empregado que apenas acompanhava o abastecimento do próprio caminhão por terceiro, contrariando frontalmente o entendimento consolidado em Súmula do TST (Súmula 364/TST e precedentes da SDI-1 no sentido de que permanecer próximo ou acompanhar abastecimento de veículo realizado por frentista não gera direito ao adicional). O acórdão prequestionou a matéria em trecho específico e foi publicado há 5 dias úteis.",
+      "clientNeeds": "Interpor Recurso de Revista ao TST por meio da Presidência do TRT da 2ª Região, demonstrando a transcendência política (art. 896-A, § 1º, II), transcrevendo o trecho prequestionado (§ 1º-A, I) e fundamentando na alínea 'a' (contrariedade à jurisprudência da SDI-1/TST) e 'c' (violação ao art. 193 da CLT)."
+    },
+    "fullDraft": "[FOLHA 01 - INTERPOSIÇÃO]\n\nEXCELENTÍSSIMO SENHOR DOUTOR DESEMBARGADOR PRESIDENTE DO EGRÉGIO TRIBUNAL REGIONAL DO TRABALHO DA 2ª REGIÃO\n\nProcesso nº 1004321-88.2024.5.02.0010\n\nINDÚSTRIA OESTE S/A, já devidamente qualificada nos autos da Reclamação Trabalhista em epígrafe movida por ..., por seu advogado infra-assinado, vem, tempestivamente, à presença de Vossa Excelência, inconformada com o v. acórdão proferido pela Turma Regional, interpor o presente\n\nRECURSO DE REVISTA\n\ncom fulcro no art. 896, alíneas 'a' e 'c', e art. 896-A da Consolidação das Leis do Trabalho.\nInforma que junta as guias comprobatórias do recolhimento do depósito recursal complementar e das custas processuais.\nRequer o processamento do recurso, com intimação da parte recorrida para contrarrazões no prazo de 8 dias úteis, e posterior remessa ao Colendo Tribunal Superior do Trabalho.\n\nNestes termos,\nPede deferimento.\n\nSão Paulo/SP, data...\nADVOGADO(A)...\nOAB/... nº ...\n\n--------------------------------------------------------------------------------\n[FOLHA 02 - RAZÕES RECURSAIS]\n\nCOLENDO TRIBUNAL SUPERIOR DO TRABALHO\nEGRÉGIA TURMA\n\nRecorrente: Indústria Oeste S/A\nRecorrido: ...\nOrigem: Tribunal Regional do Trabalho da 2ª Região\n\nRAZÕES DE RECURSO DE REVISTA\n\nI - DOS PRESSUPOSTOS EXTRÍNSECOS E INTRÍNSECOS\nO recurso é tempestivo (prazo de 8 dias úteis), preparado e regularmente representado.\n1. Da Transcendência Política (Art. 896-A, § 1º, II, da CLT): O acórdão regional contrariou jurisprudência iterativa, notória e atual da SBDI-1 deste Colendo TST, evidenciando a transcendência política da causa.\n2. Do Prequestionamento (Art. 896, § 1º-A, I, da CLT): Transcreve-se o trecho do v. acórdão que consubstancia o prequestionamento da controvérsia: \"(...) ainda que o motorista apenas permaneça aguardando ao lado do caminhão enquanto o frentista do posto realiza o abastecimento, faz jus ao adicional de periculosidade previsto no art. 193 da CLT (...)\".\n\nII - DO MÉRITO: VIOLAÇÃO AO ART. 193 DA CLT E DIVERGÊNCIA JURISPRUDENCIAL (ART. 896, 'A' E 'C', DA CLT)\nNão se pretende o revolvimento de fatos e provas (Súmula 126 do TST), mas o correto enquadramento jurídico da premissa fática expressamente consignada no acórdão regional.\nA Subseção I Especializada em Dissídios Individuais (SBDI-1) deste Colendo TST firmou entendimento pacífico de que o motorista que apenas acompanha o abastecimento do veículo realizado por terceiro (frentista) não realiza operação direta com inflamáveis (NR-16), não tendo direito ao adicional de periculosidade do art. 193 da CLT.\nAo manter a condenação, o TRT violou literalmente o art. 193 da CLT e divergiu de acórdãos paradigmáticos válidos da SBDI-1 e de outros Regionais (cópia/repositório citados nos moldes da Súmula 337 do TST).\n\nIII - DOS PEDIDOS\nAnte o exposto, requer a Recorrente a este Colendo Tribunal Superior do Trabalho:\na) O reconhecimento da transcendência política da matéria (art. 896-A, § 1º, II, da CLT);\nb) O CONHECIMENTO do Recurso de Revista por violação ao art. 193 da CLT e divergência jurisprudencial (art. 896, 'a' e 'c', da CLT);\nc) No mérito, o INTEGRAL PROVIMENTO do recurso para reformar o acórdão regional e julgar improcedente o pedido de adicional de periculosidade e seus reflexos, com inversão dos ônus sucumbenciais.\n\nNestes termos,\nPede provimento.\n\nBrasília/DF, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "acao-alimentos-civil",
+    "title": "Ação de Alimentos com Pedido de Alimentos Provisórios",
+    "area": "Direito Civil",
+    "subject": "Petições Iniciais",
+    "legalBasis": "Lei nº 5.478/68 (Lei de Alimentos, arts. 2º e 4º); Arts. 1.694 a 1.696 do Código Civil; Art. 53, II, do CPC/15.",
+    "legalDeadlines": "Não há prazo decadencial para o direito a alimentos; as prestações já fixadas prescrevem em 2 anos (art. 206, § 2º, CC - não correndo contra menores incapazes, art. 198, I, CC).",
+    "jurisdiction": "Vara de Família e Sucessões do domicílio ou residência do alimentando (autor) - art. 53, inciso II, do CPC.",
+    "overview": "A Ação de Alimentos pelo rito especial da Lei nº 5.478/68 é cabível quando houver prova pré-constituída da obrigação alimentar (certidão de nascimento provando a filiação ou certidão de casamento). Logo ao despachar a inicial, o juiz fixa obrigatoriamente alimentos provisórios (art. 4º), observando o binômio necessidade do alimentando x possibilidade do alimentante (e razoabilidade).",
+    "structureGuide": [
+      {
+        "step": "1. Endereçamento ao Juízo de Família do Alimentando",
+        "description": "Endereçar à Vara de Família do domicílio do menor/alimentando, representado ou assistido por sua genitora/genitor.",
+        "practicalTip": "Foro privilegiado do art. 53, II, do CPC: domicílio do alimentando."
+      },
+      {
+        "step": "2. Prova Pré-Constituída da Parentela",
+        "description": "Anexar a certidão de nascimento do menor comprovando o vínculo de paternidade/maternidade exigido pelo rito especial da Lei 5.478/68.",
+        "practicalTip": "Requerer a gratuidade da justiça em favor do menor hipossuficiente."
+      },
+      {
+        "step": "3. Binômio Necessidade-Possibilidade e Alimentos Provisórios",
+        "description": "Detalhar as despesas mensais do menor (educação, saúde, alimentação) e os rendimentos conhecidos do réu, pedindo alimentos provisórios imediatos (art. 4º).",
+        "practicalTip": "Se o réu tiver vínculo formal, requerer ofício à empregadora para desconto em folha de pagamento (art. 529 CPC)."
+      },
+      {
+        "step": "4. Pedidos e Intimação do MP",
+        "description": "Fixação de provisórios, citação para audiência una de conciliação/instrução, intimação obrigatória do MP (art. 178, II, CPC) e conversão em definitivos.",
+        "practicalTip": "Fixar o valor da causa em 12 prestações mensais pretendidas (art. 292, III, do CPC)."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Civil",
+      "problemStatement": "Lucas, criança de 6 anos de idade, reside com sua mãe Cláudia na Comarca de Fortaleza/CE. Desde a separação fática do casal ocorrida há 8 meses, seu pai Roberto — engenheiro empregado na empresa Construir S/A com salário líquido mensal de R$ 12.000,00 — deixou de prestar qualquer auxílio financeiro ao filho, alegando dificuldades. Cláudia não tem condições de arcar sozinha com escola, plano de saúde e alimentação de Lucas, que somam R$ 3.600,00 mensais.",
+      "clientNeeds": "Propor Ação de Alimentos pelo rito da Lei nº 5.478/68 perante a Vara de Família de Fortaleza/CE, pleiteando alimentos provisórios urgentes de 30% dos rendimentos líquidos do pai com desconto em folha de pagamento."
+    },
+    "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA ... VARA DE FAMÍLIA E SUCESSÕES DA COMARCA DE FORTALEZA / ESTADO DO CEARÁ\n\nLUCAS, brasileiro, menor impúbere com 6 anos de idade, portador do CPF nº ..., neste ato representado por sua genitora CLÁUDIA, brasileira, solteira, auxiliar administrativa, inscrita no CPF sob o nº ..., residente e domiciliada na Rua ..., nº ..., Bairro ..., Fortaleza/CE, CEP ..., endereço eletrônico ..., por seu advogado infra-assinado (procuração anexa - Doc. 01), com escritório na Rua ..., onde recebe intimações, vem, respeitosamente, perante Vossa Excelência, com fundamento na Lei nº 5.478/68 e nos arts. 1.694 e seguintes do Código Civil, propor a presente\n\nAÇÃO DE ALIMENTOS COM PEDIDO DE ALIMENTOS PROVISÓRIOS\n\nem face de ROBERTO, brasileiro, solteiro, engenheiro civil, inscrito no CPF sob o nº ..., com endereço residencial na Avenida ..., nº ..., e endereço profissional na empresa Construir S/A situada na Rua ..., nº ..., Fortaleza/CE, pelas razões de fato e de direito que passa a expor:\n\nI - DA COMPETÊNCIA E DA PROVA PRÉ-CONSTITUÍDA\nA competência pertence a este Juízo de Família por força da regra especial do art. 53, inciso II, do Código de Processo Civil (domicílio do alimentando).\nO vínculo de filiação encontra-se documentalmente comprovado pela inclusa Certidão de Nascimento (Doc. 02), legitimando o procedimento especial da Lei nº 5.478/68.\n\nII - DOS FATOS E DO BINÔMIO NECESSIDADE X POSSIBILIDADE\nO Autor é filho do Réu e conta atualmente com apenas 6 anos de idade, vivendo sob a guarda fática e cuidados exclusivos de sua genitora.\nDesde a ruptura da convivência do casal há 8 meses, o Réu cessou integralmente qualquer contribuição material para o sustento do filho. Ocorre que as despesas fixas mensais do menor com escola, alimentação, vestuário, material escolar e plano de saúde alcançam o importe mínimo de R$ 3.600,00 (planilha e comprovantes anexos - Docs. 03 a 07), valor incomportável apenas pela genitora.\nPor sua vez, o Réu ostenta plena capacidade contributiva, laborando formalmente como engenheiro civil na empresa Construir S/A com remuneração líquida mensal aproximada de R$ 12.000,00, não possuindo outros filhos ou encargos excepcionais.\n\nIII - DOS ALIMENTOS PROVISÓRIOS (ART. 4º DA LEI Nº 5.478/68)\nComprovado o parentesco e presentes o dever legal de sustento (art. 229 da CF/88 e art. 1.566, IV, do CC) e a urgência alimentar da criança, impõe-se, nos termos do art. 4º da Lei nº 5.478/68, a imediata fixação de alimentos provisórios no patamar de 30% (trinta por cento) dos rendimentos líquidos do Réu (ou 2 salários mínimos em caso de eventual desemprego), mediante desconto direto em folha de pagamento.\n\nIV - DOS PEDIDOS\nDiante do exposto, requer o Autor a Vossa Excelência:\na) A concessão dos benefícios da GRATUIDADE DA JUSTIÇA em favor do menor hipossuficiente (art. 98 do CPC);\nb) A fixação liminar de ALIMENTOS PROVISÓRIOS em favor do Autor no equivalente a 30% dos rendimentos líquidos do Réu (excluídos apenas descontos obrigatórios de INSS e IR), determinando a expedição de ofício à empregadora Construir S/A para imediato desconto em folha de pagamento e depósito na conta bancária da representante legal (banco ..., agência ..., conta ...), ou 2 salários mínimos na hipótese de ausência de vínculo empregatício;\nc) A citação do Réu para comparecer à audiência de conciliação, instrução e julgamento, onde poderá apresentar defesa sob pena de revelia (art. 7º da Lei nº 5.478/68);\nd) A intimação obrigatória do ilustre representante do Ministério Público (art. 178, II, do CPC);\ne) Ao final, a TOTAL PROCEDÊNCIA do pedido para converter os alimentos provisórios em DEFINITIVOS no percentual de 30% dos rendimentos líquidos do alimentante, condenando o Réu em custas e honorários advocatícios (art. 85, § 2º, CPC).\n\nDá-se à causa o valor de R$ 43.200,00 (equivalente a 12 prestações mensais de R$ 3.600,00 - art. 292, III, do CPC).\n\nNestes termos,\nPede deferimento.\n\nFortaleza/CE, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "acao-reintegracao-posse-civil",
+    "title": "Ação de Reintegração de Posse com Pedido Liminar",
+    "area": "Direito Civil",
+    "subject": "Petições Iniciais",
+    "legalBasis": "Arts. 560 a 566 do CPC/15; Arts. 1.196, 1.210 e 1.211 do Código Civil; Art. 47, § 2º, do CPC.",
+    "legalDeadlines": "Ação de Força Nova (rito especial com pedido liminar inaudita altera parte) exige ajuizamento dentro de ano e dia (1 ano e 1 dia) da data do esbulho (art. 558 do CPC). Após esse prazo, segue o procedimento comum (força velha).",
+    "jurisdiction": "Foro da situação do imóvel objeto do litígio — competência absoluta (art. 47, § 2º, do CPC).",
+    "overview": "A Ação de Reintegração de Posse tutela o possuidor que sofreu ESBULHO (perda total ou parcial da posse por violência, clandestinidade ou precariedade). Quando ajuizada em até ano e dia do esbulho (ação de força nova), admite a concessão imediata de mandado liminar de reintegração sem audiência do réu, desde que comprovados os requisitos do art. 561 do CPC.",
+    "structureGuide": [
+      {
+        "step": "1. Competência Absoluta do Local da Coisa",
+        "description": "Endereçar à Vara Cível da comarca onde o imóvel esbulhado está localizado (art. 47, § 2º, CPC).",
+        "practicalTip": "Não esquecer da natureza absoluta da competência nas ações possessórias imobiliárias."
+      },
+      {
+        "step": "2. Requisitos Obrigatórios do Art. 561 do CPC",
+        "description": "Comprovar documentalmente: (I) posse anterior; (II) esbulho praticado pelo réu; (III) data do esbulho (menos de ano e dia); e (IV) perda da posse.",
+        "practicalTip": "Organizar a fundamentação demonstrando cada um dos 4 incisos do art. 561 de modo explícito."
+      },
+      {
+        "step": "3. Liminar de Reintegração (Art. 562) e Cumulação (Art. 555)",
+        "description": "Requerer mandado liminar de reintegração inaudita altera parte e cumular pedidos de perdas e danos e multa diária (art. 555 do CPC).",
+        "practicalTip": "A liminar possessória de força nova dispensa demonstração de periculum in mora: basta comprovar os 4 requisitos do art. 561!"
+      },
+      {
+        "step": "4. Pedidos Finais",
+        "description": "Deferimento da liminar com expedição de mandado de reintegração, citação do réu para contestar em 15 dias após efetivada a medida e confirmação definitiva.",
+        "practicalTip": "Fixar valor da causa correspondente ao valor venal ou estimativo do imóvel/posse."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Civil",
+      "problemStatement": "Antônio exercia há 10 anos posse mansa e pacífica sobre pequena chácara localizada na Comarca de Sorocaba/SP, mantendo ali cultivo de hortaliças e caseiro. Há 25 dias, enquanto Antônio viajava, seu vizinho Marcos rompeu a cerca divisória durante a madrugada e ocupou integralmente a área de 5.000 m², impedindo a entrada do proprietário e do caseiro com ameaças. Antônio lavrou boletim de ocorrência e reuniu fotos, contas e declarações de vizinhos.",
+      "clientNeeds": "Propor Ação de Reintegração de Posse (força nova) com pedido liminar perante a Vara Cível de Sorocaba/SP, demonstrando os requisitos do art. 561 do CPC e pleiteando perdas e danos e cominação de multa."
+    },
+    "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA ... VARA CÍVEL DA COMARCA DE SOROCABA / ESTADO DE SÃO PAULO\n\nANTÔNIO, brasileiro, casado, produtor rural, portador do RG nº ..., inscrito no CPF sob o nº ..., endereço eletrônico ..., residente e domiciliado na Rua ..., nº ..., Sorocaba/SP, por seu advogado infra-assinado (procuração anexa - Doc. 01), com escritório na Rua ..., onde recebe intimações, vem, respeitosamente, à presença de Vossa Excelência, com fundamento nos artigos 554 a 566 do Código de Processo Civil e no art. 1.210 do Código Civil, propor a presente\n\nAÇÃO DE REINTEGRAÇÃO DE POSSE (FORÇA NOVA) C/C PEDIDO LIMINAR E PERDAS E DANOS\n\nem face de MARCOS, brasileiro, estado civil ..., profissão ..., residente e domiciliado na Estrada Municipal ..., km ..., Sorocaba/SP, pelas razões de fato e de direito a seguir expostas:\n\nI - DA COMPETÊNCIA E DO PROCEDIMENTO ESPECIAL DE FORÇA NOVA\nTratando-se de ação possessória imobiliária, a competência é absoluta deste Juízo da situação do bem (art. 47, § 2º, do CPC). Tendo o esbulho ocorrido há apenas 25 dias (menos de ano e dia), incide integralmente o rito especial previsto no art. 558 e seguintes do CPC.\n\nII - DOS FATOS E DOS REQUISITOS DO ART. 561 DO CPC\nConforme demonstrado de plano pelo acervo documental acostado, encontram-se cabalmente preenchidos todos os requisitos legais do art. 561 do CPC:\n1. Da Posse Anterior (art. 561, I): O Autor exerce posse mansa, pacífica e produtiva sobre o imóvel rural de 5.000 m² situado na Estrada Municipal ..., há mais de 10 (dez) anos, conforme notas fiscais de insumos, contas de energia e declarações de confrontantes anexas (Docs. 02 a 05);\n2. Do Esbulho Praticado pelo Réu (art. 561, II): Aproveitando-se da ausência momentânea do Autor, o Réu destruiu a cerca divisória durante a madrugada e invadiu clandestina e violentamente toda a propriedade;\n3. Da Data do Esbulho (art. 561, III): A invasão ilícita ocorreu há exatamente 25 dias, conforme atestado pelo Boletim de Ocorrência nº ... e ata notarial/fotos anexas (Docs. 06 e 07);\n4. Da Perda da Posse (art. 561, IV): O Autor e seu caseiro encontram-se totalmente privados do acesso ao bem, impedidos de ingressar na área por ameaças do Réu.\n\nIII - DA MEDIDA LIMINAR DE REINTEGRAÇÃO (ART. 562 DO CPC) E CUMULAÇÕES (ART. 555)\nEstando a petição inicial devidamente instruída com a prova inequívoca dos requisitos do art. 561, o art. 562 do CPC autoriza o deferimento liminar da reintegração de posse inaudita altera parte, independente de demonstração de urgência.\nOutrossim, na forma do art. 555 do CPC, cumula-se o pedido de condenação do Réu ao pagamento de perdas e danos (reparação da cerca destruída e prejuízos da lavoura) e imposição de multa diária para coibir novo esbulho.\n\nIV - DOS PEDIDOS\nAnte o exposto, requer o Autor a Vossa Excelência:\na) A concessão de MEDIDA LIMINAR inaudita altera parte, expedindo-se imediatamente o MANDADO DE REINTEGRAÇÃO DE POSSE em favor do Autor (com autorização de reforço policial, se necessário), na forma do art. 562 do CPC;\nb) Efetivada a medida liminar, a citação do Réu para que apresente contestação no prazo de 15 (quinze) dias úteis (art. 564 do CPC);\nc) Ao final, o julgamento de TOTAL PROCEDÊNCIA dos pedidos para confirmar definitivamente a reintegração na posse, condenar o Réu ao ressarcimento das perdas e danos causados à cerca e à produção rural (a serem apurados em liquidação), cominar multa diária de R$ 2.000,00 em caso de novo esbulho (art. 555, parágrafo único, I, CPC), além de custas e honorários advocatícios (art. 85, § 2º, CPC).\n\nDá-se à causa o valor de R$ 120.000,00 (cento e vinte mil reais).\n\nTermos em que,\nPede deferimento.\n\nSorocaba/SP, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "impugnacao-cumprimento-sentenca",
+    "title": "Impugnação ao Cumprimento de Sentença (Art. 525 do CPC)",
+    "area": "Direito Processual Civil",
+    "subject": "Execução & Cumprimento",
+    "legalBasis": "Art. 525, §§ 1º a 11, do CPC/15; Art. 523 do CPC (prazo prévio para pagamento voluntário).",
+    "legalDeadlines": "15 (quinze) dias úteis, independentemente de penhora ou nova intimação, contados imediatamente após o término do prazo de 15 dias para pagamento voluntário (art. 525, caput, CPC).",
+    "jurisdiction": "Dirigida por simples petição nos próprios autos do Cumprimento de Sentença perante o Juízo da condenação.",
+    "overview": "A Impugnação ao Cumprimento de Sentença é o instrumento típico de defesa do devedor na execução de título judicial (cumprimento definitivo de sentença para pagamento de quantia certa). Não exige prévia garantia do juízo para seu oferecimento (apenas para eventual pedido de efeito suspensivo, nos moldes do art. 525, § 6º, do CPC) e tem matérias de defesa taxativas no § 1º.",
+    "structureGuide": [
+      {
+        "step": "1. Tempestividade Contada da Soma dos Prazos",
+        "description": "Demonstrar que transcorreram os 15 dias úteis para pagamento voluntário (art. 523) e que a impugnação é protocolada dentro dos 15 dias úteis subsequentes.",
+        "practicalTip": "Não há nova intimação para iniciar o prazo da impugnação (ele flui automaticamente após o fim do prazo do art. 523)."
+      },
+      {
+        "step": "2. Pedido de Efeito Suspensivo (§ 6º)",
+        "description": "Se houver penhora suficiente (garantia do juízo), demonstrar fundamentos relevantes e risco de grave dano de difícil ou incerta reparação.",
+        "practicalTip": "Sem garantia do juízo, a impugnação tramita sem suspender os atos executivos."
+      },
+      {
+        "step": "3. Matérias Taxativas do Art. 525, § 1º",
+        "description": "Arguir excesso de execução (com demonstrativo do valor entendido como correto - § 4º), pagamento/causa extintiva posterior à sentença, nulidade de citação ou inexigibilidade do título.",
+        "practicalTip": "Na arguição de excesso de execução, a apresentação do valor correto em memória de cálculo é OBRIGATÓRIA sob pena de rejeição liminar (§ 5º)."
+      },
+      {
+        "step": "4. Pedidos e Honorários da Impugnação",
+        "description": "Requerer a extinção do cumprimento ou redução do valor ao montante correto e condenação do exequente em honorários na impugnação acolhida.",
+        "practicalTip": "O acolhimento da impugnação ao cumprimento de sentença gera condenação do impugnado em honorários advocatícios (Súmula 519 STJ)."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Civil",
+      "problemStatement": "Transitada em julgado sentença condenando a Empresa Gama S/A a pagar R$ 50.000,00 a Ricardo, o autor iniciou cumprimento definitivo de sentença apresentando cálculo no valor de R$ 95.000,00, computando multa de 10% do art. 523 antes do decurso do prazo e incluindo juros compostos não previstos na sentença. Durante o prazo de pagamento voluntário, a executada já havia efetuado depósito judicial de R$ 50.000,00 correspondentes ao valor exato da condenação atualizada. O prazo para impugnação encerra-se em 5 dias.",
+      "clientNeeds": "Apresentar Impugnação ao Cumprimento de Sentença nos mesmos autos (art. 525 CPC), apontando o excesso de execução de R$ 45.000,00 com planilha do valor correto (R$ 50.000,00 já depositado), pleiteando efeito suspensivo (§ 6º) e extinção pela quitação."
+    },
+    "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA ... VARA CÍVEL DA COMARCA DE RECIFE / ESTADO DE PERNAMBUCO\n\nCumprimento de Sentença nº 0055443-21.2024.8.17.2001\n\nEMPRESA GAMA S/A, já devidamente qualificada nos autos do Cumprimento de Sentença em epígrafe movido por RICARDO, por seu advogado infra-assinado, vem, tempestivamente, perante Vossa Excelência, com fulcro no art. 525, caput e § 1º, inciso V e VII, do Código de Processo Civil, apresentar sua\n\nIMPUGNAÇÃO AO CUMPRIMENTO DE SENTENÇA COM PEDIDO DE EFEITO SUSPENSIVO\n\npelos motivos fáticos e jurídicos que passa a expor:\n\nI - DA TEMPESTIVIDADE\nEncerrado o prazo de 15 (quinze) dias úteis para pagamento voluntário previsto no art. 523 do CPC, iniciou-se automaticamente o prazo subsequente de 15 (quinze) dias úteis para apresentação desta Impugnação (art. 525, caput, CPC), encontrando-se a presente manifestação plenamente tempestiva.\n\nII - DO PEDIDO DE EFEITO SUSPENSIVO (ART. 525, § 6º, DO CPC)\nO juízo encontra-se garantido pelo depósito judicial no valor de R$ 50.000,00 realizado tempestivamente nos autos (Doc. 01).\nRestam evidenciados a relevância dos fundamentos (manifesto excesso de execução violador da coisa julgada) e o grave risco de dano irreparável caso o Exequente levante quantia muito superior ao título ou realize penhoras adicionais indevidas sobre o patrimônio da Impugnante.\n\nIII - DO MÉRITO: DO EXCESSO DE EXECUÇÃO E DA QUITAÇÃO INTEGRAL\nO Exequente deflagrou a execução cobrando R$ 95.000,00, incidindo em evidente excesso de execução (art. 525, § 1º, V, CPC):\n1. Capitalização indevida de juros (anatocismo): O cálculo exequendo aplicou juros compostos sem qualquer autorização no título executivo judicial, em flagrante afronta à coisa julgada e à Súmula 121 do STF;\n2. Incidência indevida da multa e honorários do art. 523, § 1º, do CPC: A Impugnante efetuou o depósito tempestivo e integral do valor realmente devido antes do término do prazo de 15 dias úteis, inexistindo inadimplemento que autorize o acréscimo punitivo de 10%.\nEm estrito cumprimento ao art. 525, § 4º, do CPC, a Impugnante apresenta a inclusa memória discriminada de cálculo (Doc. 02), demonstrando que o valor efetivamente devido importa em R$ 50.000,00 (já integralmente quitados pelo depósito de fls. ...), configurando excesso de R$ 45.000,00.\n\nIV - DOS PEDIDOS\nAnte o exposto, requer a Impugnante a Vossa Excelência:\na) A atribuição de EFEITO SUSPENSIVO à presente Impugnação (art. 525, § 6º, CPC), obstaculizando qualquer ato expropriatório ou levantamento além do valor incontroverso;\nb) A intimação do Exequente/Impugnado para manifestação no prazo legal;\nc) No mérito, o INTEGRAL ACOLHIMENTO desta Impugnação para reconhecer o excesso de execução de R$ 45.000,00, homologando o valor correto de R$ 50.000,00 já depositado, com a consequente EXTINÇÃO do cumprimento de sentença pela satisfação integral da obrigação (art. 924, II, do CPC);\nd) A condenação do Impugnado ao pagamento de honorários advocatícios sucumbenciais sobre o valor do excesso afastado, conforme jurisprudência consolidada do STJ.\n\nNestes termos,\nPede deferimento.\n\nRecife/PE, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "embargos-execucao-civel",
+    "title": "Embargos à Execução de Título Extrajudicial (Art. 914 do CPC)",
+    "area": "Direito Processual Civil",
+    "subject": "Execução & Cumprimento",
+    "legalBasis": "Arts. 914 a 920 do CPC/15; Art. 915 (prazo); Art. 917 (matérias alegáveis); Art. 919, § 1º (efeito suspensivo).",
+    "legalDeadlines": "15 (quinze) dias úteis contados da juntada aos autos do mandado de citação cumprido (art. 915 c/c art. 231 do CPC).",
+    "jurisdiction": "Distribuídos por dependência ao juízo da Execução de Título Extrajudicial e autuados em apartado (art. 914, § 1º, do CPC).",
+    "overview": "Os Embargos à Execução são ação cognitiva autônoma distribuída por dependência nos autos de execução de título extrajudicial (cheque, nota promissória, contrato com 2 testemunhas). Independem de penhora, depósito ou caução para serem opostos (art. 914, caput), exigindo-se garantia apenas se o embargante postular a concessão de efeito suspensivo (art. 919, § 1º).",
+    "structureGuide": [
+      {
+        "step": "1. Distribuição por Dependência e Dispensa de Garantia",
+        "description": "Endereçar ao juízo da execução principal com distribuição por dependência (art. 914, § 1º, CPC), mencionando a dispensa de garantia prévia.",
+        "practicalTip": "Os embargos recebem numeração autônoma por serem ação incidental."
+      },
+      {
+        "step": "2. Tempestividade (Art. 915)",
+        "description": "Demonstrar o protocolo em até 15 dias úteis a contar da juntada do mandado citatório positivo (não da penhora).",
+        "practicalTip": "Não há prazo em dobro para litisconsortes com procuradores diferentes nos embargos à execução (art. 915, § 3º, CPC)."
+      },
+      {
+        "step": "3. Mérito Executivo Amplo (Art. 917)",
+        "description": "Arguir inexigibilidade/nulidade do título executivo (falta de liquidez, certeza ou exigibilidade - art. 783), prescrição da cártula, excesso ou qualquer matéria de contestação (art. 917, VI).",
+        "practicalTip": "Como não houve fase de conhecimento prévia, a matéria de defesa nos embargos à execução extrajudicial é ampla!"
+      },
+      {
+        "step": "4. Pedidos e Valor da Causa",
+        "description": "Requerer a extinção da execução (ou redução do excesso), intimação do embargado (15 dias), condenação em honorários e fixar o valor da causa.",
+        "practicalTip": "O valor da causa deve corresponder ao montante cobrado na execução ou ao excesso discutido."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Civil",
+      "problemStatement": "Bruno foi citado há 6 dias úteis em Ação de Execução de Título Extrajudicial movida por Eduardo no valor de R$ 40.000,00, lastreada exclusivamente em um contrato particular de mútuo assinado apenas pelas partes (sem nenhuma assinatura de testemunhas, nem constituição em documento público ou assinatura eletrônica com integridade certificada). Além disso, Eduardo cobra o débito antes do vencimento contratual previsto para o próximo ano.",
+      "clientNeeds": "Opor Embargos à Execução de Título Extrajudicial distribuídos por dependência ao Juízo da Execução (art. 914 do CPC), sustentando a nulidade da execução por ausência de título executivo extrajudicial (art. 784, III, CPC) e inexigibilidade da obrigação (art. 803, I, CPC)."
+    },
+    "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA ... VARA CÍVEL DA COMARCA DE MANAUS / ESTADO DO AMAZONAS\n\nDISTRIBUIÇÃO POR DEPENDÊNCIA À EXECUÇÃO DE TÍTULO EXTRAJUDICIAL Nº 0600111-22.2026.8.04.0001\n\nBRUNO, brasileiro, solteiro, comerciante, portador do RG nº ..., inscrito no CPF sob o nº ..., endereço eletrônico ..., residente e domiciliado na Rua ..., nº ..., Manaus/AM, por seu advogado infra-assinado (procuração anexa - Doc. 01), com escritório na Rua ..., onde recebe intimações, vem, tempestivamente, perante Vossa Excelência, com fundamento nos artigos 914 e seguintes do Código de Processo Civil, opor os presentes\n\nEMBARGOS À EXECUÇÃO\n\nem face de EDUARDO, brasileiro, casado, empresário, inscrito no CPF sob o nº ..., já qualificado nos autos principais da Execução em epígrafe, pelas razões de fato e de direito a seguir expostas:\n\nI - DA TEMPESTIVIDADE E DA DISPENSA DE GARANTIA DO JUÍZO\nO mandado de citação positivo foi juntado aos autos executivos principais há 6 (seis) dias úteis, revelando-se tempestivos os presentes embargos nos moldes do art. 915 do CPC.\nNos termos do art. 914, caput, do CPC, a oposição de embargos independe de penhora, depósito ou caução, devendo ser distribuídos por dependência e autuados em apartado (§ 1º).\n\nII - DO MÉRITO: DA NULIDADE DA EXECUÇÃO POR AUSÊNCIA DE TÍTULO EXECUTIVO E INEXIGIBILIDADE\n1. Ausência de Título Executivo Extrajudicial (Art. 784, III, e Art. 803, I, do CPC): A execução foi aparelhada exclusivamente com instrumento particular de mútuo subscrito apenas pelas partes contratantes, desprovido da assinatura de 2 (duas) testemunhas ou de certificado digital que lhe confira autenticidade legal (art. 784, III e § 4º, do CPC). Sem previsão expressa em lei (nulla executio sine titulo), o documento não ostenta eficácia executiva, tornando nula a execução por falta de título (art. 803, I, do CPC).\n2. Inexigibilidade da Obrigação: Ademais, a Cláusula 3ª do instrumento anexado prevê o vencimento único da dívida apenas para o exercício vindouro, inexistindo obrigação vencida e exigível na data do ajuizamento (art. 783 e art. 917, I, do CPC).\n\nIII - DOS PEDIDOS\nAnte o exposto, requer o Embargante a Vossa Excelência:\na) O recebimento e processamento dos presentes Embargos à Execução por dependência à execução nº ..., com autuação em apartado;\nb) A intimação do Embargado, na pessoa de seu advogado constituído nos autos principais (art. 920, I, CPC), para impugnação no prazo de 15 (quinze) dias úteis;\nc) Ao final, seja julgado TOTALMENTE PROCEDENTE o pedido dos Embargos para reconhecer a nulidade da execução pela ausência de título executivo extrajudicial e pela inexigibilidade da obrigação, extinguindo a Execução nº ... com base nos arts. 803, I, e 485, IV, do CPC;\nd) A condenação do Embargado ao pagamento das custas processuais e honorários advocatícios sucumbenciais, nos termos do art. 85, § 2º, do CPC.\n\nDá-se à causa o valor de R$ 40.000,00 (quarenta mil reais).\n\nNestes termos,\nPede deferimento.\n\nManaus/AM, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "relaxamento-prisao-penal",
+    "title": "Pedido de Relaxamento de Prisão em Flagrante c/c Liberdade Provisória",
+    "area": "Direito Penal",
+    "subject": "Defesas & Respostas",
+    "legalBasis": "Art. 5º, LXV e LXVI, da CF/88; Arts. 310, incisos I e III, 312, 319 e 321 do Código de Processo Penal.",
+    "legalDeadlines": "Pode ser formulado imediatamente após a comunicação do auto de prisão em flagrante (audiência de custódia ou petição ao juízo competente), sem prazo preclusivo enquanto durar a prisão.",
+    "jurisdiction": "Juiz de Direito da Vara Criminal (ou Juízo das Garantias / Plantão Judiciário) competente para o controle da prisão em flagrante.",
+    "overview": "O Relaxamento de Prisão é a peça defensiva dirigida diretamente ao Juiz de 1º grau quando a prisão em flagrante padece de ILEGALIDADE formal ou material (ex.: ausência de situação flagrancial do art. 302 do CPP, flagrante preparado - Súmula 145/STF, ou violação ao art. 306 do CPP). Por cautela técnica nas provas de 2ª fase, formula-se pedido subsidiário de Liberdade Provisória (com ou sem fiança/cautelares diversas do art. 319) caso o juiz entenda legal o flagrante.",
+    "structureGuide": [
+      {
+        "step": "1. Endereçamento ao Juízo de 1º Grau",
+        "description": "Endereçar ao Juiz da Vara Criminal (ou Juiz das Garantias) para quem o Auto de Prisão em Flagrante (APF) foi distribuído.",
+        "practicalTip": "ATENÇÃO: Se o próprio delegado/polícia praticou a ilegalidade e ainda não houve decisão do juiz convertendo em preventiva, a peça ao juiz é Relaxamento de Prisão (e não HC ao Tribunal!)."
+      },
+      {
+        "step": "2. Pedido Principal: Relaxamento da Prisão Ilegal (Art. 5º, LXV, CF)",
+        "description": "Demonstrar o vício formal (ausência de comunicação em 24h, ausência de entrega de nota de culpa) ou material (flagrante preparado ou ausência de hipótese do art. 302 CPP).",
+        "practicalTip": "Citar a Súmula 145 do STF em casos de flagrante preparado/provocado."
+      },
+      {
+        "step": "3. Pedido Subsidiário: Liberdade Provisória (Art. 310, III, CPP)",
+        "description": "Caso superada a ilegalidade, demonstrar a ausência dos requisitos da prisão preventiva (arts. 312 e 313 CPP), com primariedade e residência fixa.",
+        "practicalTip": "Pedir subsidiariamente medidas cautelares diversas da prisão (art. 319) e isenção de fiança se hipossuficiente (art. 350 CPP)."
+      },
+      {
+        "step": "4. Pedidos e Alvará de Soltura",
+        "description": "Requerer a oitiva do MP, o relaxamento da prisão com expedição imediata de alvará de soltura e, subsidiariamente, liberdade provisória.",
+        "practicalTip": "Nunca esquecer de requerer a expedição do competente Alvará de Soltura."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Penal",
+      "problemStatement": "Três dias após um furto simples ocorrido em uma loja de eletrônicos sem qualquer testemunha presencial no momento do delito, policiais militares realizaram abordagem de rotina em Gabriel na praça central e, ao notar que este trazia consigo um telefone compatível com a descrição do boletim de ocorrência, efetuaram sua prisão 'em flagrante' e o conduziram à delegacia, onde foi lavrado APF sem entrega de nota de culpa. Gabriel é primário, possui residência fixa e trabalho lícito. O APF acabou de ser distribuído à 2ª Vara Criminal.",
+      "clientNeeds": "Formular Pedido de Relaxamento de Prisão em Flagrante Ilegal (ausência de situação flagrancial do art. 302 do CPP e ausência de nota de culpa) c/c pedido subsidiário de Liberdade Provisória sem fiança perante a 2ª Vara Criminal."
+    },
+    "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA 2ª VARA CRIMINAL DA COMARCA DE GOIÂNIA / ESTADO DE GOIÁS\n\nAuto de Prisão em Flagrante nº ...\n\nGABRIEL, brasileiro, solteiro, eletricista, portador do RG nº ..., inscrito no CPF sob o nº ..., residente e domiciliado na Rua ..., nº ..., Goiânia/GO, atualmente recolhido na unidade prisional local, por seu advogado infra-assinado (procuração anexa - Doc. 01), vem, respeitosamente, à presença de Vossa Excelência, com fundamento no art. 5º, incisos LXV e LXVI, da Constituição Federal de 1988, e nos artigos 310, incisos I e III, 319 e 321 do Código de Processo Penal, requerer o\n\nRELAXAMENTO DE PRISÃO EM FLAGRANTE C/C PEDIDO SUBSIDIÁRIO DE LIBERDADE PROVISÓRIA\n\npelas razões de fato e de direito a seguir expostas:\n\nI - DOS FATOS\nO Requerente foi abordado pela Polícia Militar em via pública exatamente três dias após a suposta subtração de um aparelho celular ocorrida em estabelecimento comercial, sem que houvesse perseguição ininterrupta logo após o delito. Conduzido à delegacia, foi autuado em flagrante delito por furto simples (art. 155, caput, do CP), sem que sequer lhe fosse entregue a nota de culpa no prazo legal de 24 horas.\n\nII - DO PEDIDO PRINCIPAL: DA ILEGALIDADE DO FLAGRANTE E DO RELAXAMENTO (ART. 5º, LXV, CF E ART. 310, I, CPP)\nConsoante o art. 302 do Código de Processo Penal, considera-se em flagrante delito somente quem está cometendo a infração penal, acaba de cometê-la, é perseguido logo após em situação que faça presumir ser autor, ou é encontrado logo depois com instrumentos/objetos que façam presumir autoria.\nNo caso concreto, transcorreram mais de 72 horas desde o fato delituoso sem que houvesse qualquer perseguição ininterrupta iniciada no momento do crime, inexistindo hipótese de flagrante próprio, impróprio ou presumido. Ademais, a autoridade policial deixou de entregar ao preso a nota de culpa prevista no art. 306, § 2º, do CPP, eivando o ato de nulidade absoluta.\nDiante da flagrante ilegalidade, impõe-se o imediato RELAXAMENTO da prisão, por força do mandamento constitucional do art. 5º, LXV, da CF/88 e art. 310, I, do CPP.\n\nIII - DO PEDIDO SUBSIDIÁRIO: DA LIBERDADE PROVISÓRIA (ART. 310, III, E ART. 321 DO CPP)\nAd argumentandum tantum, caso Vossa Excelência entenda pela higidez formal do flagrante, impõe-se a imediata concessão da LIBERDADE PROVISÓRIA.\nNão estão presentes os pressupostos autorizadores da prisão preventiva previstos no art. 312 do CPP, nem sequer o requisito objetivo do art. 313, inciso I, do CPP, uma vez que o crime de furto simples possui pena máxima igual a 4 (quatro) anos de reclusão (e NÃO superior a 4 anos) e o Requerente é primário (certidão de antecedentes anexa), possui residência fixa e ocupação lícita comprovada.\n\nIV - DOS PEDIDOS\nAnte o exposto, requer o Requerente a Vossa Excelência, ouvido o ilustre representante do Ministério Público:\na) Como pedido PRINCIPAL, o RELAXAMENTO DA PRISÃO EM FLAGRANTE por manifesta ilegalidade (art. 5º, LXV, da CF/88 e art. 310, I, do CPP), expedindo-se incontinenti o competente ALVARÁ DE SOLTURA em favor de GABRIEL;\nb) SUBSIDIARIAMENTE, caso não acolhido o relaxamento, a concessão da LIBERDADE PROVISÓRIA sem fiança (art. 310, III, c/c art. 321 e art. 350 do CPP) ou mediante aplicação de medidas cautelares diversas da prisão previstas no art. 319 do CPP, com a imediata expedição do alvará de soltura.\n\nNestes termos,\nPede deferimento.\n\nGoiânia/GO, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "recuperacao-judicial-empresarial",
+    "title": "Petição Inicial de Pedido de Recuperação Judicial (Lei nº 11.101/05)",
+    "area": "Direito Empresarial",
+    "subject": "Petições Iniciais",
+    "legalBasis": "Arts. 47 a 52 da Lei nº 11.101/2005 (LREF); Princípio da Preservação da Empresa.",
+    "legalDeadlines": "A empresa deve comprovar atividade regular há mais de 2 (dois) anos (art. 48, caput). Deferido o processamento, inicia-se o stay period de 180 dias (art. 6º, § 4º) e abre-se prazo de 60 dias para apresentação do Plano de Recuperação Judicial (art. 53).",
+    "jurisdiction": "Juízo da Vara Empresarial (ou Vara Cível na ausência de especializada) da Comarca onde se situa o principal estabelecimento do devedor (art. 3º da Lei nº 11.101/05).",
+    "overview": "A Recuperação Judicial tem por objetivo viabilizar a superação da situação de crise econômico-financeira do devedor empresário, a fim de permitir a manutenção da fonte produtora, do emprego dos trabalhadores e dos interesses dos credores, promovendo a preservação da empresa e sua função social (art. 47 da LREF). Exige o atendimento rigoroso dos requisitos subjetivos do art. 48 e documentais do art. 51.",
+    "structureGuide": [
+      {
+        "step": "1. Competência do Principal Estabelecimento (Art. 3º)",
+        "description": "Endereçar ao juízo do principal estabelecimento econômico-administrativo da sociedade empresária (onde se concentram as decisões e maior volume de negócios).",
+        "practicalTip": "Nem sempre coincide com a sede estatutária registrada no contrato social."
+      },
+      {
+        "step": "2. Requisitos Legais do Art. 48 da Lei nº 11.101/05",
+        "description": "Comprovar o exercício regular das atividades empresariais há mais de 2 anos, ausência de falência anterior não extinta e ausência de recuperação judicial nos últimos 5 anos.",
+        "practicalTip": "Também demonstrar que nenhum administrador foi condenado por crime falimentar."
+      },
+      {
+        "step": "3. Exposição da Crise e Instrução Documental (Art. 51)",
+        "description": "Expor as causas concretas da crise patrimonial e anexar todos os documentos obrigatórios do art. 51 (demonstrações contábeis dos 3 últimos exercícios, relação nominal completa de credores e empregados, certidões).",
+        "practicalTip": "Destacar a viabilidade econômica e a preservação de empregos."
+      },
+      {
+        "step": "4. Pedidos de Processamento e Stay Period (Art. 52)",
+        "description": "Requerer o deferimento do processamento da RJ, nomeação do Administrador Judicial e suspensão imediata de todas as ações e execuções por 180 dias (stay period).",
+        "practicalTip": "Incluir pedido de dispensa de apresentação de certidões negativas para o exercício regular (art. 52, II)."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Empresarial",
+      "problemStatement": "A Indústria Têxtil Horizonte Ltda., com único e principal estabelecimento em Blumenau/SC e em funcionamento regular há 12 anos, atravessa aguda crise transitória de liquidez após retração do mercado exportador e alta do dólar sobre insumos. A empresa mantém 140 empregados diretos, apresenta balanços positivos operacionais futuros, jamais faliu ou utilizou recuperação judicial anterior, mas vem sofrendo bloqueios em contas e execuções individuais que ameaçam paralisar a fábrica.",
+      "clientNeeds": "Elaborar Petição Inicial de Pedido de Recuperação Judicial perante o Juízo competente de Blumenau/SC, demonstrando o cumprimento dos arts. 48 e 51 da Lei nº 11.101/05 e requerendo o processamento com suspensão das execuções por 180 dias (stay period)."
+    },
+    "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA ... VARA CÍVEL / EMPRESARIAL DA COMARCA DE BLUMENAU / ESTADO DE SANTA CATARINA\n\nINDÚSTRIA TÊXTIL HORIZONTE LTDA., sociedade empresária limitada regularmente inscrita no CNPJ sob o nº ..., com único e principal estabelecimento na Avenida Industrial, nº ..., Blumenau/SC, CEP ..., endereço eletrônico ..., por seu advogado constituído (procuração anexa - Doc. 01), com escritório na Rua ..., onde recebe intimações, vem, respeitosamente, perante Vossa Excelência, com fulcro nos artigos 47, 48, 51 e 52 da Lei nº 11.101/2005 (LREF), requerer o processamento de sua\n\nRECUPERAÇÃO JUDICIAL\n\npelas razões fáticas e fundamentos jurídicos a seguir expostos:\n\nI - DA COMPETÊNCIA DO PRINCIPAL ESTABELECIMENTO (ART. 3º DA LREF)\nO único e principal estabelecimento produtivo e decisório da Requerente localiza-se na Comarca de Blumenau/SC, fixando a competência absoluta deste juízo nos termos do art. 3º da Lei nº 11.101/2005.\n\nII - DO CUMPRIMENTO DOS REQUISITOS LEGAIS (ART. 48 DA LREF)\nA Requerente atende integralmente a todos os requisitos do art. 48 da LREF:\na) Exerce regularmente suas atividades empresariais há 12 (doze) anos ininterruptos (contrato social e certidão simplificada da JUCESC anexos - Doc. 02), superando largamente o biênio mínimo legal;\nb) Não é falida, tampouco requereu ou obteve concessão de recuperação judicial nos últimos 5 anos;\nc) Nenhum de seus administradores ou sócios controladores foi condenado por crime previsto na Lei Falimentar (certidões criminais negativas anexas - Doc. 03).\n\nIII - DA EXPOSIÇÃO DAS CAUSAS DA CRISE E DA VIABILIDADE ECONÔMICA (ART. 51, I, DA LREF)\nNos últimos 18 meses, a sociedade experimentou severa crise conjuntural de liquidez decorrente da súbita elevação cambial de matérias-primas e retração temporária das exportações. A fim de honrar seus 140 postos de trabalho diretos, contraiu empréstimos bancários de elevado custo que passaram a comprometer seu fluxo de caixa, culminando em execuções individuais capazes de inviabilizar a continuidade operacional.\nNada obstante a iliquidez passageira, a atividade industrial da Requerente é estruturalmente viável e lucrativa, gerando expressiva receita tributária e empregos na região, merecendo a tutela do princípio da preservação da empresa (art. 47 da LREF).\n\nIV - DA INSTRUÇÃO DOCUMENTAL COMPLETA (ART. 51 DA LREF)\nA presente inicial encontra-se instruída com toda a documentação contábil e societária obrigatória descrita nos incisos II a XI do art. 51 da LREF, notadamente: balanços patrimoniais e demonstrações de resultados dos 3 últimos exercícios sociais, relatório de fluxo de caixa, relação nominal completa de todos os credores sujeitos e não sujeitos, relação integral de empregados, extratos bancários e certidões dos cartórios de protestos.\n\nV - DOS PEDIDOS\nAnte todo o exposto, requer a Requerente a Vossa Excelência:\na) O DEFERIMENTO DO PROCESSAMENTO da Recuperação Judicial, nos exatos termos do art. 52 da Lei nº 11.101/2005;\nb) A nomeação de Administrador Judicial idôneo na forma do art. 52, I, c/c art. 21 da LREF;\nc) A determinação de imediata SUSPENSÃO de todas as ações e execuções em face da Requerente pelo prazo legal de 180 (cento e oitenta) dias (stay period - art. 6º, § 4º, e art. 52, III, da LREF), comunicando-se os respectivos juízos;\nd) A dispensa da apresentação de certidões negativas para que o devedor exerça suas atividades regulares (art. 52, II, da LREF);\ne) A intimação eletrônica do Ministério Público e a comunicação às Fazendas Públicas Federal, Estadual e Municipal (art. 52, V, da LREF), bem como a expedição de edital no órgão oficial (art. 52, § 1º);\nf) A abertura do prazo legal de 60 (sessenta) dias após a publicação desta decisão para a apresentação do Plano de Recuperação Judicial (art. 53 da LREF).\n\nDá-se à causa o valor de R$ 3.500.000,00 (soma total dos créditos sujeitos à recuperação judicial - art. 51, § 5º, da LREF).\n\nNestes termos,\nPede deferimento.\n\nBlumenau/SC, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "contrarrazoes-apelacao-penal",
+    "title": "Contrarrazões de Apelação Criminal (Art. 600 do CPP)",
+    "area": "Direito Penal",
+    "subject": "Recursos",
+    "legalBasis": "Art. 600 do Código de Processo Penal; Arts. 386 e 387 do CPP; Art. 5º, LV e LVII, da CF/88.",
+    "legalDeadlines": "8 (oito) dias corridos contados da intimação pessoal/eletrônica para apresentação de contrarrazões após as razões do apelante (art. 600, caput, c/c art. 798 do CPP).",
+    "jurisdiction": "Folha de juntada endereçada ao Juízo Criminal de 1º grau (a quo) e razões endereçadas ao Tribunal de Justiça ou TRF (ad quem).",
+    "overview": "As Contrarrazões de Apelação Criminal constituem a resposta do recorrido ao recurso interposto pelo Ministério Público ou querelante (ou pela assistência da acusação) contra sentença absolutória ou condenatória mais branda. Possui estrutura dúplice (petição de juntada ao juízo de origem e folha de contrarrazões ao Tribunal), devendo rebater ponto a ponto as teses acusatórias e pugnar pela manutenção integral da sentença recorrida.",
+    "structureGuide": [
+      {
+        "step": "1. Petição de Juntada (Juízo A Quo)",
+        "description": "Endereçar ao Juiz Criminal da Vara de origem requerendo a juntada tempestiva das contrarrazões no prazo de 8 dias corridos e posterior remessa ao Tribunal.",
+        "practicalTip": "Observar o prazo de 8 dias corridos do art. 600 do CPP (no processo penal os prazos contam-se em dias corridos, conforme art. 798 do CPP!)."
+      },
+      {
+        "step": "2. Folha de Contrarrazões (Tribunal Ad Quem)",
+        "description": "Endereçar ao Egrégio Tribunal de Justiça ou TRF, identificando Recorrido (Apelado) e Recorrente (Apelante - MP/Querelante).",
+        "practicalTip": "EGRÉGIO TRIBUNAL DE JUSTIÇA / COLENDA CÂMARA CRIMINAL"
+      },
+      {
+        "step": "3. Preliminares Recursais (se houver)",
+        "description": "Examinar se o recurso do Ministério Público é intempestivo (passou de 5 dias da ciência pessoal) ou carece de interesse recursal.",
+        "practicalTip": "Se o recurso do MP for intempestivo, pugnar pelo não conhecimento em sede preliminar."
+      },
+      {
+        "step": "4. Mérito das Contrarrazões (Manutenção da Sentença)",
+        "description": "Refutar a pretensão acusatória defendendo a absolvição (art. 386), ausência de dolo, erro de tipo, prescrição ou redução da pena já aplicada.",
+        "practicalTip": "O pedido final deve ser pelo NÃO PROVIMENTO do recurso ministerial, mantendo-se incólume a sentença recorrida."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Penal",
+      "problemStatement": "Marcos foi absolvido pelo Juízo da 1ª Vara Criminal da Comarca de Vitória/ES da imputação de furto qualificado com base no art. 386, VII, do CPP (insuficiência de provas para condenação), diante da fragilidade do reconhecimento fotográfico realizado apenas na fase inquisitorial e não confirmado em juízo (art. 226 do CPP). O Ministério Público interpôs Apelação pugnando pela condenação com base exclusivamente no inquérito policial. A defesa foi intimada há 4 dias corridos para contrarrazões.",
+      "clientNeeds": "Apresentar Contrarrazões de Apelação Criminal no prazo de 8 dias corridos (art. 600 do CPP) requerendo o não provimento do recurso ministerial e a manutenção da absolvição com base no art. 155 e art. 226 do CPP e princípio do in dubio pro reo."
+    },
+    "fullDraft": "[FOLHA 01 - PETIÇÃO DE JUNTADA]\n\nEXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA 1ª VARA CRIMINAL DA COMARCA DE VITÓRIA / ESTADO DO ESPÍRITO SANTO\n\nProcesso nº 0011223-44.2024.8.08.0024\n\nMARCOS, já devidamente qualificado nos autos da Ação Penal em epígrafe, por seu advogado infra-assinado, vem, tempestivamente, perante Vossa Excelência, com fulcro no art. 600 do Código de Processo Penal, apresentar suas\n\nCONTRARRAZÕES DE APELAÇÃO CRIMINAL\n\nem resposta ao recurso interposto pelo ilustre representante do Ministério Público.\nRequer a juntada das inclusas razões de impugnação e, após as formalidades de praxe, a remessa dos autos ao Egrégio Tribunal de Justiça do Estado do Espírito Santo.\n\nNestes termos,\nPede deferimento.\n\nVitória/ES, data...\nADVOGADO(A)...\nOAB/... nº ...\n\n--------------------------------------------------------------------------------\n[FOLHA 02 - CONTRARRAZÕES]\n\nEGRÉGIO TRIBUNAL DE JUSTIÇA DO ESTADO DO ESPÍRITO SANTO\nCOLENDA CÂMARA CRIMINAL\n\nApelante: Ministério Público Estadual\nApelado: Marcos\nOrigem: 1ª Vara Criminal da Comarca de Vitória/ES\n\nCONTRARRAZÕES AO RECURSO DE APELAÇÃO\n\nI - DA TEMPESTIVIDADE\nAs presentes contrarrazões são protocoladas dentro do prazo legal de 8 (oito) dias corridos previsto no art. 600, caput, c/c art. 798 do CPP.\n\nII - DO MÉRITO: DA NECESSÁRIA MANUTENÇÃO DA SENTENÇA ABSOLUTÓRIA\nIrrepreensível a r. sentença de primeiro grau ao absolver o Apelado com fulcro no art. 386, inciso VII, do Código de Processo Penal.\nO recurso ministerial pretende a condenação valendo-se unicamente de reconhecimento fotográfico informal realizado durante o inquérito policial, sem observância das garantias mínimas do art. 226 do CPP e sem qualquer corroboração probatória sob o crivo do contraditório judicial.\nOra, nos termos categóricos do art. 155, caput, do CPP, é vedado ao magistrado fundamentar sua decisão condenatória exclusivamente nos elementos informativos colhidos na investigação. Ademais, a jurisprudência pacífica do Superior Tribunal de Justiça (STJ) firmou que a inobservância do procedimento formal do art. 226 do CPP acarreta nulidade do reconhecimento pessoal/fotográfico, não servindo sequer como prova isolada suficiente para suplantar a presunção de inocência.\nInexistindo certeza da autoria delitiva além de qualquer dúvida razoável, impera o princípio constitucional do in dubio pro reo, impondo-se a manutenção integral do édito absolutório.\n\nIII - DOS PEDIDOS\nAnte todo o exposto, requer o Apelado a este Egrégio Tribunal de Justiça:\na) O CONHECIMENTO e integral DESPROVIMENTO do recurso de Apelação interposto pelo Ministério Público, mantendo-se incólume em todos os seus termos a respeitável sentença absolutória de primeiro grau.\n\nNestes termos,\nPede justiça e confirmação.\n\nVitória/ES, data...\nADVOGADO(A)...\nOAB/... nº ..."
+  },
+  {
+    "id": "mandado-injuncao-constitucional",
+    "title": "Mandado de Injunção Individual (Lei nº 13.300/16)",
+    "area": "Direito Constitucional",
+    "subject": "Remédios Constitucionais",
+    "legalBasis": "Art. 5º, LXXI, da CF/88; Lei nº 13.300/2016 (arts. 2º, 4º, 8º e 9º).",
+    "legalDeadlines": "Não há prazo decadencial; persiste o interesse de agir enquanto perdurar a mora legislativa inconstitucional.",
+    "jurisdiction": "Competência originária definida pelo órgão omisso: STF (omissão do Congresso Nacional ou Presidente - art. 102, I, 'q', CF); STJ (art. 105, I, 'h'); ou TJ estadual (omissão de governador/assembleia em normas estaduais).",
+    "overview": "O Mandado de Injunção é remédio constitucional cabível sempre que a falta total ou parcial de norma regulamentadora torne inviável o exercício dos direitos e liberdades constitucionais e das prerrogativas inerentes à nacionalidade, à soberania e à cidadania (art. 5º, LXXI). Adota-se no Brasil a corrente concretista (art. 8º da Lei nº 13.300/16), permitindo ao Judiciário estabelecer as condições concretas para fruição do direito caso persistam a omissão.",
+    "structureGuide": [
+      {
+        "step": "1. Competência Originária Conforme Autoridade Omissa",
+        "description": "Identificar quem tinha o dever constitucional de editar a lei faltante (ex.: Presidente/Congresso -> STF; Governador/Assembleia -> TJ local).",
+        "practicalTip": "Não confundir: no MI o polo passivo é integrado pelo órgão/autoridade competente pela edição da norma regulamentadora (art. 3º e 5º da Lei 13.300/16)."
+      },
+      {
+        "step": "2. Demonstração da Norma Constitucional de Eficácia Limitada",
+        "description": "Apontar o dispositivo da CF/88 que assegura o direito fundamental mas depende de regulamentação infraconstitucional não editada em prazo razoável.",
+        "practicalTip": "Exemplo clássico: aposentadoria especial de servidor público (art. 40, § 4º-C, da CF) ou aviso prévio proporcional antes da lei."
+      },
+      {
+        "step": "3. Inviabilidade Concreta do Exercício pelo Impetrante",
+        "description": "Comprovar documentalmente que o impetrante preenche os pressupostos fáticos e sofre negativa administrativa pela ausência da lei regulamentadora.",
+        "practicalTip": "Não existe concessão de medida liminar em Mandado de Injunção segundo jurisprudência consolidada do STF."
+      },
+      {
+        "step": "4. Pedidos Concretistas (Art. 8º da Lei nº 13.300/16)",
+        "description": "Requerer o reconhecimento da mora legislativa e, em sede concretista, a aplicação analógica da norma existente ou fixação de prazo para edição com solução concreta imediata.",
+        "practicalTip": "Pedir a notificação do impetrado (10 dias), ciência à advocacia pública e parecer do Ministério Público."
+      }
+    ],
+    "caseScenario": {
+      "title": "Caso Prático 2ª Fase OAB Constitucional",
+      "problemStatement": "Helena é servidora pública federal efetiva há 26 anos exercendo atividades permanentes sob exposição a agentes químicos insalubres prejudiciais à saúde. Ao requerer administrativamente sua aposentadoria especial prevista constitucionalmente no art. 40, § 4º-C, da CF/88 (regra permanente dependente de lei complementar federal), o órgão público negou o pedido alegando falta de lei complementar específica regulamentando o direito no âmbito do regime próprio da União.",
+      "clientNeeds": "Impetrar Mandado de Injunção Individual perante o Supremo Tribunal Federal (art. 102, I, 'q', da CF/88) contra o Presidente da República e Congresso Nacional (mora legislativa), pleiteando o suprimento concretista mediante aplicação analógica do art. 57 da Lei nº 8.213/91 (Súmula Vinculante 33)."
+    },
+    "fullDraft": "EXCELENTÍSSIMO SENHOR DOUTOR MINISTRO PRESIDENTE DO COLENDO SUPREMO TRIBUNAL FEDERAL\n\nHELENA, brasileira, casada, servidora pública federal, portadora do RG nº ..., inscrita no CPF sob o nº ..., endereço eletrônico ..., residente e domiciliada na Rua ..., nº ..., Brasília/DF, por seu advogado infra-assinado (procuração anexa - Doc. 01), com escritório na Rua ..., onde recebe intimações, vem, respeitosamente, perante esta Suprema Corte, com fundamento no art. 5º, inciso LXXI, e art. 102, inciso I, alínea 'q', da Constituição Federal de 1988, e na Lei nº 13.300/2016, impetrar o presente\n\nMANDADO DE INJUNÇÃO INDIVIDUAL\n\nem face do EXCELENTÍSSIMO SENHOR PRESIDENTE DA REPÚBLICA e do CONGRESSO NACIONAL (na pessoa de seu Presidente), autoridades omissas responsáveis pela iniciativa e edição da lei complementar regulamentadora, com ciência à Advocacia-Geral da União (art. 5º, II, da Lei nº 13.300/16), pelas razões fáticas e jurídicas a seguir expostas:\n\nI - DA COMPETÊNCIA ORIGINÁRIA E DA LEGITIMIDADE (ART. 102, I, 'Q', DA CF/88)\nA competência para processar e julgar Mandado de Injunção quando a elaboração da norma regulamentadora for atribuição do Presidente da República ou do Congresso Nacional pertence originariamente ao Supremo Tribunal Federal (art. 102, I, 'q', CF/88).\nA Impetrante é parte legítima (art. 3º da Lei nº 13.300/16), na medida em que sofre obstáculo concreto ao exercício do direito constitucional à aposentadoria especial assegurado aos servidores públicos submetidos a agentes nocivos.\n\nII - DOS FATOS E DA MORA LEGISLATIVA INCONSTITUCIONAL\nA Impetrante exerce cargo público efetivo federal há mais de 26 anos em laboratório público com exposição permanente e habitual a agentes químicos prejudiciais à saúde (laudo técnico e histórico funcional anexos - Docs. 02 e 03).\nAo protocolizar pedido administrativo de concessão de aposentadoria especial, teve seu pleito indeferido sob a alegação expressa de ausência da lei complementar regulamentadora exigida pelo art. 40 da Constituição Federal (Doc. 04).\nTranscorridas décadas desde a promulgação constitucional sem a edição do diploma normativo específico, configura-se manifesta mora legislativa inconstitucional que inviabiliza direito fundamental.\n\nIII - DO DIREITO E DA SOLUÇÃO CONCRETISTA (ART. 8º DA LEI Nº 13.300/16 E SÚMULA VINCULANTE 33)\nConforme a Lei nº 13.300/2016 e a consolidada jurisprudência desta Suprema Corte (Súmula Vinculante nº 33), reconhecido o estado de mora legislativa na regulamentação da aposentadoria especial do servidor público, impõe-se a atuação jurisdicional concretista direta para viabilizar o exercício do direito mediante a aplicação analógica, no que couber, das regras do Regime Geral de Previdência Social previstas no art. 57 da Lei nº 8.213/91.\n\nIV - DOS PEDIDOS\nAnte o exposto, requer a Impetrante a Vossa Excelência:\na) A notificação das autoridades impetradas para prestarem informações no prazo de 10 (dez) dias (art. 5º, I, da Lei nº 13.300/16);\nb) A cientificação do órgão de representação judicial da União (AGU), na forma do art. 5º, II, da Lei nº 13.300/16;\nc) A oitiva do Excelentíssimo Procurador-Geral da República (art. 7º da Lei nº 13.300/16);\nd) Ao final, a CONCESSÃO DA INJUNÇÃO para reconhecer a mora legislativa e, nos termos do art. 8º, II, da Lei nº 13.300/16 e da Súmula Vinculante 33, assegurar imediatamente à Impetrante o direito à análise de seu pedido de aposentadoria especial aplicando-se as disposições do art. 57 da Lei nº 8.213/91 enquanto não editada a lei complementar específica.\n\nDá-se à causa o valor de R$ 1.000,00 (mil reais).\n\nNestes termos,\nPede deferimento.\n\nBrasília/DF, data...\nADVOGADO(A)...\nOAB/... nº ..."
   }
 ];
+

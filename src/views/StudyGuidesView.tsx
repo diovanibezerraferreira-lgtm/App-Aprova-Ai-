@@ -93,16 +93,16 @@ export const StudyGuidesView: React.FC = () => {
   const extensiveCount = STUDY_MATERIALS.filter(m => m.isExtensiveManual || (m.pageCount && m.pageCount >= 50)).length;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#0B1F3A] flex items-center justify-center text-[#D4AF37] shadow-md">
+        <div className="min-w-0">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#0B1F3A] flex items-center justify-center text-[#D4AF37] shadow-md shrink-0">
               <BookOpen className="w-5 h-5" />
             </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold font-serif text-[#0B1F3A]">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-3xl font-bold font-serif text-[#0B1F3A] break-words">
                 Biblioteca Jurídica de Apostilas & Manuais
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
@@ -113,7 +113,7 @@ export const StudyGuidesView: React.FC = () => {
         </div>
 
         {/* Global Search */}
-        <div className="relative max-w-xs w-full">
+        <div className="relative w-full sm:max-w-xs min-w-0">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
@@ -215,12 +215,12 @@ export const StudyGuidesView: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Filter className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto min-w-0 max-w-full">
+          <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           <select
             value={disciplineFilter}
             onChange={e => setDisciplineFilter(e.target.value)}
-            className="px-2.5 py-1 text-xs border border-slate-300 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#0B1F3A]"
+            className="w-full sm:w-auto min-w-0 max-w-full flex-1 px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#0B1F3A]"
           >
             <option value="todas">Filtrar por disciplina...</option>
             {OAB_DISCIPLINES.map(d => (
@@ -230,7 +230,7 @@ export const StudyGuidesView: React.FC = () => {
             ))}
           </select>
           {completedIds.length > 0 && (
-            <span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full font-semibold border border-emerald-200">
+            <span className="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full font-semibold border border-emerald-200 shrink-0">
               {completedIds.length} lidas
             </span>
           )}
@@ -238,7 +238,7 @@ export const StudyGuidesView: React.FC = () => {
       </div>
 
       {/* Library Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredMaterials.map(mat => {
           const discipline = OAB_DISCIPLINES.find(d => d.id === mat.disciplineId);
           const isCompleted = completedIds.includes(mat.id);
@@ -247,7 +247,7 @@ export const StudyGuidesView: React.FC = () => {
           return (
             <div
               key={mat.id}
-              className={`bg-white rounded-3xl border shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col justify-between ${
+              className={`min-w-0 bg-white rounded-3xl border shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col justify-between ${
                 isExtensive
                   ? 'border-[#D4AF37]/50 ring-1 ring-[#D4AF37]/30'
                   : isCompleted
@@ -257,7 +257,7 @@ export const StudyGuidesView: React.FC = () => {
             >
               {/* Cover card header */}
               <div
-                className={`p-6 text-white relative overflow-hidden ${
+                className={`p-4 sm:p-6 text-white relative overflow-hidden ${
                   isExtensive
                     ? 'bg-gradient-to-br from-[#0B1F3A] via-[#16365C] to-[#0B1F3A]'
                     : 'bg-[#0B1F3A]'
@@ -265,17 +265,17 @@ export const StudyGuidesView: React.FC = () => {
               >
                 <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/5 rounded-full" />
                 
-                <div className="flex items-center justify-between text-xs text-slate-300 mb-2">
-                  <span className="font-semibold text-[#D4AF37] uppercase tracking-wider">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300 mb-2">
+                  <span className="font-semibold text-[#D4AF37] uppercase tracking-wider min-w-0 break-words">
                     {discipline?.name || mat.disciplineId}
                   </span>
                   {isExtensive ? (
-                    <span className="bg-[#D4AF37] text-[#0B1F3A] px-2 py-0.5 rounded-md text-[10px] font-extrabold flex items-center gap-1 shadow-xs">
+                    <span className="bg-[#D4AF37] text-[#0B1F3A] px-2 py-0.5 rounded-md text-[10px] font-extrabold flex items-center gap-1 shadow-xs shrink-0">
                       <Layers className="w-3 h-3" />
                       {mat.pageCount || 50} Páginas
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-[11px]">
+                    <span className="flex items-center gap-1 text-[11px] shrink-0">
                       <Clock className="w-3 h-3 text-[#D4AF37]" />
                       {mat.estimatedReadTime}
                     </span>
@@ -359,34 +359,45 @@ export const StudyGuidesView: React.FC = () => {
       {/* Advanced In-App Book Reader Modal */}
       {selectedMaterial && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-xs animate-fade-in">
-          <div className="relative w-full max-w-5xl max-h-[94vh] bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+          <div className="relative w-full max-w-5xl max-h-[94vh] bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col min-w-0">
             
             {/* Top Reader Bar */}
-            <div className="p-4 bg-[#0B1F3A] text-white flex flex-wrap items-center justify-between gap-3 border-b border-[#D4AF37]/30 shrink-0">
-              <div className="flex items-center gap-2.5 truncate max-w-xl">
-                <BookOpen className="w-5 h-5 text-[#D4AF37] shrink-0" />
-                <div className="truncate">
-                  <div className="flex items-center gap-2">
-                    <span className="font-serif font-bold text-sm sm:text-base truncate">
-                      {selectedMaterial.title}
-                    </span>
-                    {selectedMaterial.pageCount && (
-                      <span className="px-2 py-0.5 rounded bg-[#D4AF37] text-[#0B1F3A] text-[10px] font-extrabold shrink-0">
-                        {selectedMaterial.pageCount} Págs Didáticas
+            <div className="p-3 sm:p-4 bg-[#0B1F3A] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-b border-[#D4AF37]/30 shrink-0 min-w-0">
+              <div className="flex items-center justify-between gap-2 min-w-0 flex-1">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <BookOpen className="w-5 h-5 text-[#D4AF37] shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+                      <span className="font-serif font-bold text-sm sm:text-base break-words line-clamp-2 sm:truncate">
+                        {selectedMaterial.title}
                       </span>
-                    )}
+                      {selectedMaterial.pageCount && (
+                        <span className="px-2 py-0.5 rounded bg-[#D4AF37] text-[#0B1F3A] text-[10px] font-extrabold shrink-0">
+                          {selectedMaterial.pageCount} Págs Didáticas
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-300 truncate">{selectedMaterial.author}</p>
                   </div>
-                  <p className="text-[11px] text-slate-300 truncate">{selectedMaterial.author}</p>
                 </div>
+
+                {/* Close button on mobile top-right */}
+                <button
+                  onClick={() => setSelectedMaterial(null)}
+                  className="sm:hidden p-1.5 rounded-full text-slate-300 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+                  aria-label="Fechar Leitor"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Reader Controls */}
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 shrink-0">
                 {/* View Mode Toggle: Chapter vs Continuous Book */}
-                <div className="flex items-center bg-white/10 rounded-lg p-0.5 text-xs">
+                <div className="flex items-center bg-white/10 rounded-lg p-0.5 text-[11px] sm:text-xs">
                   <button
                     onClick={() => setViewMode('chapters')}
-                    className={`px-2.5 py-1 rounded font-semibold transition-colors ${
+                    className={`px-2 sm:px-2.5 py-1 rounded font-semibold transition-colors whitespace-nowrap ${
                       viewMode === 'chapters' ? 'bg-[#D4AF37] text-[#0B1F3A]' : 'text-slate-300'
                     }`}
                   >
@@ -394,7 +405,7 @@ export const StudyGuidesView: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setViewMode('continuous')}
-                    className={`px-2.5 py-1 rounded font-semibold transition-colors ${
+                    className={`px-2 sm:px-2.5 py-1 rounded font-semibold transition-colors whitespace-nowrap ${
                       viewMode === 'continuous' ? 'bg-[#D4AF37] text-[#0B1F3A]' : 'text-slate-300'
                     }`}
                   >
@@ -402,59 +413,61 @@ export const StudyGuidesView: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Font Size Selector */}
-                <div className="hidden sm:flex items-center bg-white/10 rounded-lg p-0.5 text-xs">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  {/* Font Size Selector */}
+                  <div className="hidden sm:flex items-center bg-white/10 rounded-lg p-0.5 text-xs">
+                    <button
+                      onClick={() => setFontSize('sm')}
+                      className={`px-2 py-1 rounded ${fontSize === 'sm' ? 'bg-[#D4AF37] text-[#0B1F3A] font-bold' : 'text-slate-200'}`}
+                    >
+                      A-
+                    </button>
+                    <button
+                      onClick={() => setFontSize('base')}
+                      className={`px-2 py-1 rounded ${fontSize === 'base' ? 'bg-[#D4AF37] text-[#0B1F3A] font-bold' : 'text-slate-200'}`}
+                    >
+                      A
+                    </button>
+                    <button
+                      onClick={() => setFontSize('lg')}
+                      className={`px-2 py-1 rounded ${fontSize === 'lg' ? 'bg-[#D4AF37] text-[#0B1F3A] font-bold' : 'text-slate-200'}`}
+                    >
+                      A+
+                    </button>
+                  </div>
+
+                  {/* Mark as Completed */}
                   <button
-                    onClick={() => setFontSize('sm')}
-                    className={`px-2 py-1 rounded ${fontSize === 'sm' ? 'bg-[#D4AF37] text-[#0B1F3A] font-bold' : 'text-slate-200'}`}
+                    onClick={() => toggleCompleted(selectedMaterial.id)}
+                    className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all whitespace-nowrap ${
+                      completedIds.includes(selectedMaterial.id)
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-white/10 hover:bg-white/20 text-slate-200'
+                    }`}
                   >
-                    A-
+                    <Check className="w-3.5 h-3.5 shrink-0" />
+                    <span className="hidden sm:inline">
+                      {completedIds.includes(selectedMaterial.id) ? 'Concluído' : 'Marcar como Lido'}
+                    </span>
                   </button>
+
+                  {/* Close desktop */}
                   <button
-                    onClick={() => setFontSize('base')}
-                    className={`px-2 py-1 rounded ${fontSize === 'base' ? 'bg-[#D4AF37] text-[#0B1F3A] font-bold' : 'text-slate-200'}`}
+                    onClick={() => setSelectedMaterial(null)}
+                    className="hidden sm:inline-flex p-1 rounded-full text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                    aria-label="Fechar Leitor"
                   >
-                    A
-                  </button>
-                  <button
-                    onClick={() => setFontSize('lg')}
-                    className={`px-2 py-1 rounded ${fontSize === 'lg' ? 'bg-[#D4AF37] text-[#0B1F3A] font-bold' : 'text-slate-200'}`}
-                  >
-                    A+
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
-
-                {/* Mark as Completed */}
-                <button
-                  onClick={() => toggleCompleted(selectedMaterial.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
-                    completedIds.includes(selectedMaterial.id)
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-white/10 hover:bg-white/20 text-slate-200'
-                  }`}
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">
-                    {completedIds.includes(selectedMaterial.id) ? 'Concluído' : 'Marcar como Lido'}
-                  </span>
-                </button>
-
-                {/* Close */}
-                <button
-                  onClick={() => setSelectedMaterial(null)}
-                  className="p-1 rounded-full text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-                  aria-label="Fechar Leitor"
-                >
-                  <X className="w-5 h-5" />
-                </button>
               </div>
             </div>
 
             {/* Reader Sub-Bar: Page Indicator & In-Book Search */}
-            <div className="px-5 py-2.5 bg-slate-100 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600">
-              <div className="flex items-center gap-2">
-                <FileCheck className="w-4 h-4 text-[#0B1F3A]" />
-                <span>
+            <div className="px-3 sm:px-5 py-2.5 bg-slate-100 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 text-xs text-slate-600 shrink-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <FileCheck className="w-4 h-4 text-[#0B1F3A] shrink-0" />
+                <span className="break-words min-w-0">
                   {viewMode === 'chapters'
                     ? `Capítulo ${activeChapterIndex + 1} de ${selectedMaterial.chapters.length} ${
                         selectedMaterial.pageCount
@@ -466,23 +479,23 @@ export const StudyGuidesView: React.FC = () => {
               </div>
 
               {/* In-book search input */}
-              <div className="relative max-w-xs w-full sm:w-auto">
+              <div className="relative w-full sm:max-w-xs min-w-0">
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
                 <input
                   type="text"
                   value={inBookSearch}
                   onChange={e => setInBookSearch(e.target.value)}
                   placeholder="Pesquisar termo no manual..."
-                  className="pl-8 pr-3 py-1 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#0B1F3A]"
+                  className="w-full pl-8 pr-3 py-1 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#0B1F3A]"
                 />
               </div>
             </div>
 
             {/* Reader Body: Sidebar TOC + Content Area */}
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden">
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-12 min-h-0 overflow-hidden">
               
               {/* Sidebar TOC (Index) */}
-              <div className="md:col-span-4 bg-slate-50 border-r border-slate-200 p-4 overflow-y-auto space-y-2">
+              <div className="md:col-span-4 min-w-0 max-h-40 md:max-h-none bg-slate-50 border-b md:border-b-0 md:border-r border-slate-200 p-3 sm:p-4 overflow-y-auto space-y-2 shrink-0">
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
                   Sumário do Manual ({selectedMaterial.chapters.length} partes):
                 </div>
@@ -495,55 +508,55 @@ export const StudyGuidesView: React.FC = () => {
                         setActiveChapterIndex(idx);
                         setViewMode('chapters');
                       }}
-                      className={`w-full p-3 rounded-xl text-left text-xs transition-colors flex items-start gap-2.5 ${
+                      className={`w-full p-2.5 sm:p-3 rounded-xl text-left text-xs transition-colors flex items-start gap-2.5 min-w-0 ${
                         isCurrent
                           ? 'bg-[#0B1F3A] text-[#D4AF37] font-bold shadow-xs'
                           : 'text-slate-700 hover:bg-slate-200'
                       }`}
                     >
                       <span className="font-bold shrink-0">{idx + 1}.</span>
-                      <span className="line-clamp-2 leading-snug">{ch.title}</span>
+                      <span className="line-clamp-2 leading-snug break-words min-w-0">{ch.title}</span>
                     </button>
                   );
                 })}
               </div>
 
               {/* Main Reading Window */}
-              <div className="md:col-span-8 p-6 sm:p-10 overflow-y-auto space-y-8">
+              <div className="md:col-span-8 min-w-0 p-4 sm:p-8 lg:p-10 overflow-y-auto overflow-x-hidden space-y-8">
                 
                 {/* Mode 1: Chapter by Chapter */}
                 {viewMode === 'chapters' && selectedMaterial.chapters[activeChapterIndex] && (
-                  <div className="space-y-6">
+                  <div className="space-y-6 min-w-0">
                     <div className="border-b border-slate-200 pb-4">
                       <div className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-1">
                         Capítulo {activeChapterIndex + 1} de {selectedMaterial.chapters.length}
                       </div>
-                      <h2 className="text-xl sm:text-2xl font-bold font-serif text-[#0B1F3A]">
+                      <h2 className="text-lg sm:text-2xl font-bold font-serif text-[#0B1F3A] break-words">
                         {selectedMaterial.chapters[activeChapterIndex].title}
                       </h2>
                     </div>
 
                     <div
-                      className={`text-slate-800 leading-relaxed space-y-4 ${
+                      className={`text-slate-800 leading-relaxed space-y-4 min-w-0 ${
                         fontSize === 'sm' ? 'text-xs' : fontSize === 'lg' ? 'text-base sm:text-lg' : 'text-sm'
                       }`}
                     >
-                      <p className="whitespace-pre-line text-justify font-serif sm:font-sans">
+                      <p className="whitespace-pre-line text-left sm:text-justify font-serif sm:font-sans break-words [overflow-wrap:anywhere]">
                         {selectedMaterial.chapters[activeChapterIndex].content}
                       </p>
                     </div>
 
                     {/* Key Statutes Section */}
-                    <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2">
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2 min-w-0">
                       <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5 uppercase tracking-wide">
-                        <Scale className="w-4 h-4 text-amber-700" />
-                        Dispositivos Legais e Fundamentação Jurisprudencial:
+                        <Scale className="w-4 h-4 text-amber-700 shrink-0" />
+                        <span>Dispositivos Legais e Fundamentação Jurisprudencial:</span>
                       </span>
                       <div className="flex flex-wrap gap-1.5">
                         {selectedMaterial.chapters[activeChapterIndex].keyStatutes.map((st, i) => (
                           <span
                             key={i}
-                            className="px-2.5 py-1 rounded-lg bg-white border border-amber-200 text-amber-950 text-xs font-semibold shadow-2xs"
+                            className="px-2.5 py-1 rounded-lg bg-white border border-amber-200 text-amber-950 text-xs font-semibold shadow-2xs break-words max-w-full"
                           >
                             {st}
                           </span>
@@ -552,29 +565,29 @@ export const StudyGuidesView: React.FC = () => {
                     </div>
 
                     {/* Summary Points Section */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                      <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 min-w-0">
+                      <span className="text-xs font-bold text-slate-800 uppercase tracking-wide block">
                         Pontos Vitais para Gabaritar a Prova:
                       </span>
                       <ul className="space-y-2 text-xs text-slate-700">
                         {selectedMaterial.chapters[activeChapterIndex].summaryPoints.map((pt, i) => (
-                          <li key={i} className="flex items-start gap-2">
+                          <li key={i} className="flex items-start gap-2 min-w-0">
                             <CheckCircle2 className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                            <span className="leading-relaxed">{pt}</span>
+                            <span className="leading-relaxed break-words min-w-0">{pt}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
                     {/* Prev / Next Pagination controls */}
-                    <div className="pt-6 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
                       <button
                         onClick={() => setActiveChapterIndex(prev => Math.max(0, prev - 1))}
                         disabled={activeChapterIndex === 0}
-                        className="px-4 py-2 rounded-xl border border-slate-300 font-bold disabled:opacity-30 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                        className="px-3 sm:px-4 py-2 rounded-xl border border-slate-300 font-bold disabled:opacity-30 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
                       >
-                        <ChevronLeft className="w-4 h-4" />
-                        <span>Capítulo Anterior</span>
+                        <ChevronLeft className="w-4 h-4 shrink-0" />
+                        <span>Anterior</span>
                       </button>
 
                       <button
@@ -584,10 +597,10 @@ export const StudyGuidesView: React.FC = () => {
                           )
                         }
                         disabled={activeChapterIndex === selectedMaterial.chapters.length - 1}
-                        className="px-5 py-2.5 rounded-xl bg-[#0B1F3A] text-white font-bold disabled:opacity-30 hover:bg-[#16365C] transition-colors flex items-center gap-1.5 shadow"
+                        className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-[#0B1F3A] text-white font-bold disabled:opacity-30 hover:bg-[#16365C] transition-colors flex items-center gap-1.5 shadow"
                       >
                         <span>Próximo Capítulo</span>
-                        <ChevronRight className="w-4 h-4" />
+                        <ChevronRight className="w-4 h-4 shrink-0" />
                       </button>
                     </div>
                   </div>
@@ -595,33 +608,33 @@ export const StudyGuidesView: React.FC = () => {
 
                 {/* Mode 2: Continuous Book Reading (Livro Completo) */}
                 {viewMode === 'continuous' && (
-                  <div className="space-y-12">
-                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 text-center space-y-2">
-                      <h2 className="text-2xl font-bold font-serif text-[#0B1F3A]">{selectedMaterial.title}</h2>
+                  <div className="space-y-10 sm:space-y-12 min-w-0">
+                    <div className="p-4 sm:p-6 bg-slate-50 rounded-2xl border border-slate-200 text-center space-y-2">
+                      <h2 className="text-lg sm:text-2xl font-bold font-serif text-[#0B1F3A] break-words">{selectedMaterial.title}</h2>
                       <p className="text-xs text-slate-600">{selectedMaterial.author} · {selectedMaterial.edition || 'Edição Completa'}</p>
                       <p className="text-xs text-[#0B1F3A] font-semibold">{selectedMaterial.chapters.length} capítulos em sequência contínua</p>
                     </div>
 
                     {selectedMaterial.chapters.map((ch, idx) => (
-                      <div key={idx} className="space-y-4 border-b border-slate-200 pb-8">
+                      <div key={idx} className="space-y-4 border-b border-slate-200 pb-8 min-w-0">
                         <div className="text-xs font-bold text-[#D4AF37] uppercase tracking-wide">
                           Parte {idx + 1} de {selectedMaterial.chapters.length}
                         </div>
-                        <h3 className="text-xl font-bold font-serif text-[#0B1F3A]">{ch.title}</h3>
+                        <h3 className="text-lg sm:text-xl font-bold font-serif text-[#0B1F3A] break-words">{ch.title}</h3>
 
                         <div
-                          className={`text-slate-800 leading-relaxed space-y-4 ${
+                          className={`text-slate-800 leading-relaxed space-y-4 min-w-0 ${
                             fontSize === 'sm' ? 'text-xs' : fontSize === 'lg' ? 'text-base' : 'text-sm'
                           }`}
                         >
-                          <p className="whitespace-pre-line text-justify font-serif sm:font-sans">{ch.content}</p>
+                          <p className="whitespace-pre-line text-left sm:text-justify font-serif sm:font-sans break-words [overflow-wrap:anywhere]">{ch.content}</p>
                         </div>
 
-                        <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs">
+                        <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs min-w-0">
                           <strong className="text-amber-900 block mb-1">Dispositivos Aplicados:</strong>
                           <div className="flex flex-wrap gap-1">
                             {ch.keyStatutes.map((st, i) => (
-                              <span key={i} className="px-2 py-0.5 rounded bg-white border border-amber-200 text-amber-900 text-[11px]">
+                              <span key={i} className="px-2 py-0.5 rounded bg-white border border-amber-200 text-amber-900 text-[11px] break-words max-w-full">
                                 {st}
                               </span>
                             ))}

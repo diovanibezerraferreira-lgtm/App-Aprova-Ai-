@@ -54,33 +54,33 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#0B1F3A] text-white border-b border-[#D4AF37]/30 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
+    <header className="sticky top-0 z-40 w-full max-w-full bg-[#0B1F3A] text-white border-b border-[#D4AF37]/30 shadow-md">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-2 sm:gap-4 min-w-0">
           
           {/* Zone 1: Brand Wordmark with discreet legal symbol */}
           <button
             onClick={() => handleNavClick('inicio')}
-            className="flex items-center gap-2.5 text-left focus:outline-none group shrink-0"
+            className="flex items-center gap-2 sm:gap-2.5 text-left focus:outline-none group min-w-0 shrink"
             aria-label="Ir para a página inicial do Aprova Direito"
           >
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#B89326] p-0.5 flex items-center justify-center shadow-inner">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#B89326] p-0.5 flex items-center justify-center shadow-inner shrink-0">
               <div className="w-full h-full bg-[#0B1F3A] rounded-[7px] flex items-center justify-center group-hover:bg-[#0E274A] transition-colors">
-                <Scale className="w-5 h-5 text-[#D4AF37]" strokeWidth={2.2} />
+                <Scale className="w-4 h-4 sm:w-5 sm:h-5 text-[#D4AF37]" strokeWidth={2.2} />
               </div>
             </div>
-            <div className="flex flex-col">
-              <span className="font-serif text-lg font-bold tracking-tight text-white group-hover:text-[#F6ECCE] transition-colors whitespace-nowrap">
+            <div className="flex flex-col min-w-0">
+              <span className="font-serif text-sm sm:text-lg font-bold tracking-tight text-white group-hover:text-[#F6ECCE] transition-colors whitespace-nowrap truncate">
                 APROVA <span className="text-[#D4AF37]">DIREITO</span>
               </span>
-              <span className="text-[10px] tracking-wider uppercase text-slate-300 font-medium -mt-1 hidden sm:block">
+              <span className="text-[10px] tracking-wider uppercase text-slate-300 font-medium -mt-1 hidden sm:block truncate">
                 OAB & Concursos Jurídicos
               </span>
             </div>
           </button>
 
           {/* Zone 2: Navigation Links (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-sm font-medium">
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-sm font-medium min-w-0">
             {navLinks.map(link => {
               const isActive = activeTab === link.id;
               return (
@@ -100,22 +100,24 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Zone 3: Primary Action & Profile Zone */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* PWA Install Button */}
             <PWAInstallButton variant="header" />
 
             {/* Premium CTA Button */}
             <button
               onClick={() => handleNavClick('premium')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all shadow-sm ${
+              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-semibold transition-all shadow-sm whitespace-nowrap ${
                 activeTab === 'premium'
                   ? 'bg-[#D4AF37] text-[#0B1F3A]'
                   : 'bg-gradient-to-r from-[#D4AF37] to-[#C59F2A] hover:from-[#E6C86E] hover:to-[#D4AF37] text-[#0B1F3A]'
               }`}
             >
-              <Crown className="w-3.5 h-3.5 fill-current" />
+              <Crown className="w-3.5 h-3.5 fill-current shrink-0" />
               {authProfile?.isPremium || userProfile.isPremium ? (
-                <span>Premium Ativo</span>
+                <span>
+                  <span className="hidden sm:inline">Premium </span>Ativo
+                </span>
               ) : (
                 <>
                   <span className="hidden sm:inline">Assinar</span> Premium
@@ -128,14 +130,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors border ${
+                  className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors border ${
                     activeTab === 'perfil' || userDropdownOpen
                       ? 'border-[#D4AF37] bg-white/15 text-[#D4AF37]'
                       : 'border-slate-700 hover:border-slate-500 bg-white/5 text-slate-200'
                   }`}
                   title="Menu do Usuário"
                 >
-                  <User className="w-3.5 h-3.5 text-[#D4AF37]" />
+                  <User className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                   <span className="hidden md:inline max-w-[110px] truncate font-semibold">
                     {activeUser?.name?.split(' ')[0] || 'Aluno'}
                   </span>
@@ -143,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 {/* User Dropdown */}
                 {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white text-slate-800 rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 text-xs">
+                  <div className="absolute right-0 mt-2 w-48 max-w-[calc(100vw-1.5rem)] bg-white text-slate-800 rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 text-xs">
                     <div className="px-3 py-2 border-b border-slate-100">
                       <p className="font-bold text-slate-900 truncate">{activeUser?.name}</p>
                       <p className="text-[11px] text-slate-500 truncate">{currentUser?.email || activeUser?.email}</p>
@@ -176,9 +178,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             ) : (
               <button
                 onClick={onOpenAuth}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors"
+                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors whitespace-nowrap"
               >
-                <User className="w-3.5 h-3.5" />
+                <User className="w-3.5 h-3.5 shrink-0" />
                 <span>Entrar</span>
               </button>
             )}
@@ -186,7 +188,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Mobile Menu Hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-md text-slate-200 hover:text-white hover:bg-white/10"
+              className="lg:hidden p-1.5 sm:p-2 rounded-md text-slate-200 hover:text-white hover:bg-white/10 shrink-0"
               aria-label="Abrir menu de navegação"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -198,7 +200,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Dropdown Menu for all items */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-[#071527] border-b border-[#D4AF37]/20 px-4 pt-2 pb-4 space-y-1">
+        <div className="lg:hidden w-full max-w-full bg-[#071527] border-b border-[#D4AF37]/20 px-3 sm:px-4 pt-2 pb-4 space-y-1">
           <div className="grid grid-cols-2 gap-1.5 py-2">
             {navLinks.map(link => (
               <button

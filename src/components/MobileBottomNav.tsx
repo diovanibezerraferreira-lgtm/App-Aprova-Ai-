@@ -21,10 +21,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0B1F3A]/95 backdrop-blur-md border-t border-[#D4AF37]/30 text-slate-300 pb-safe shadow-2xl"
+      className="lg:hidden fixed bottom-0 left-0 right-0 w-full max-w-full z-40 bg-[#0B1F3A]/95 backdrop-blur-md border-t border-[#D4AF37]/30 text-slate-300 pb-safe shadow-2xl overflow-hidden"
       aria-label="Navegação móvel inferior"
     >
-      <div className="grid grid-cols-5 items-center h-16 max-w-lg mx-auto px-1">
+      <div className="grid grid-cols-5 items-center h-16 w-full max-w-lg mx-auto px-1">
         {tabs.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -32,15 +32,15 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             <button
               key={tab.id}
               onClick={() => onSelectTab(tab.id)}
-              className={`flex flex-col items-center justify-center h-full min-h-[44px] min-w-[44px] py-1 transition-colors relative ${
+              className={`flex flex-col items-center justify-center w-full min-w-0 h-full min-h-[44px] py-1 px-0.5 transition-colors relative ${
                 isActive ? 'text-[#D4AF37]' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               {isActive && (
                 <span className="absolute top-1 w-6 h-0.5 bg-[#D4AF37] rounded-full" />
               )}
-              <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.4]' : 'stroke-[1.8]'}`} />
-              <span className={`text-[11px] font-medium tracking-tight mt-1 truncate max-w-[62px] ${
+              <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'stroke-[2.4]' : 'stroke-[1.8]'}`} />
+              <span className={`text-[10px] sm:text-[11px] font-medium tracking-tight mt-1 truncate max-w-full ${
                 isActive ? 'font-semibold text-[#D4AF37]' : ''
               }`}>
                 {tab.label}

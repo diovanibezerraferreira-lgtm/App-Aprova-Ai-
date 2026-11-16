@@ -169,46 +169,46 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-[#D4AF37]/40 overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-[#D4AF37]/40 overflow-hidden my-2 sm:my-6 max-h-[92vh] overflow-y-auto">
 
         {/* Top Banner */}
-        <div className="bg-gradient-to-r from-[#0B1F3A] via-[#16365C] to-[#0B1F3A] text-white p-6 relative">
+        <div className="bg-gradient-to-r from-[#0B1F3A] via-[#16365C] to-[#0B1F3A] text-white p-4 sm:p-6 relative">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1 rounded-full text-slate-300 hover:text-white hover:bg-white/10"
+            className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 p-1 rounded-full text-slate-300 hover:text-white hover:bg-white/10"
             aria-label="Fechar"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-semibold mb-3">
-            <Crown className="w-3.5 h-3.5" />
-            <span>Assinatura Premium Aprova Direito</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-semibold mb-3 max-w-[calc(100%-2.25rem)]">
+            <Crown className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Assinatura Premium Aprova Direito</span>
           </div>
 
-          <h2 className="text-2xl font-bold font-serif text-white">
+          <h2 className="text-xl sm:text-2xl font-bold font-serif text-white pr-6 break-words">
             {isPremiumActive ? 'Seu Plano Premium está Ativo!' : 'Acelere sua Aprovação na OAB'}
           </h2>
           <div className="flex flex-wrap items-baseline gap-2 mt-2">
-            <span className="text-3xl font-extrabold text-[#D4AF37]">R$ 29,90</span>
+            <span className="text-2xl sm:text-3xl font-extrabold text-[#D4AF37]">R$ 29,90</span>
             <span className="text-sm text-slate-300">/ mês</span>
-            <span className="text-xs bg-[#D4AF37]/20 text-[#F6ECCE] px-2.5 py-0.5 rounded-full ml-1">
+            <span className="text-xs bg-[#D4AF37]/20 text-[#F6ECCE] px-2.5 py-0.5 rounded-full">
               Cartão Recorrente ou Pix
             </span>
           </div>
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-5">
+        <div className="p-4 sm:p-6 space-y-5">
 
           {/* Sandbox badge if detected */}
           {isSandbox && (
             <div className="p-3 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-start gap-2.5">
               <FlaskConical className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <div>
+              <div className="min-w-0">
                 <p className="font-bold">Modo Teste Sandbox (Asaas)</p>
-                <p className="text-[11px] text-amber-800 mt-0.5">
+                <p className="text-[11px] text-amber-800 mt-0.5 break-words">
                   Ambiente de testes ativo. Nenhuma cobrança real será feita no seu cartão ou conta bancária.
                 </p>
               </div>
@@ -220,9 +220,9 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             <div className="space-y-4">
               <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                <div className="space-y-1">
+                <div className="space-y-1 min-w-0">
                   <p className="font-bold text-sm text-emerald-900">Assinatura Confirmada</p>
-                  <p className="leading-relaxed text-emerald-800">
+                  <p className="leading-relaxed text-emerald-800 break-words [overflow-wrap:anywhere]">
                     Todos os recursos Premium do Aprova Direito estão liberados para sua conta ({currentUser?.email || userEmail}).
                   </p>
                   {userProfile?.subscriptionDueDate && (
@@ -316,20 +316,20 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 </div>
               )}
 
-              <div className="flex items-center gap-2 pt-1">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
                 <button
                   type="button"
                   onClick={handleCheckStatus}
                   disabled={checkingStatus}
                   className="flex-1 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 ${checkingStatus ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${checkingStatus ? 'animate-spin' : ''}`} />
                   <span>{checkingStatus ? 'Consultando...' : 'Já paguei — Verificar Status'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setCheckoutUrl(null)}
-                  className="py-2.5 px-3 text-xs text-slate-500 hover:text-slate-800 font-medium"
+                  className="py-2.5 px-3 text-xs text-slate-500 hover:text-slate-800 font-medium text-center"
                 >
                   Voltar
                 </button>
@@ -351,12 +351,12 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 {premiumFeatures.map((feat, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-xs text-slate-700">
                     <Check className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                    <span>{feat}</span>
+                    <span className="break-words">{feat}</span>
                   </li>
                 ))}
               </ul>
 
-              <div className="grid grid-cols-2 gap-2 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                 <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-2 text-xs text-slate-700">
                   <CreditCard className="w-4 h-4 text-[#0B1F3A] shrink-0" />
                   <span className="font-medium">Cartão Recorrente</span>
