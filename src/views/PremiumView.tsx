@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Crown,
   CheckCircle2,
-  XCircle,
   ShieldCheck,
   CreditCard,
   QrCode,
@@ -12,7 +11,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { fetchSubscriptionStatus } from '../services/asaasService';
-import { LEGAL_BRIEFS } from '../data/legalBriefs';
+import { TOTAL_LEGAL_BRIEFS_COUNT } from '../data/legalBriefs';
+import { TOTAL_QUESTIONS_COUNT } from '../data/questions';
+import { TOTAL_STUDY_MATERIALS_COUNT } from '../data/studyMaterials';
 
 interface PremiumViewProps {
   onOpenPremiumModal: () => void;
@@ -23,11 +24,10 @@ export const PremiumView: React.FC<PremiumViewProps> = ({
   onOpenPremiumModal,
   onGoToQuestions
 }) => {
-  const { currentUser, userProfile } = useAuth();
+  const { currentUser, userProfile, isPremiumActive } = useAuth();
   const [checking, setChecking] = React.useState(false);
   const [statusFeedback, setStatusFeedback] = React.useState<string | null>(null);
 
-  const isPremiumActive = !!userProfile?.isPremium;
   const subStatus = userProfile?.subscriptionStatus || 'NONE';
 
   const handleRefreshStatus = async () => {
@@ -55,33 +55,33 @@ export const PremiumView: React.FC<PremiumViewProps> = ({
   const comparisonItems = [
     {
       feature: 'Banco de Questões Didáticas',
-      free: 'Acesso demonstrativo',
-      premium: 'Acesso completo a todas as disciplinas com filtro anti-repetição'
+      free: 'Até 10 questões por dia distribuídas entre as disciplinas',
+      premium: `Acesso completo e ilimitado às ${TOTAL_QUESTIONS_COUNT.toLocaleString('pt-BR')} questões com filtro anti-repetição`
     },
     {
       feature: 'Comentários & Fundamentação Legal',
-      free: 'Disponível em questões exemplo',
-      premium: 'Completo com artigos de lei e súmulas dos Tribunais'
+      free: 'Incluso nas 10 questões diárias gratuitas',
+      premium: 'Ilimitado com artigos de lei e súmulas dos Tribunais'
     },
     {
       feature: 'Simulados Cronometrados FGV',
-      free: '1 por dia (versão express)',
-      premium: 'Ilimitados com cronômetro oficial e revisão detalhada'
+      free: '1 Simulado Express gratuito por dia',
+      premium: '40 modalidades ilimitadas (OAB 80Q, Concursos e Customizados)'
     },
     {
       feature: 'Laboratório de Peças Processuais (2ª Fase)',
-      free: 'Visualização de modelos base',
-      premium: `${LEGAL_BRIEFS.length} tipos de peças completas com casos práticos e esqueletos`
+      free: '2 peças completas (Resposta à Acusação e Reclamação Trabalhista)',
+      premium: `Todas as ${TOTAL_LEGAL_BRIEFS_COUNT} peças completas com casos práticos e esqueletos`
     },
     {
-      feature: 'Biblioteca de Apostilas & Resumos',
-      free: 'Leitura demonstrativa',
-      premium: 'Biblioteca completa com todas as disciplinas da OAB'
+      feature: 'Biblioteca de Apostilas & Manuais',
+      free: '3 apostilas com 1º capítulo liberado (Ética, Constitucional e Civil)',
+      premium: `Todos os ${TOTAL_STUDY_MATERIALS_COUNT} manuais 50+ páginas e apostilas desbloqueados`
     },
     {
       feature: 'Painel de Desempenho & Métricas',
-      free: 'Estatísticas locais básicas',
-      premium: 'Diagnóstico avançado de pontos fracos e metas na nuvem'
+      free: 'Estatísticas básicas de treino',
+      premium: 'Diagnóstico completo de pontos fracos e histórico na nuvem'
     },
     {
       feature: 'Formas de Pagamento & Segurança',
@@ -183,19 +183,19 @@ export const PremiumView: React.FC<PremiumViewProps> = ({
             <ul className="space-y-3 pt-4 border-t border-slate-100 text-xs text-slate-700">
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <span>Acesso a questões didáticas selecionadas</span>
+                <span>Até <strong>10 questões por dia</strong> entre as disciplinas</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <span>1 simulado express por dia</span>
+                <span><strong>1 Simulado Express</strong> gratuito por dia</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <span>Consulta a modelos demonstrativos de peças</span>
+                <span><strong>2 peças completas</strong> (Resposta à Acusação e Reclamação Trabalhista)</span>
               </li>
-              <li className="flex items-start gap-2 text-slate-400">
-                <XCircle className="w-4 h-4 text-slate-300 shrink-0 mt-0.5" />
-                <span>Sem simulados ilimitados customizados</span>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span><strong>3 apostilas</strong> com 1º capítulo liberado (Ética, Constitucional e Civil)</span>
               </li>
             </ul>
           </div>
@@ -237,7 +237,7 @@ export const PremiumView: React.FC<PremiumViewProps> = ({
             <ul className="space-y-3 pt-4 border-t border-slate-100 text-xs text-slate-800 font-medium">
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                <span>Acesso completo ao banco de questões com controle anti-repetição</span>
+                <span>Acesso completo às {TOTAL_QUESTIONS_COUNT.toLocaleString('pt-BR')} questões com filtro anti-repetição</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
@@ -245,11 +245,11 @@ export const PremiumView: React.FC<PremiumViewProps> = ({
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                <span>Laboratório de 2ª fase completo com {LEGAL_BRIEFS.length} tipos de peças processuais</span>
+                <span>Laboratório de 2ª fase completo com todas as {TOTAL_LEGAL_BRIEFS_COUNT} peças processuais</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                <span>Biblioteca completa de apostilas doutrinárias no app</span>
+                <span>Biblioteca completa com todos os {TOTAL_STUDY_MATERIALS_COUNT} manuais e apostilas</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />

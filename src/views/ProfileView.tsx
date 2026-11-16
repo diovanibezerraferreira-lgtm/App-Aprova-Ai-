@@ -28,7 +28,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   onOpenPremium,
   onSelectTab
 }) => {
-  const { currentUser, userProfile, updateProfileData, signOutUser } = useAuth();
+  const { currentUser, userProfile, isPremiumActive, updateProfileData, signOutUser } = useAuth();
 
   const [name, setName] = useState('');
   const [studyFocus, setStudyFocus] = useState<UserProfile['studyFocus']>('OAB 1ª Fase');
@@ -179,7 +179,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </div>
               <div className="flex flex-wrap items-center justify-between gap-1.5">
                 <span className="text-slate-400">Plano atual:</span>
-                {userProfile?.isPremium ? (
+                {isPremiumActive ? (
                   <span className="font-bold text-[#0B1F3A] bg-[#D4AF37]/25 px-2 py-0.5 rounded inline-flex items-center gap-1">
                     <Crown className="w-3 h-3 text-[#D4AF37] fill-current" />
                     Premium Ativo
@@ -215,16 +215,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </span>
               <span
                 className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                  userProfile?.isPremium
+                  isPremiumActive
                     ? 'text-[#0B1F3A] bg-[#D4AF37]'
                     : 'text-[#0B1F3A] bg-[#D4AF37]/20'
                 }`}
               >
-                {userProfile?.isPremium ? 'Premium' : 'Gratuito'}
+                {isPremiumActive ? 'Premium' : 'Gratuito'}
               </span>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
-              {userProfile?.isPremium
+              {isPremiumActive
                 ? 'Sua assinatura Premium Aprova Direito (R$ 29,90/mês) está ativa com acesso total liberado.'
                 : 'Você está utilizando o plano gratuito. Desbloqueie simulados ilimitados e banco ampliado com o Premium.'}
             </p>
@@ -234,7 +234,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             >
               <Crown className="w-3.5 h-3.5 fill-current" />
               <span>
-                {userProfile?.isPremium ? 'Ver Detalhes do Premium' : 'Assinar Premium (R$ 29,90)'}
+                {isPremiumActive ? 'Ver Detalhes do Premium' : 'Assinar Premium (R$ 29,90)'}
               </span>
             </button>
           </div>

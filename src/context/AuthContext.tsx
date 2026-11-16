@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import {
@@ -13,17 +13,30 @@ import {
   createUserProfileDoc,
   createLocalFallbackProfile
 } from '../services/authService';
+import {
+  loadUserAnswersFromFirestore,
+  loadUserSimuladosFromFirestore
+} from '../services/firestoreSync';
 import { UserProfile } from '../types';
-import { getStoredProfile, saveStoredProfile } from '../utils/storage';
+import {
+  getStoredProfile,
+  saveStoredProfile,
+  clearStoredProfile,
+  resetUserProgress,
+  mergeRemoteAnswersIntoStorage,
+  mergeRemoteSimuladosIntoStorage
+} from '../utils/storage';
 
 interface AuthContextType {
   currentUser: User | null;
   userProfile: ExtendedUserProfile | null;
+  isPremiumActive: boolean;
   loading: boolean;
   authModalOpen: boolean;
   authModalMode: 'login' | 'signup' | 'forgot';
   openAuthModal: (mode?: 'login' | 'signup' | 'forgot') => void;
   closeAuthModal: () => void;
+  getAuthHeaders: () => Promise<Record<string, string>>;
   signUp: (name: string, email: string, pass: string, focus: UserProfile['studyFocus']) => Promise<void>;
   signIn: (email: string, pass: string) => Promise<void>;
   signInGoogle: () => Promise<void>;
@@ -34,6 +47,11 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function isProfilePremiumActive(user: User | null, profile: ExtendedUserProfile | null): boolean {
+  if (!user || !profile) return false;
+  return profile.isPremium === true && profile.subscriptionStatus === 'ACTIVE';
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -65,6 +83,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserProfile(profile);
           saveStoredProfile(profile);
 
+          // Hydrate cloud study progress on login
+          Promise.all([
+            loadUserAnswersFromFirestore(),
+            loadUserSimuladosFromFirestore()
+          ]).then(([remoteAnswers, remoteSimulados]) => {
+            mergeRemoteAnswersIntoStorage(remoteAnswers);
+            mergeRemoteSimuladosIntoStorage(remoteSimulados);
+          }).catch(() => {});
+
           // Real-time listener: When Asaas Webhook updates user doc, UI updates automatically!
           try {
             const { doc, onSnapshot } = await import('firebase/firestore');
@@ -88,6 +115,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ...fallback,
             id: user.uid,
             plan: 'gratuito',
+            isPremium: false,
+            subscriptionStatus: 'NONE',
             termsAccepted: true,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -106,6 +135,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         unsubscribeDoc();
       }
     };
+  }, []);
+
+  const isPremiumActive = isProfilePremiumActive(currentUser, userProfile);
+
+  const getAuthHeaders = useCallback(async (): Promise<Record<string, string>> => {
+    const user = auth.currentUser;
+    if (!user) return {};
+    try {
+      const token = await user.getIdToken();
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    } catch {
+      return {};
+    }
   }, []);
 
   const openAuthModal = (mode: 'login' | 'signup' | 'forgot' = 'login') => {
@@ -140,7 +182,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInLocally = (name: string, email: string, focus: UserProfile['studyFocus']) => {
-    const profile = createLocalFallbackProfile(name, email, focus);
+    const profile = {
+      ...createLocalFallbackProfile(name, email, focus),
+      isPremium: false,
+      subscriptionStatus: 'NONE' as const,
+      plan: 'gratuito' as const,
+    };
     setUserProfile(profile);
     saveStoredProfile(profile);
   };
@@ -155,17 +202,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.warn('Notice during signOut:', e);
     }
+    setCurrentUser(null);
     setUserProfile(null);
-    saveStoredProfile({
-      name: 'Estudante Concurseiro',
-      email: 'estudante@aprovadireito.com.br',
-      isRegistered: false,
-      studyFocus: 'OAB 1ª Fase',
-      targetExamDate: '2026-11-29',
-      dailyGoalQuestions: 20,
-      memberSince: 'Novembro de 2026',
-      isPremium: false
-    });
+    clearStoredProfile();
+    resetUserProgress();
   };
 
   const updateProfileData = async (data: Partial<ExtendedUserProfile>) => {
@@ -183,11 +223,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         currentUser,
         userProfile,
+        isPremiumActive,
         loading,
         authModalOpen,
         authModalMode,
         openAuthModal,
         closeAuthModal,
+        getAuthHeaders,
         signUp,
         signIn,
         signInGoogle,

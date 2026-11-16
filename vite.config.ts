@@ -61,6 +61,10 @@ export default defineConfig(() => {
           navigateFallbackDenylist: [/^\/__/, /^\/api/],
           runtimeCaching: [
             {
+              urlPattern: /^\/api\/.*/i,
+              handler: 'NetworkOnly',
+            },
+            {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
               handler: 'CacheFirst',
               options: {
@@ -91,7 +95,7 @@ export default defineConfig(() => {
           ],
         },
         devOptions: {
-          enabled: true,
+          enabled: process.env.DISABLE_HMR !== 'true',
           type: 'module',
         },
       }),

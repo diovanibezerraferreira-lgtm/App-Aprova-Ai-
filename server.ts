@@ -58,6 +58,54 @@ async function startServer() {
     }
   });
 
+  app.all('/api/questions', async (req, res) => {
+    try {
+      const { default: handler } = await import('./api/questions.js');
+      await handler(req, res);
+    } catch (err: any) {
+      console.error('Error in /api/questions:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: err.message || 'Internal server error' });
+      }
+    }
+  });
+
+  app.all('/api/simulados', async (req, res) => {
+    try {
+      const { default: handler } = await import('./api/simulados.js');
+      await handler(req, res);
+    } catch (err: any) {
+      console.error('Error in /api/simulados:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: err.message || 'Internal server error' });
+      }
+    }
+  });
+
+  app.all('/api/briefs', async (req, res) => {
+    try {
+      const { default: handler } = await import('./api/briefs.js');
+      await handler(req, res);
+    } catch (err: any) {
+      console.error('Error in /api/briefs:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: err.message || 'Internal server error' });
+      }
+    }
+  });
+
+  app.all('/api/materials', async (req, res) => {
+    try {
+      const { default: handler } = await import('./api/materials.js');
+      await handler(req, res);
+    } catch (err: any) {
+      console.error('Error in /api/materials:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: err.message || 'Internal server error' });
+      }
+    }
+  });
+
   // Safe healthcheck endpoint (never leaks secret keys)
   app.get('/api/health', (_req, res) => {
     const hasAsaasKey = !!process.env.ASAAS_API_KEY;

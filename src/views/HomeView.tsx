@@ -1,7 +1,8 @@
 import React from 'react';
 import { ActiveTab, Discipline, UserProfile } from '../types';
 import { OAB_DISCIPLINES } from '../data/disciplines';
-import { LEGAL_BRIEFS } from '../data/legalBriefs';
+import { TOTAL_LEGAL_BRIEFS_COUNT } from '../data/legalBriefs';
+import { TOTAL_QUESTIONS_COUNT } from '../data/questions';
 import {
   Scale,
   Award,
@@ -50,7 +51,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     {
       icon: FileCheck,
       title: 'Laboratório de Peças Processuais (2ª Fase)',
-      description: `${LEGAL_BRIEFS.length} peças fundamentais das 7 áreas da 2ª fase com análise de competência, prazos, estrutura passo a passo e modelos completos.`
+      description: `${TOTAL_LEGAL_BRIEFS_COUNT} peças fundamentais das 7 áreas da 2ª fase com análise de competência, prazos, estrutura passo a passo e modelos completos.`
     },
     {
       icon: BookOpen,
@@ -147,7 +148,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {/* Quick Proof metrics strip */}
             <div className="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 border-t border-white/10 text-xs text-slate-300 max-w-2xl">
               <div className="min-w-0">
-                <span className="block text-lg sm:text-xl font-bold text-[#D4AF37] tabular-nums">800+</span>
+                <span className="block text-lg sm:text-xl font-bold text-[#D4AF37] tabular-nums">{TOTAL_QUESTIONS_COUNT.toLocaleString('pt-BR')}</span>
                 <span className="text-slate-400">Questões Comentadas</span>
               </div>
               <div className="min-w-0">
@@ -155,7 +156,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <span className="text-slate-400">Manuais & Apostilas</span>
               </div>
               <div className="min-w-0">
-                <span className="block text-lg sm:text-xl font-bold text-white tabular-nums">32+</span>
+                <span className="block text-lg sm:text-xl font-bold text-white tabular-nums">40+</span>
                 <span className="text-slate-400">Simulados & Concursos</span>
               </div>
               <div className="min-w-0">
@@ -279,7 +280,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               Laboratório Prático de Peças Processuais
             </h2>
             <p className="text-sm text-slate-300 leading-relaxed">
-              Não perca pontos em endereçamento, tempestividade ou falta de pedidos. Treine as {LEGAL_BRIEFS.length} principais peças cobradas nas 2ª fases da OAB (Civil, Processo Civil, Penal, Trabalho, Constitucional, Tributário e Empresarial) com casos hipotéticos e modelos demonstrativos redigidos.
+              Não perca pontos em endereçamento, tempestividade ou falta de pedidos. Treine as {TOTAL_LEGAL_BRIEFS_COUNT} principais peças cobradas nas 2ª fases da OAB (Civil, Processo Civil, Penal, Trabalho, Constitucional, Tributário e Empresarial) com casos hipotéticos e modelos demonstrativos redigidos.
             </p>
             <div className="flex flex-wrap gap-2 pt-2">
               <button
@@ -334,19 +335,19 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <ul className="space-y-2.5 text-xs text-slate-700 pt-4 border-t border-slate-100">
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span>Acesso a questões demonstrativas com gabarito</span>
+                    <span>Até <strong>10 questões por dia</strong> distribuídas entre as disciplinas</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span>1 simulado express por dia</span>
+                    <span><strong>1 simulado express</strong> gratuito por dia</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span>Visualização de modelos de peças processuais</span>
+                    <span><strong>2 peças completas</strong> (Resposta à Acusação e Reclamação Trabalhista)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <span>Painel básico de acompanhamento local</span>
+                    <span><strong>3 apostilas</strong> com 1º capítulo liberado (Ética, Constitucional e Civil)</span>
                   </li>
                 </ul>
               </div>
@@ -386,19 +387,19 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <ul className="space-y-2.5 text-xs text-slate-700 pt-4 border-t border-slate-100">
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                    <span><strong>Acesso ilimitado</strong> a todo o banco de questões</span>
+                    <span><strong>Acesso ilimitado</strong> a todas as {TOTAL_QUESTIONS_COUNT.toLocaleString('pt-BR')} questões comentadas</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                    <span><strong>Simulados ilimitados</strong> com cronômetro oficial da prova</span>
+                    <span><strong>Simulados ilimitados</strong> com cronômetro oficial da prova (80Q / 5h)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                    <span><strong>Laboratório de 2ª fase</strong> completo com {LEGAL_BRIEFS.length} peças</span>
+                    <span><strong>Laboratório de 2ª fase</strong> completo com todas as {TOTAL_LEGAL_BRIEFS_COUNT} peças</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                    <span><strong>Biblioteca completa</strong> de apostilas e resumos</span>
+                    <span><strong>Biblioteca completa</strong> de manuais 50+ páginas e apostilas</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />

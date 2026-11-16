@@ -1,8 +1,15 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { DisciplineId, Question } from '../types';
-import { MOCK_QUESTIONS } from '../data/questions';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { QuestionItem } from '../types';
 import { OAB_DISCIPLINES } from '../data/disciplines';
+import { TOTAL_QUESTIONS_COUNT, FREE_DAILY_QUESTIONS_LIMIT } from '../data/questions';
 import { saveQuestionAnswer, getStoredAnswers, resetQuestionAnswers } from '../utils/storage';
+import { useAuth } from '../context/AuthContext';
+import {
+  fetchQuestionsFeed,
+  submitQuestionAnswer,
+  ApiAccessError,
+  DailyQuotaInfo
+} from '../services/contentService';
 import {
   HelpCircle,
   CheckCircle2,
@@ -11,136 +18,170 @@ import {
   RotateCcw,
   BookOpen,
   Scale,
-  Award,
   Filter,
   Info,
   SlidersHorizontal,
-  Layers,
   Flame,
   BookmarkCheck,
   RefreshCw,
   Sparkles,
   Check,
-  Tag
+  Tag,
+  Lock,
+  Crown,
+  LogIn,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface QuestionsViewProps {
   initialDisciplineId?: string;
   onRefreshPerformance?: () => void;
+  onOpenAuth?: () => void;
+  onOpenPremium?: () => void;
+}
+
+interface RevealedSolution {
+  correctOptionId: 'A' | 'B' | 'C' | 'D';
+  explanation: string;
+  legalFoundation: string;
 }
 
 export const QuestionsView: React.FC<QuestionsViewProps> = ({
   initialDisciplineId,
-  onRefreshPerformance
+  onRefreshPerformance,
+  onOpenAuth,
+  onOpenPremium
 }) => {
+  const { currentUser, isPremiumActive } = useAuth();
+
   const [selectedDiscipline, setSelectedDiscipline] = useState<string>(initialDisciplineId || 'todas');
   const [selectedSubject, setSelectedSubject] = useState<string>('todos');
   const [selectedDifficulty, setSelectedDifficulty] = useState<'todas' | 'Fácil' | 'Médio' | 'Difícil'>('todas');
-  
-  // Storage version for reactive updates
+  const [page, setPage] = useState<number>(1);
+
+  // Server feed state
+  const [questionsPool, setQuestionsPool] = useState<QuestionItem[]>([]);
+  const [serverIsPremium, setServerIsPremium] = useState<boolean>(false);
+  const [quota, setQuota] = useState<DailyQuotaInfo | null>(null);
+  const [catalogTotal, setCatalogTotal] = useState<number>(TOTAL_QUESTIONS_COUNT);
+  const [byDisciplineStats, setByDisciplineStats] = useState<Record<string, number>>({});
+  const [availableSubjects, setAvailableSubjects] = useState<{ name: string; count: number }[]>([]);
+  const [difficultyCounts, setDifficultyCounts] = useState({ todas: 0, facil: 0, medio: 0, dificil: 0 });
+  const [pagination, setPagination] = useState({ page: 1, limit: 300, total: 0, totalPages: 1 });
+  const [loading, setLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Interaction & grading state
   const [storageVersion, setStorageVersion] = useState<number>(0);
-  
-  // Active queue index
   const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(0);
   const [selectedOptionId, setSelectedOptionId] = useState<'A' | 'B' | 'C' | 'D' | null>(null);
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [revealedSolutions, setRevealedSolutions] = useState<Record<string, RevealedSolution>>({});
+  const [limitReachedMessage, setLimitReachedMessage] = useState<string | null>(null);
   const [sessionHits, setSessionHits] = useState<number>(0);
   const [sessionMisses, setSessionMisses] = useState<number>(0);
   const [resetNotice, setResetNotice] = useState<string | null>(null);
 
-  // Sync initialDisciplineId if changed externally
   useEffect(() => {
     if (initialDisciplineId) {
       setSelectedDiscipline(initialDisciplineId);
       setSelectedSubject('todos');
+      setPage(1);
       setCurrentQueueIndex(0);
       setSelectedOptionId(null);
       setIsAnswered(false);
     }
   }, [initialDisciplineId]);
 
-  // Read stored answers
+  const loadFeed = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const res = await fetchQuestionsFeed({
+        disciplineId: selectedDiscipline,
+        subject: selectedSubject,
+        difficulty: selectedDifficulty,
+        page,
+        limit: 300,
+      });
+
+      setQuestionsPool(res.questions);
+      setServerIsPremium(res.isPremium);
+      setQuota(res.quota);
+      setCatalogTotal(res.catalogStats.total);
+      setByDisciplineStats(res.catalogStats.byDiscipline);
+      setAvailableSubjects(res.availableSubjects);
+      setDifficultyCounts(res.difficultyCounts);
+      setPagination(res.pagination);
+
+      if (!res.isPremium && res.quota.questionsRemaining <= 0) {
+        setLimitReachedMessage(
+          `Você atingiu o limite diário de ${res.quota.questionsLimit} questões gratuitas de hoje. Assine o Plano Premium para continuar sem limites.`
+        );
+      } else {
+        setLimitReachedMessage(null);
+      }
+    } catch (err: any) {
+      setLoadError(err?.message || 'Não foi possível carregar as questões do servidor.');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedDiscipline, selectedSubject, selectedDifficulty, page]);
+
+  useEffect(() => {
+    loadFeed();
+  }, [loadFeed, currentUser?.uid, isPremiumActive]);
+
   const storedAnswers = useMemo(() => {
     return getStoredAnswers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageVersion]);
 
-  // Answer records map
   const answersMap = useMemo(() => {
     return new Map(storedAnswers.map(a => [a.questionId, a]));
   }, [storedAnswers]);
 
-  // Available subjects for the currently selected discipline
-  const availableSubjects = useMemo(() => {
-    const pool = selectedDiscipline === 'todas'
-      ? MOCK_QUESTIONS
-      : MOCK_QUESTIONS.filter(q => q.disciplineId === selectedDiscipline);
-
-    const subjectCounts = new Map<string, number>();
-    for (const q of pool) {
-      subjectCounts.set(q.subject, (subjectCounts.get(q.subject) || 0) + 1);
-    }
-
-    return Array.from(subjectCounts.entries())
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-  }, [selectedDiscipline]);
-
-  // Filtered pool based on Discipline, Subject, and Difficulty
-  const filteredPool = useMemo(() => {
-    return MOCK_QUESTIONS.filter(q => {
-      const matchDiscipline = selectedDiscipline === 'todas' || q.disciplineId === selectedDiscipline;
-      const matchSubject = selectedSubject === 'todos' || q.subject === selectedSubject;
-      const matchDifficulty = selectedDifficulty === 'todas' || q.difficulty === selectedDifficulty;
-      return matchDiscipline && matchSubject && matchDifficulty;
-    });
-  }, [selectedDiscipline, selectedSubject, selectedDifficulty]);
-
-  // Difficulty counts dynamic to selected discipline and subject
-  const difficultyCounts = useMemo(() => {
-    const base = MOCK_QUESTIONS.filter(q => {
-      const matchDiscipline = selectedDiscipline === 'todas' || q.disciplineId === selectedDiscipline;
-      const matchSubject = selectedSubject === 'todos' || q.subject === selectedSubject;
-      return matchDiscipline && matchSubject;
-    });
-    return {
-      todas: base.length,
-      facil: base.filter(q => q.difficulty === 'Fácil').length,
-      medio: base.filter(q => q.difficulty === 'Médio').length,
-      dificil: base.filter(q => q.difficulty === 'Difícil').length,
-    };
-  }, [selectedDiscipline, selectedSubject]);
-
-  // Split into unanswered (inéditas) and answered (revisitadas)
   const unansweredPool = useMemo(() => {
-    return filteredPool.filter(q => !answersMap.has(q.id));
-  }, [filteredPool, answersMap]);
+    return questionsPool.filter(q => !answersMap.has(q.id));
+  }, [questionsPool, answersMap]);
 
   const answeredPool = useMemo(() => {
-    return filteredPool.filter(q => answersMap.has(q.id));
-  }, [filteredPool, answersMap]);
+    return questionsPool.filter(q => answersMap.has(q.id));
+  }, [questionsPool, answersMap]);
 
-  // Is the current cycle complete (all questions answered)?
-  const isCycleComplete = filteredPool.length > 0 && unansweredPool.length === 0;
+  const isCycleComplete = questionsPool.length > 0 && unansweredPool.length === 0;
 
-  // Active question queue: Prioritizes unanswered questions. When all answered, runs revisit cycle.
   const activeQueue = useMemo(() => {
-    if (filteredPool.length === 0) return [];
+    if (questionsPool.length === 0) return [];
     if (unansweredPool.length > 0) return unansweredPool;
     return answeredPool;
-  }, [filteredPool, unansweredPool, answeredPool]);
+  }, [questionsPool, unansweredPool, answeredPool]);
 
-  // Clamp currentQueueIndex safely
   const safeIndex = currentQueueIndex < activeQueue.length ? currentQueueIndex : 0;
-  const currentQuestion: Question | undefined = activeQueue[safeIndex];
-
-  // Previous answer for the current question, if any
+  const currentQuestion: QuestionItem | undefined = activeQueue[safeIndex];
   const previousAnswer = currentQuestion ? answersMap.get(currentQuestion.id) : undefined;
 
-  // Reset filter selections
+  const activeSolution: RevealedSolution | null = useMemo(() => {
+    if (!currentQuestion) return null;
+    if (revealedSolutions[currentQuestion.id]) {
+      return revealedSolutions[currentQuestion.id];
+    }
+    if (currentQuestion.correctOptionId) {
+      return {
+        correctOptionId: currentQuestion.correctOptionId,
+        explanation: currentQuestion.explanation,
+        legalFoundation: currentQuestion.legalFoundation,
+      };
+    }
+    return null;
+  }, [currentQuestion, revealedSolutions]);
+
   const handleDisciplineChange = (discId: string) => {
     setSelectedDiscipline(discId);
     setSelectedSubject('todos');
+    setPage(1);
     setCurrentQueueIndex(0);
     setSelectedOptionId(null);
     setIsAnswered(false);
@@ -148,6 +189,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
 
   const handleSubjectChange = (subject: string) => {
     setSelectedSubject(subject);
+    setPage(1);
     setCurrentQueueIndex(0);
     setSelectedOptionId(null);
     setIsAnswered(false);
@@ -155,46 +197,90 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
 
   const handleDifficultyChange = (diff: 'todas' | 'Fácil' | 'Médio' | 'Difícil') => {
     setSelectedDifficulty(diff);
+    setPage(1);
     setCurrentQueueIndex(0);
     setSelectedOptionId(null);
     setIsAnswered(false);
   };
 
   const handleSelectOption = (optId: 'A' | 'B' | 'C' | 'D') => {
-    if (isAnswered) return;
+    if (isAnswered || submitting) return;
     setSelectedOptionId(optId);
   };
 
-  const handleConfirmAnswer = () => {
-    if (!selectedOptionId || !currentQuestion || isAnswered) return;
+  const handleConfirmAnswer = async () => {
+    if (!selectedOptionId || !currentQuestion || isAnswered || submitting) return;
 
-    const isCorrect = selectedOptionId === currentQuestion.correctOptionId;
-    setIsAnswered(true);
+    setSubmitting(true);
+    try {
+      const result = await submitQuestionAnswer(currentQuestion.id, selectedOptionId);
 
-    if (isCorrect) {
-      setSessionHits(prev => prev + 1);
-    } else {
-      setSessionMisses(prev => prev + 1);
+      setRevealedSolutions(prev => ({
+        ...prev,
+        [currentQuestion.id]: {
+          correctOptionId: result.correctOptionId,
+          explanation: result.explanation,
+          legalFoundation: result.legalFoundation,
+        },
+      }));
+
+      setIsAnswered(true);
+      setLimitReachedMessage(null);
+
+      if (result.isCorrect) {
+        setSessionHits(prev => prev + 1);
+      } else {
+        setSessionMisses(prev => prev + 1);
+      }
+
+      if (!result.isPremium && result.questionsLimit !== null) {
+        setQuota(prev =>
+          prev
+            ? {
+                ...prev,
+                questionsUsed: result.questionsUsed,
+                questionsRemaining: result.questionsRemaining ?? 0,
+                answeredQuestionIdsToday: prev.answeredQuestionIdsToday.includes(currentQuestion.id)
+                  ? prev.answeredQuestionIdsToday
+                  : [...prev.answeredQuestionIdsToday, currentQuestion.id],
+              }
+            : null
+        );
+      }
+
+      saveQuestionAnswer({
+        questionId: currentQuestion.id,
+        selectedOptionId,
+        isCorrect: result.isCorrect,
+        timestamp: Date.now(),
+        disciplineId: currentQuestion.disciplineId,
+        subject: currentQuestion.subject,
+      });
+
+      if (onRefreshPerformance) onRefreshPerformance();
+    } catch (err: any) {
+      if (err instanceof ApiAccessError && err.code === 'DAILY_LIMIT_REACHED') {
+        setLimitReachedMessage(err.message);
+        setQuota(prev =>
+          prev
+            ? {
+                ...prev,
+                questionsUsed: err.details?.questionsLimit ?? FREE_DAILY_QUESTIONS_LIMIT,
+                questionsRemaining: 0,
+              }
+            : null
+        );
+      } else {
+        setLoadError(err?.message || 'Erro ao validar resposta no servidor.');
+      }
+    } finally {
+      setSubmitting(false);
     }
-
-    // Save answer to storage (with subject for precise theme tracking)
-    saveQuestionAnswer({
-      questionId: currentQuestion.id,
-      selectedOptionId: selectedOptionId,
-      isCorrect: isCorrect,
-      timestamp: Date.now(),
-      disciplineId: currentQuestion.disciplineId,
-      subject: currentQuestion.subject
-    });
-
-    if (onRefreshPerformance) onRefreshPerformance();
   };
 
   const handleNextQuestion = () => {
     setSelectedOptionId(null);
     setIsAnswered(false);
-    
-    // Refresh storage snapshot now that answer flow concluded
     setStorageVersion(v => v + 1);
 
     if (activeQueue.length > 1) {
@@ -209,16 +295,15 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
     setIsAnswered(false);
   };
 
-  // Reset cycle specifically for this subject/theme and discipline
   const handleResetCycle = () => {
-    if (filteredPool.length === 0) return;
-    const idsToReset = filteredPool.map(q => q.id);
+    if (questionsPool.length === 0) return;
+    const idsToReset = questionsPool.map(q => q.id);
     resetQuestionAnswers(idsToReset);
     setStorageVersion(v => v + 1);
     setCurrentQueueIndex(0);
     setSelectedOptionId(null);
     setIsAnswered(false);
-    setResetNotice('Ciclo reiniciado! As questões deste tema foram restauradas como inéditas para novo treinamento.');
+    setResetNotice('Ciclo reiniciado! As questões deste filtro foram restauradas como inéditas para novo treinamento.');
     setTimeout(() => {
       setResetNotice(null);
     }, 4500);
@@ -226,14 +311,17 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
 
   const currentDisciplineInfo = OAB_DISCIPLINES.find(d => d.id === currentQuestion?.disciplineId);
 
-  // Progress metrics in current filtered view
-  const progressPercent = filteredPool.length > 0
-    ? Math.round((answeredPool.length / filteredPool.length) * 100)
+  const progressPercent = questionsPool.length > 0
+    ? Math.round((answeredPool.length / questionsPool.length) * 100)
     : 0;
+
+  const quotaLimit = quota?.questionsLimit || FREE_DAILY_QUESTIONS_LIMIT;
+  const quotaUsed = quota?.questionsUsed || 0;
+  const quotaRemaining = quota?.questionsRemaining ?? quotaLimit;
+  const isFreeQuotaExhausted = !serverIsPremium && quotaRemaining <= 0;
 
   return (
     <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5 sm:space-y-6">
-      
       {/* Header & Filter Controls */}
       <div className="space-y-4 min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-200 pb-4">
@@ -247,7 +335,9 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                   Banco de Questões Comentadas
                 </h1>
                 <p className="text-xs text-slate-500">
-                  Questões únicas e revisadas. Controle anti-repetição com prioridade para inéditas e ciclos de fixação.
+                  {serverIsPremium
+                    ? `Acesso Premium completo às ${catalogTotal.toLocaleString('pt-BR')} questões comentadas com controle anti-repetição.`
+                    : `Plano Gratuito: até ${quotaLimit} questões por dia distribuídas entre as disciplinas.`}
                 </p>
               </div>
             </div>
@@ -275,6 +365,112 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Daily Freemium Quota Tracker */}
+        {!loading && !serverIsPremium && (
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#0B1F3A] to-[#16365C] text-white border border-[#D4AF37]/40 shadow-md space-y-3 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-1 min-w-0">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#D4AF37] uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                  <span>Cota Diária do Plano Gratuito</span>
+                </div>
+                <p className="text-xs sm:text-sm font-semibold text-white">
+                  {quotaUsed} de {quotaLimit} questões respondidas hoje ·{' '}
+                  <span className={quotaRemaining > 0 ? 'text-emerald-300' : 'text-amber-300'}>
+                    {quotaRemaining > 0
+                      ? `${quotaRemaining} restante${quotaRemaining > 1 ? 's' : ''} hoje`
+                      : 'Limite diário atingido'}
+                  </span>
+                </p>
+                <p className="text-[11px] text-slate-300">
+                  Amostra diária distribuída entre as 21 disciplinas. No Plano Premium (R$ 29,90/mês) você desbloqueia todas as {catalogTotal.toLocaleString('pt-BR')} questões sem limites.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                {!currentUser && onOpenAuth && (
+                  <button
+                    onClick={onOpenAuth}
+                    className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/20 transition-colors"
+                  >
+                    Entrar
+                  </button>
+                )}
+                {onOpenPremium && (
+                  <button
+                    onClick={onOpenPremium}
+                    className="px-4 py-2 rounded-xl bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] text-xs font-extrabold shadow transition-colors flex items-center gap-1.5"
+                  >
+                    <Crown className="w-3.5 h-3.5" />
+                    <span>Liberar {catalogTotal.toLocaleString('pt-BR')} Questões</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="w-full h-2 rounded-full bg-white/15 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  isFreeQuotaExhausted ? 'bg-rose-400' : 'bg-[#D4AF37]'
+                }`}
+                style={{ width: `${Math.min(100, Math.round((quotaUsed / quotaLimit) * 100))}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Limit Reached Alert */}
+        {limitReachedMessage && !serverIsPremium && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-amber-50 border-2 border-[#D4AF37] text-[#0B1F3A] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-[#0B1F3A] text-[#D4AF37] flex items-center justify-center shrink-0">
+                <Lock className="w-4 h-4" />
+              </div>
+              <div className="space-y-1 min-w-0">
+                <h3 className="text-sm font-bold text-[#0B1F3A]">
+                  Limite de {quotaLimit} questões diárias atingido
+                </h3>
+                <p className="text-xs text-slate-700 leading-relaxed">
+                  {limitReachedMessage}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              {!currentUser && onOpenAuth && (
+                <button
+                  onClick={onOpenAuth}
+                  className="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-xs font-bold text-slate-800 flex items-center gap-1.5"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Já sou assinante</span>
+                </button>
+              )}
+              {onOpenPremium && (
+                <button
+                  onClick={onOpenPremium}
+                  className="px-4 py-2 rounded-xl bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] text-xs font-extrabold shadow flex items-center gap-1.5"
+                >
+                  <Crown className="w-3.5 h-3.5" />
+                  <span>Assinar Premium (R$ 29,90/mês)</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {loadError && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex flex-wrap items-center justify-between gap-2">
+            <span>{loadError}</span>
+            <button
+              onClick={loadFeed}
+              className="px-3 py-1 rounded-lg bg-white border border-rose-300 font-semibold flex items-center gap-1"
+            >
+              <RefreshCw className="w-3 h-3" />
+              <span>Tentar Novamente</span>
+            </button>
+          </div>
+        )}
 
         {/* Notice Banner */}
         {resetNotice && (
@@ -306,10 +502,10 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                 onChange={e => handleDisciplineChange(e.target.value)}
                 className="w-full sm:w-auto min-w-0 max-w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-[#0B1F3A]"
               >
-                <option value="todas">Todas as Disciplinas ({MOCK_QUESTIONS.length})</option>
+                <option value="todas">Todas as Disciplinas ({catalogTotal})</option>
                 {OAB_DISCIPLINES.map(d => (
                   <option key={d.id} value={d.id}>
-                    {d.name} ({MOCK_QUESTIONS.filter(q => q.disciplineId === d.id).length} questões)
+                    {d.name} ({byDisciplineStats[d.id] || 300} questões)
                   </option>
                 ))}
               </select>
@@ -325,11 +521,11 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                   : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
               }`}
             >
-              Todas ({MOCK_QUESTIONS.length})
+              Todas ({catalogTotal})
             </button>
             {OAB_DISCIPLINES.map(disc => {
               const isSelected = selectedDiscipline === disc.id;
-              const count = MOCK_QUESTIONS.filter(q => q.disciplineId === disc.id).length;
+              const count = byDisciplineStats[disc.id] || 300;
               return (
                 <button
                   key={disc.id}
@@ -366,7 +562,9 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                 onChange={e => handleSubjectChange(e.target.value)}
                 className="w-full sm:w-auto min-w-0 max-w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-slate-50 text-slate-800 font-medium focus:outline-none focus:ring-1 focus:ring-[#0B1F3A]"
               >
-                <option value="todos">Todos os Temas ({filteredPool.length > 0 ? filteredPool.length : availableSubjects.reduce((acc, s) => acc + s.count, 0)})</option>
+                <option value="todos">
+                  Todos os Temas ({availableSubjects.reduce((acc, s) => acc + s.count, 0)})
+                </option>
                 {availableSubjects.map(s => (
                   <option key={s.name} value={s.name}>
                     {s.name} ({s.count} questões)
@@ -376,7 +574,6 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
             </div>
           </div>
 
-          {/* Quick pill filter for top themes */}
           <div className="flex items-center gap-1.5 w-full max-w-full min-w-0 overflow-x-auto pt-1 pb-1 scrollbar-none text-[11px]">
             <button
               onClick={() => handleSubjectChange('todos')}
@@ -460,18 +657,17 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
             </div>
           </div>
 
-          {/* Theme Progress & Cycle Reset */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-between md:justify-end text-xs">
             <div className="flex items-center gap-2">
-              <span className="text-slate-500">Progresso no tema:</span>
+              <span className="text-slate-500">Progresso no lote:</span>
               <span className="font-bold text-[#0B1F3A]">
-                {answeredPool.length}/{filteredPool.length} ({progressPercent}%)
+                {answeredPool.length}/{questionsPool.length} ({progressPercent}%)
               </span>
             </div>
             {answeredPool.length > 0 && (
               <button
                 onClick={handleResetCycle}
-                title="Reiniciar o ciclo de questões deste tema"
+                title="Reiniciar o ciclo de questões deste lote"
                 className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 hover:text-[#0B1F3A] border border-slate-300 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors shadow-sm"
               >
                 <RefreshCw className="w-3 h-3 text-[#D4AF37]" />
@@ -481,8 +677,44 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
           </div>
         </div>
 
-        {/* Progress Bar Track */}
-        {filteredPool.length > 0 && (
+        {/* Premium Pagination Strip */}
+        {serverIsPremium && pagination.totalPages > 1 && (
+          <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs">
+            <span className="text-slate-600 font-medium">
+              Página <strong>{pagination.page}</strong> de <strong>{pagination.totalPages}</strong> ({pagination.total} questões neste filtro)
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => {
+                  setPage(p => Math.max(1, p - 1));
+                  setCurrentQueueIndex(0);
+                  setSelectedOptionId(null);
+                  setIsAnswered(false);
+                }}
+                disabled={page <= 1}
+                className="px-2.5 py-1 rounded-lg border border-slate-300 text-slate-700 font-semibold disabled:opacity-40 hover:bg-slate-50 flex items-center gap-1"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>Anterior</span>
+              </button>
+              <button
+                onClick={() => {
+                  setPage(p => Math.min(pagination.totalPages, p + 1));
+                  setCurrentQueueIndex(0);
+                  setSelectedOptionId(null);
+                  setIsAnswered(false);
+                }}
+                disabled={page >= pagination.totalPages}
+                className="px-2.5 py-1 rounded-lg bg-[#0B1F3A] text-[#D4AF37] font-semibold disabled:opacity-40 hover:bg-[#16365C] flex items-center gap-1"
+              >
+                <span>Próximo Lote</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {questionsPool.length > 0 && (
           <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
             <div
               className="bg-[#D4AF37] h-full transition-all duration-300 rounded-full"
@@ -491,7 +723,6 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
           </div>
         )}
 
-        {/* Cycle Completed / Revisit Notification */}
         {isCycleComplete && (
           <div className="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-950 shadow-sm animate-fade-in">
             <div className="flex items-start sm:items-center gap-2.5">
@@ -500,10 +731,10 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
               </div>
               <div>
                 <p className="font-bold text-sm text-[#0B1F3A]">
-                  Ciclo Completo! Todas as {filteredPool.length} questões deste filtro já foram respondidas.
+                  Ciclo Completo! Todas as {questionsPool.length} questões deste lote já foram respondidas.
                 </p>
                 <p className="text-slate-600 mt-0.5">
-                  Modo de Revisão e Fixação ativo. As perguntas estão sendo revisitadas em sequência sem repetições imediatas.
+                  Modo de Revisão e Fixação ativo. As perguntas estão sendo revisitadas em sequência.
                 </p>
               </div>
             </div>
@@ -518,11 +749,11 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
         )}
       </div>
 
-      {/* Active Question Card */}
-      {currentQuestion ? (
+      {/* Loading skeleton or Question Card */}
+      {loading ? (
+        <div className="h-96 bg-white rounded-2xl border border-slate-200 animate-pulse" />
+      ) : currentQuestion ? (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-w-0">
-          
-          {/* Card Top Header */}
           <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
               <span className="font-bold text-[#0B1F3A] uppercase tracking-wide break-words">
@@ -543,7 +774,6 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                 {currentQuestion.difficulty}
               </span>
 
-              {/* Status Badge: Inédita vs Revisitada */}
               {previousAnswer ? (
                 <span
                   className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border flex items-center gap-1 ${
@@ -551,7 +781,6 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                       ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                       : 'bg-amber-50 text-amber-900 border-amber-300'
                   }`}
-                  title="Questão já respondida em momento anterior"
                 >
                   <RotateCcw className="w-2.5 h-2.5 shrink-0" />
                   <span>Revisão ({previousAnswer.isCorrect ? 'Acertada anterior' : 'Errou anterior'})</span>
@@ -570,19 +799,16 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
           </div>
 
           <div className="p-4 sm:p-8 space-y-5 sm:space-y-6 min-w-0">
-            
-            {/* Statement / Enunciado */}
             <div className="text-slate-900 text-sm sm:text-base leading-relaxed min-w-0">
               <p className="font-normal whitespace-pre-line break-words">
                 {currentQuestion.statement}
               </p>
             </div>
 
-            {/* Options List */}
             <div className="space-y-3 pt-2 min-w-0">
               {currentQuestion.options.map(option => {
                 const isSelected = selectedOptionId === option.id;
-                const isCorrect = option.id === currentQuestion.correctOptionId;
+                const isCorrect = Boolean(activeSolution && option.id === activeSolution.correctOptionId);
 
                 let optionStyles = 'border-slate-200 hover:border-[#0B1F3A]/40 hover:bg-slate-50/50 bg-white';
                 let badgeStyles = 'bg-slate-100 text-slate-700 border-slate-300';
@@ -592,7 +818,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                   badgeStyles = 'bg-[#0B1F3A] text-white border-[#0B1F3A]';
                 }
 
-                if (isAnswered) {
+                if (isAnswered && activeSolution) {
                   if (isCorrect) {
                     optionStyles = 'border-emerald-500 bg-emerald-50/60 ring-1 ring-emerald-500';
                     badgeStyles = 'bg-emerald-600 text-white border-emerald-600';
@@ -608,7 +834,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                   <button
                     key={option.id}
                     onClick={() => handleSelectOption(option.id)}
-                    disabled={isAnswered}
+                    disabled={isAnswered || submitting}
                     className={`w-full p-3 sm:p-4 rounded-xl border text-left transition-all flex items-start gap-2.5 sm:gap-3.5 min-w-0 ${optionStyles}`}
                   >
                     <span
@@ -619,10 +845,10 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                     <span className="text-xs sm:text-sm text-slate-800 leading-snug flex-1 min-w-0 break-words">
                       {option.text}
                     </span>
-                    {isAnswered && isCorrect && (
+                    {isAnswered && activeSolution && isCorrect && (
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                     )}
-                    {isAnswered && isSelected && !isCorrect && (
+                    {isAnswered && activeSolution && isSelected && !isCorrect && (
                       <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
                     )}
                   </button>
@@ -634,17 +860,29 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
             <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
               <div>
                 {!isAnswered ? (
-                  <button
-                    onClick={handleConfirmAnswer}
-                    disabled={!selectedOptionId}
-                    className={`px-6 py-2.5 rounded-xl font-bold text-xs transition-all shadow-sm ${
-                      selectedOptionId
-                        ? 'bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37]'
-                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                    }`}
-                  >
-                    Responder Questão
-                  </button>
+                  isFreeQuotaExhausted && !quota?.answeredQuestionIdsToday?.includes(currentQuestion.id) ? (
+                    onOpenPremium && (
+                      <button
+                        onClick={onOpenPremium}
+                        className="px-5 py-2.5 rounded-xl font-extrabold text-xs bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] shadow-sm flex items-center gap-2"
+                      >
+                        <Crown className="w-4 h-4" />
+                        <span>Desbloquear Questões Ilimitadas</span>
+                      </button>
+                    )
+                  ) : (
+                    <button
+                      onClick={handleConfirmAnswer}
+                      disabled={!selectedOptionId || submitting}
+                      className={`px-6 py-2.5 rounded-xl font-bold text-xs transition-all shadow-sm ${
+                        selectedOptionId && !submitting
+                          ? 'bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37]'
+                          : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {submitting ? 'Validando...' : 'Responder Questão'}
+                    </button>
+                  )
                 ) : (
                   <button
                     onClick={handleResetCurrent}
@@ -668,27 +906,25 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
             </div>
 
             {/* Explanation & Legal Foundation Section */}
-            {isAnswered && (
+            {isAnswered && activeSolution && (
               <div className="mt-6 pt-6 border-t border-slate-200 space-y-4 animate-fade-in">
-                
-                {/* Result Announcement */}
                 <div
                   className={`p-4 rounded-xl border flex items-start gap-3 ${
-                    selectedOptionId === currentQuestion.correctOptionId
+                    selectedOptionId === activeSolution.correctOptionId
                       ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                       : 'bg-rose-50 border-rose-200 text-rose-900'
                   }`}
                 >
-                  {selectedOptionId === currentQuestion.correctOptionId ? (
+                  {selectedOptionId === activeSolution.correctOptionId ? (
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                   ) : (
                     <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
                   )}
                   <div>
                     <h4 className="text-sm font-bold">
-                      {selectedOptionId === currentQuestion.correctOptionId
+                      {selectedOptionId === activeSolution.correctOptionId
                         ? 'Parabéns! Resposta Correta.'
-                        : `Resposta Incorreta. A alternativa correta é a letra ${currentQuestion.correctOptionId}.`}
+                        : `Resposta Incorreta. A alternativa correta é a letra ${activeSolution.correctOptionId}.`}
                     </h4>
                     <p className="text-xs mt-0.5 opacity-90">
                       Confira abaixo os fundamentos jurídicos e doutrinários da questão.
@@ -696,14 +932,13 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                   </div>
                 </div>
 
-                {/* Explanation Content */}
                 <div className="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 space-y-3 min-w-0">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#0B1F3A]">
                     <BookOpen className="w-4 h-4 text-[#D4AF37] shrink-0" />
                     <span>Comentário Didático da Questão</span>
                   </div>
                   <p className="text-xs sm:text-sm text-slate-800 leading-relaxed break-words">
-                    {currentQuestion.explanation}
+                    {activeSolution.explanation}
                   </p>
 
                   <div className="pt-2 border-t border-slate-200 min-w-0">
@@ -712,7 +947,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                       Fundamento Jurídico:
                     </span>
                     <p className="text-xs text-slate-600 mt-0.5 font-medium break-words">
-                      {currentQuestion.legalFoundation}
+                      {activeSolution.legalFoundation}
                     </p>
                   </div>
 
@@ -722,13 +957,10 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                     </div>
                   )}
                 </div>
-
               </div>
             )}
-
           </div>
 
-          {/* Footer note */}
           <div className="px-4 sm:px-6 py-2.5 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-500 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
               <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -736,7 +968,6 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
             </div>
             <span className="text-slate-400 text-[10px] shrink-0">ID: {currentQuestion.id}</span>
           </div>
-
         </div>
       ) : (
         <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 space-y-4">
@@ -746,7 +977,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
           <div className="space-y-1">
             <h3 className="text-base font-bold text-slate-800">Nenhuma questão encontrada para este filtro</h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Não há questões no nível <strong className="text-slate-700">{selectedDifficulty}</strong> para o tema e disciplina selecionados.
+              Não há questões no filtro selecionado no momento.
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
@@ -757,7 +988,10 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
               Ver Todas as Dificuldades
             </button>
             <button
-              onClick={() => { handleDisciplineChange('todas'); handleDifficultyChange('todas'); }}
+              onClick={() => {
+                handleDisciplineChange('todas');
+                handleDifficultyChange('todas');
+              }}
               className="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-200"
             >
               Limpar Todos os Filtros
@@ -765,7 +999,6 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
           </div>
         </div>
       )}
-
     </div>
   );
 };

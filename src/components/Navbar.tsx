@@ -19,7 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuth,
   onOpenPremiumModal
 }) => {
-  const { currentUser, userProfile: authProfile, signOutUser } = useAuth();
+  const { currentUser, userProfile: authProfile, isPremiumActive, signOutUser } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
@@ -114,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Crown className="w-3.5 h-3.5 fill-current shrink-0" />
-              {authProfile?.isPremium || userProfile.isPremium ? (
+              {isPremiumActive ? (
                 <span>
                   <span className="hidden sm:inline">Premium </span>Ativo
                 </span>

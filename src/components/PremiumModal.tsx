@@ -37,7 +37,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   onClose,
   userEmail = ''
 }) => {
-  const { currentUser, userProfile, openAuthModal, updateProfileData } = useAuth();
+  const { currentUser, userProfile, isPremiumActive, openAuthModal, updateProfileData } = useAuth();
 
   const [fullName, setFullName] = useState('');
   const [cpf, setCpf] = useState('');
@@ -76,7 +76,6 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
 
   if (!isOpen) return null;
 
-  const isPremiumActive = !!userProfile?.isPremium;
   const subStatus = userProfile?.subscriptionStatus || 'NONE';
 
   const handleSubscribe = async (e: React.FormEvent) => {

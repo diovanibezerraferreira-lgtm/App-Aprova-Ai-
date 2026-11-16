@@ -1,9 +1,16 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { DisciplineId, Question, SimuladoConfig, SimuladoResult } from '../types';
-import { MOCK_QUESTIONS } from '../data/questions';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { DisciplineId, Question, QuestionItem, SimuladoConfig, SimuladoResult } from '../types';
 import { OAB_DISCIPLINES } from '../data/disciplines';
-import { SIMULADO_PRESETS, OFFICIAL_OAB_DISTRIBUTION } from '../data/simulados';
+import { SIMULADO_PRESETS, ExtendedSimuladoConfig } from '../data/simulados';
 import { saveSimuladoResult } from '../utils/storage';
+import { useAuth } from '../context/AuthContext';
+import {
+  fetchSimuladosCatalog,
+  startSimuladoSession,
+  finishSimuladoSession,
+  ApiAccessError,
+  DailyQuotaInfo
+} from '../services/contentService';
 import {
   Clock,
   Play,
@@ -14,50 +21,136 @@ import {
   Award,
   ChevronRight,
   ChevronLeft,
-  ArrowRight,
-  HelpCircle,
-  FileText,
   Pause,
   Flag,
-  Check,
   BarChart3,
   ListFilter,
-  ShieldAlert,
-  BookOpen
+  BookOpen,
+  Lock,
+  Crown,
+  Sparkles,
+  LogIn
 } from 'lucide-react';
 
 interface SimuladosViewProps {
   onRefreshPerformance?: () => void;
+  onOpenAuth?: () => void;
+  onOpenPremium?: () => void;
 }
 
-export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerformance }) => {
+export const SimuladosView: React.FC<SimuladosViewProps> = ({
+  onRefreshPerformance,
+  onOpenAuth,
+  onOpenPremium
+}) => {
+  const { currentUser, isPremiumActive } = useAuth();
+
   // Screens: 'setup' | 'active' | 'result'
   const [screen, setScreen] = useState<'setup' | 'active' | 'result'>('setup');
 
+  // Server catalog & quota state
+  const [presets, setPresets] = useState<
+    (ExtendedSimuladoConfig & { isFree?: boolean; isLocked?: boolean })[]
+  >(SIMULADO_PRESETS.map(p => ({ ...p, isFree: p.id === 'simulado-express-10', isLocked: p.id !== 'simulado-express-10' })));
+  const [serverIsPremium, setServerIsPremium] = useState<boolean>(false);
+  const [quota, setQuota] = useState<DailyQuotaInfo | null>(null);
+  const [loadingCatalog, setLoadingCatalog] = useState<boolean>(true);
+  const [starting, setStarting] = useState<boolean>(false);
+  const [finishing, setFinishing] = useState<boolean>(false);
+  const [accessBannerMsg, setAccessBannerMsg] = useState<string | null>(null);
+
   // Setup options
   const [presetCategoryFilter, setPresetCategoryFilter] = useState<'all' | 'oab-oficial' | 'concursos' | 'blocos' | 'rapidos' | 'disciplina'>('all');
-  const [selectedPresetId, setSelectedPresetId] = useState<string>('simulado-oab-41');
   const [selectedDiscipline, setSelectedDiscipline] = useState<string>('todas');
   const [customDifficulty, setCustomDifficulty] = useState<'todas' | 'Fácil' | 'Médio' | 'Difícil'>('todas');
   const [customQuestionCount, setCustomQuestionCount] = useState<number>(20);
   const [customTimeMinutes, setCustomTimeMinutes] = useState<number>(45);
 
   // Active Simulado State
+  const [activeSessionId, setActiveSessionId] = useState<string>('');
   const [simuladoTitle, setSimuladoTitle] = useState<string>('');
-  const [simuladoTotalTimeSeconds, setSimuladoTotalTimeSeconds] = useState<number>(1800);
-  const [activeQuestions, setActiveQuestions] = useState<Question[]>([]);
+  const [simuladoDisciplineId, setSimuladoDisciplineId] = useState<string>('todas');
+  const [simuladoTotalTimeSeconds, setSimuladoTotalTimeSeconds] = useState<number>(900);
+  const [activeQuestions, setActiveQuestions] = useState<QuestionItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, 'A' | 'B' | 'C' | 'D'>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<Record<number, boolean>>({});
-  const [secondsRemaining, setSecondsRemaining] = useState<number>(1800);
+  const [secondsRemaining, setSecondsRemaining] = useState<number>(900);
   const [isTimerPaused, setIsTimerPaused] = useState<boolean>(false);
   const [navFilter, setNavFilter] = useState<'all' | 'unanswered' | 'flagged'>('all');
   const [showSubmitModal, setShowSubmitModal] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const finishingRef = useRef<boolean>(false);
 
   // Result State
+  const [gradedQuestions, setGradedQuestions] = useState<Question[]>([]);
   const [latestResult, setLatestResult] = useState<SimuladoResult | null>(null);
   const [resultFilter, setResultFilter] = useState<'wrong' | 'all' | 'flagged'>('wrong');
+
+  const loadCatalog = useCallback(async () => {
+    setLoadingCatalog(true);
+    try {
+      const res = await fetchSimuladosCatalog();
+      setPresets(res.presets);
+      setServerIsPremium(res.isPremium);
+      setQuota(res.quota);
+    } catch (err: any) {
+      console.warn('Could not load simulados catalog:', err);
+    } finally {
+      setLoadingCatalog(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCatalog();
+  }, [loadCatalog, currentUser?.uid, isPremiumActive]);
+
+  const handleConfirmFinish = useCallback(async () => {
+    if (finishingRef.current || !activeSessionId) return;
+    finishingRef.current = true;
+    setFinishing(true);
+    setShowSubmitModal(false);
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    try {
+      const graded = await finishSimuladoSession({
+        sessionId: activeSessionId,
+        userAnswers,
+      });
+
+      const result: SimuladoResult = {
+        id: 'sim-' + Date.now(),
+        configTitle: simuladoTitle || `Simulado (${graded.totalQuestions} Questões)`,
+        disciplineId: simuladoDisciplineId as DisciplineId | 'todas',
+        totalQuestions: graded.totalQuestions,
+        correctAnswers: graded.correctAnswers,
+        timeSpentSeconds: simuladoTotalTimeSeconds - Math.max(0, secondsRemaining),
+        date: new Date().toLocaleDateString('pt-BR'),
+        answers: graded.answers,
+      };
+
+      saveSimuladoResult(result);
+      setGradedQuestions(graded.gradedQuestions);
+      setLatestResult(result);
+      setScreen('result');
+      loadCatalog();
+      if (onRefreshPerformance) onRefreshPerformance();
+    } catch (err: any) {
+      setAccessBannerMsg(err?.message || 'Erro ao finalizar e corrigir o simulado no servidor.');
+    } finally {
+      finishingRef.current = false;
+      setFinishing(false);
+    }
+  }, [
+    activeSessionId,
+    userAnswers,
+    simuladoTitle,
+    simuladoDisciplineId,
+    simuladoTotalTimeSeconds,
+    secondsRemaining,
+    loadCatalog,
+    onRefreshPerformance
+  ]);
 
   // Timer Effect
   useEffect(() => {
@@ -65,157 +158,73 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
       timerRef.current = setTimeout(() => {
         setSecondsRemaining(prev => prev - 1);
       }, 1000);
-    } else if (screen === 'active' && secondsRemaining <= 0) {
+    } else if (screen === 'active' && secondsRemaining <= 0 && activeSessionId) {
       handleConfirmFinish();
     }
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [screen, isTimerPaused, secondsRemaining]);
+  }, [screen, isTimerPaused, secondsRemaining, activeSessionId, handleConfirmFinish]);
 
-  // Helper to shuffle questions
-  const shuffleArray = <T,>(array: T[]): T[] => {
-    const arr = [...array];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
+  const handleStartSimulado = async (preset?: SimuladoConfig & { isLocked?: boolean }) => {
+    if (starting) return;
+
+    if (!serverIsPremium && (!preset || preset.isLocked || preset.id !== 'simulado-express-10')) {
+      setAccessBannerMsg(
+        'Esta modalidade completa é exclusiva do Plano Premium (R$ 29,90/mês). No plano gratuito você pode fazer 1 Simulado Express (10 questões) por dia.'
+      );
+      if (onOpenPremium) onOpenPremium();
+      return;
     }
-    return arr;
-  };
 
-  const handleStartSimulado = (preset?: SimuladoConfig) => {
-    let prepared: Question[] = [];
-    let title = '';
-    let timeMins = 30;
+    setStarting(true);
+    setAccessBannerMsg(null);
+    finishingRef.current = false;
 
-    if (preset) {
-      title = preset.title;
-      timeMins = preset.timeLimitMinutes;
+    try {
+      const started = await startSimuladoSession(
+        preset
+          ? { presetId: preset.id }
+          : {
+              customConfig: {
+                disciplineId: selectedDiscipline,
+                difficulty: customDifficulty,
+                questionCount: customQuestionCount,
+                timeLimitMinutes: customTimeMinutes,
+              },
+            }
+      );
 
-      if (preset.id.startsWith('simulado-oab')) {
-        // Build the official 80-question OAB exam with exact FGV distribution
-        OFFICIAL_OAB_DISTRIBUTION.forEach(item => {
-          const matching = MOCK_QUESTIONS.filter(q => q.disciplineId === item.disciplineId);
-          const shuffled = shuffleArray(matching);
-          const picked = shuffled.slice(0, item.count);
-          prepared.push(...picked);
-        });
-      } else if (preset.id === 'simulado-concurso-magistratura') {
-        const civ = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'civil')).slice(0, 10);
-        const pciv = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'processo-civil')).slice(0, 10);
-        const constQ = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'constitucional')).slice(0, 10);
-        const pen = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'penal')).slice(0, 8);
-        const ppen = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'processo-penal')).slice(0, 7);
-        const cdc = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'consumidor')).slice(0, 5);
-        prepared.push(...civ, ...pciv, ...constQ, ...pen, ...ppen, ...cdc);
-      } else if (preset.id === 'simulado-concurso-mp') {
-        const pen = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'penal')).slice(0, 12);
-        const ppen = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'processo-penal')).slice(0, 12);
-        const constQ = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'constitucional')).slice(0, 8);
-        const adm = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'administrativo')).slice(0, 8);
-        const amb = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'ambiental')).slice(0, 5);
-        const cdc = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'consumidor')).slice(0, 5);
-        prepared.push(...pen, ...ppen, ...constQ, ...adm, ...amb, ...cdc);
-      } else if (preset.id === 'simulado-concurso-defensoria') {
-        const dh = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'direitos-humanos')).slice(0, 10);
-        const pen = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'penal')).slice(0, 8);
-        const ppen = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'processo-penal')).slice(0, 8);
-        const civ = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'civil')).slice(0, 8);
-        const eca = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'crianca-adolescente')).slice(0, 6);
-        prepared.push(...dh, ...pen, ...ppen, ...civ, ...eca);
-      } else if (preset.id === 'simulado-concurso-delegado') {
-        const pen = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'penal')).slice(0, 12);
-        const ppen = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'processo-penal')).slice(0, 12);
-        const constQ = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'constitucional')).slice(0, 8);
-        const adm = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'administrativo')).slice(0, 8);
-        prepared.push(...pen, ...ppen, ...constQ, ...adm);
-      } else if (preset.id === 'simulado-concurso-tribunais') {
-        const pciv = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'processo-civil')).slice(0, 8);
-        const ppen = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'processo-penal')).slice(0, 8);
-        const ptrab = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'processo-trabalho')).slice(0, 6);
-        const constQ = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'constitucional')).slice(0, 4);
-        const adm = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'administrativo')).slice(0, 4);
-        prepared.push(...pciv, ...ppen, ...ptrab, ...constQ, ...adm);
-      } else if (preset.id === 'simulado-pegadinhas-fgv') {
-        const hard = shuffleArray(MOCK_QUESTIONS.filter(q => q.difficulty === 'Difícil'));
-        prepared = hard.slice(0, 25);
-      } else if (preset.id === 'simulado-diagnostico-30') {
-        const shuffled = shuffleArray(MOCK_QUESTIONS);
-        prepared = shuffled.slice(0, 30);
-      } else if (preset.id === 'simulado-bloco-penal') {
-        const penal = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'penal')).slice(0, 6);
-        const procPenal = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'processo-penal')).slice(0, 6);
-        prepared.push(...penal, ...procPenal);
-      } else if (preset.id === 'simulado-bloco-trabalhista') {
-        const trab = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'trabalho')).slice(0, 5);
-        const procTrab = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'processo-trabalho')).slice(0, 5);
-        prepared.push(...trab, ...procTrab);
-      } else if (preset.id === 'simulado-bloco-civel') {
-        const civ = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'civil')).slice(0, 6);
-        const procCiv = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'processo-civil')).slice(0, 6);
-        prepared.push(...civ, ...procCiv);
-      } else if (preset.id === 'simulado-bloco-publico') {
-        const constQ = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'constitucional')).slice(0, 4);
-        const adminQ = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'administrativo')).slice(0, 4);
-        const tribQ = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'tributario')).slice(0, 4);
-        const finQ = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === 'financeiro')).slice(0, 3);
-        prepared.push(...constQ, ...adminQ, ...tribQ, ...finQ);
-      } else if (preset.id === 'simulado-bloco-transversais') {
-        const transversais: DisciplineId[] = [
-          'direitos-humanos',
-          'ambiental',
-          'consumidor',
-          'crianca-adolescente',
-          'filosofia',
-          'eleitoral',
-          'internacional',
-          'previdenciario'
-        ];
-        transversais.forEach(dId => {
-          const match = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === dId)).slice(0, 2);
-          prepared.push(...match);
-        });
-      } else if (preset.disciplineId && preset.disciplineId !== 'todas') {
-        const match = shuffleArray(MOCK_QUESTIONS.filter(q => q.disciplineId === preset.disciplineId));
-        prepared = match.slice(0, preset.questionCount);
+      setActiveSessionId(started.sessionId);
+      setSimuladoTitle(started.title);
+      setSimuladoDisciplineId(started.disciplineId || 'todas');
+      setSimuladoTotalTimeSeconds(started.timeLimitMinutes * 60);
+      setSecondsRemaining(started.timeLimitMinutes * 60);
+      setActiveQuestions(started.questions);
+      setGradedQuestions([]);
+      setQuota(started.quota);
+      setUserAnswers({});
+      setFlaggedQuestions({});
+      setCurrentIndex(0);
+      setIsTimerPaused(false);
+      setShowSubmitModal(false);
+      setScreen('active');
+    } catch (err: any) {
+      if (err instanceof ApiAccessError) {
+        setAccessBannerMsg(err.message);
+        if (err.code === 'DAILY_LIMIT_REACHED') {
+          setQuota(prev =>
+            prev
+              ? { ...prev, simuladosUsed: prev.simuladosLimit, simuladosRemaining: 0 }
+              : null
+          );
+        }
       } else {
-        const shuffled = shuffleArray(MOCK_QUESTIONS);
-        prepared = shuffled.slice(0, preset.questionCount);
+        setAccessBannerMsg(err?.message || 'Não foi possível iniciar o simulado no momento.');
       }
-    } else {
-      // Custom simulado builder
-      timeMins = customTimeMinutes;
-      const disc = OAB_DISCIPLINES.find(d => d.id === selectedDiscipline);
-      const diffLabel = customDifficulty === 'todas' ? '' : ` · Nível ${customDifficulty}`;
-      title = selectedDiscipline === 'todas'
-        ? `Simulado Personalizado Geral (${customQuestionCount}Q${diffLabel})`
-        : `Simulado Personalizado: ${disc?.name || selectedDiscipline} (${customQuestionCount}Q${diffLabel})`;
-
-      let pool = MOCK_QUESTIONS;
-      if (selectedDiscipline !== 'todas') {
-        pool = pool.filter(q => q.disciplineId === selectedDiscipline);
-      }
-      if (customDifficulty !== 'todas') {
-        pool = pool.filter(q => q.difficulty === customDifficulty);
-      }
-      prepared = shuffleArray(pool).slice(0, customQuestionCount);
+    } finally {
+      setStarting(false);
     }
-
-    // Fallback if pool is smaller than requested
-    if (prepared.length === 0) {
-      prepared = shuffleArray(MOCK_QUESTIONS).slice(0, 10);
-    }
-
-    setSimuladoTitle(title);
-    setSimuladoTotalTimeSeconds(timeMins * 60);
-    setSecondsRemaining(timeMins * 60);
-    setActiveQuestions(prepared);
-    setUserAnswers({});
-    setFlaggedQuestions({});
-    setCurrentIndex(0);
-    setIsTimerPaused(false);
-    setShowSubmitModal(false);
-    setScreen('active');
   };
 
   const handleSelectOption = (optId: 'A' | 'B' | 'C' | 'D') => {
@@ -232,39 +241,6 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
     }));
   };
 
-  const handleConfirmFinish = () => {
-    setShowSubmitModal(false);
-    if (timerRef.current) clearTimeout(timerRef.current);
-
-    let correctCount = 0;
-    const answerDetails = activeQuestions.map((q, idx) => {
-      const selected = userAnswers[idx];
-      const isCorrect = selected === q.correctOptionId;
-      if (isCorrect) correctCount++;
-      return {
-        questionId: q.id,
-        selectedOptionId: selected,
-        isCorrect
-      };
-    });
-
-    const result: SimuladoResult = {
-      id: 'sim-' + Date.now(),
-      configTitle: simuladoTitle || `Simulado (${activeQuestions.length} Questões)`,
-      disciplineId: selectedDiscipline as DisciplineId | 'todas',
-      totalQuestions: activeQuestions.length,
-      correctAnswers: correctCount,
-      timeSpentSeconds: simuladoTotalTimeSeconds - Math.max(0, secondsRemaining),
-      date: new Date().toLocaleDateString('pt-BR'),
-      answers: answerDetails
-    };
-
-    saveSimuladoResult(result);
-    setLatestResult(result);
-    setScreen('result');
-    if (onRefreshPerformance) onRefreshPerformance();
-  };
-
   const formatTimer = (totalSecs: number) => {
     const hours = Math.floor(totalSecs / 3600);
     const mins = Math.floor((totalSecs % 3600) / 60);
@@ -275,13 +251,14 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Performance breakdown by discipline for Results screen
+  const reviewQuestions = gradedQuestions.length > 0 ? gradedQuestions : [];
+
   const disciplineBreakdown = useMemo(() => {
-    if (!latestResult || activeQuestions.length === 0) return [];
+    if (!latestResult || reviewQuestions.length === 0) return [];
 
     const statsMap: Record<string, { total: number; correct: number; name: string }> = {};
 
-    activeQuestions.forEach((q, idx) => {
+    reviewQuestions.forEach((q, idx) => {
       const dId = q.disciplineId;
       if (!statsMap[dId]) {
         const disc = OAB_DISCIPLINES.find(d => d.id === dId);
@@ -304,7 +281,13 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
       correct: val.correct,
       pct: Math.round((val.correct / val.total) * 100)
     }));
-  }, [latestResult, activeQuestions]);
+  }, [latestResult, reviewQuestions]);
+
+  const expressPreset = presets.find(p => p.id === 'simulado-express-10');
+  const officialOabPreset = presets.find(p => p.id === 'simulado-oab-41') || presets[0];
+  const simLimit = quota?.simuladosLimit ?? 1;
+  const simUsed = quota?.simuladosUsed ?? 0;
+  const simRemaining = quota?.simuladosRemaining ?? 1;
 
   // -------------------------------------------------------------
   // RENDER: SETUP SCREEN
@@ -329,13 +312,110 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
           </div>
         </div>
 
+        {/* Freemium Free Express Card + Daily Quota Strip */}
+        {!loadingCatalog && !serverIsPremium && (
+          <div className="rounded-3xl bg-white border-2 border-[#D4AF37]/60 shadow-md p-4 sm:p-6 space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1.5 min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[11px] font-bold">
+                    Plano Gratuito · 1 Simulado Express/dia
+                  </span>
+                  <span className="text-xs font-bold text-[#0B1F3A]">
+                    Cota de hoje: {simUsed} de {simLimit} usado
+                  </span>
+                </div>
+                <h2 className="text-lg sm:text-xl font-bold font-serif text-[#0B1F3A]">
+                  Simulado Express Gratuito (10 Questões · 15 min)
+                </h2>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Experimente a correção oficial com gabarito comentado ao final. Para acessar as 80 questões oficiais OAB, concursos e simulados ilimitados, assine o Plano Premium.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                <button
+                  onClick={() => expressPreset && handleStartSimulado(expressPreset)}
+                  disabled={starting || simRemaining <= 0}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 shadow transition-all ${
+                    simRemaining > 0 && !starting
+                      ? 'bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37]'
+                      : 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                  }`}
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>
+                    {starting
+                      ? 'Iniciando...'
+                      : simRemaining > 0
+                      ? 'Iniciar Simulado Express Gratuito'
+                      : 'Cota diária já utilizada hoje'}
+                  </span>
+                </button>
+
+                {onOpenPremium && (
+                  <button
+                    onClick={onOpenPremium}
+                    className="px-4 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] text-xs font-extrabold shadow flex items-center gap-1.5"
+                  >
+                    <Crown className="w-3.5 h-3.5" />
+                    <span>Liberar Todos · R$ 29,90</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Access / Limit Banner */}
+        {accessBannerMsg && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-amber-50 border-2 border-[#D4AF37] text-[#0B1F3A] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-[#0B1F3A] text-[#D4AF37] flex items-center justify-center shrink-0">
+                <Lock className="w-4 h-4" />
+              </div>
+              <div className="space-y-1 min-w-0">
+                <p className="text-xs sm:text-sm font-bold text-[#0B1F3A]">{accessBannerMsg}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              {!currentUser && onOpenAuth && (
+                <button
+                  onClick={onOpenAuth}
+                  className="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-xs font-bold text-slate-800 flex items-center gap-1.5"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Já sou assinante</span>
+                </button>
+              )}
+              {onOpenPremium && (
+                <button
+                  onClick={onOpenPremium}
+                  className="px-4 py-2 rounded-xl bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] text-xs font-extrabold shadow flex items-center gap-1.5"
+                >
+                  <Crown className="w-3.5 h-3.5" />
+                  <span>Assinar Premium (R$ 29,90/mês)</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Featured Big Card: Official 80-Question Exam */}
         <div className="bg-gradient-to-br from-[#0B1F3A] via-[#122b4d] to-[#0B1F3A] rounded-3xl p-5 sm:p-8 text-white shadow-xl border border-[#D4AF37]/30 relative overflow-hidden">
           <div className="absolute -right-8 -bottom-8 w-48 h-48 bg-[#D4AF37]/10 rounded-full blur-2xl" />
           <div className="max-w-3xl space-y-4 relative z-10 min-w-0">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-bold uppercase tracking-wider max-w-full">
-              <Award className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">Simulação Real Oficial</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-bold uppercase tracking-wider max-w-full">
+                <Award className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Simulação Real Oficial</span>
+              </div>
+              {!serverIsPremium && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 border border-white/20 text-[#D4AF37] text-xs font-bold">
+                  <Lock className="w-3 h-3" />
+                  Exclusivo Premium
+                </span>
+              )}
             </div>
 
             <h2 className="text-xl sm:text-3xl font-bold font-serif text-white break-words">
@@ -363,11 +443,22 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
 
             <div className="pt-4">
               <button
-                onClick={() => handleStartSimulado(SIMULADO_PRESETS[0])}
+                onClick={() => officialOabPreset && handleStartSimulado(officialOabPreset)}
+                disabled={starting}
                 className="w-full sm:w-auto px-5 sm:px-6 py-3 bg-[#D4AF37] hover:bg-[#c59f2a] text-[#0B1F3A] font-extrabold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
               >
-                <Play className="w-4 h-4 fill-current shrink-0" />
-                <span>Iniciar Simulado Oficial (80 Questões)</span>
+                {!serverIsPremium ? (
+                  <Lock className="w-4 h-4 shrink-0" />
+                ) : (
+                  <Play className="w-4 h-4 fill-current shrink-0" />
+                )}
+                <span>
+                  {!serverIsPremium
+                    ? 'Desbloquear Simulado Oficial (80 Questões)'
+                    : starting
+                    ? 'Preparando Prova...'
+                    : 'Iniciar Simulado Oficial (80 Questões)'}
+                </span>
               </button>
             </div>
           </div>
@@ -380,10 +471,9 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
               <BookOpen className="w-4 h-4 text-[#0B1F3A]" />
               <span>Modalidades, Concursos & Desafios</span>
             </h2>
-            <span className="text-xs text-slate-500 font-semibold">{SIMULADO_PRESETS.length} simulados prontos</span>
+            <span className="text-xs text-slate-500 font-semibold">{presets.length} simulados prontos</span>
           </div>
 
-          {/* Category Filter Pills */}
           <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
             <button
               onClick={() => setPresetCategoryFilter('all')}
@@ -393,7 +483,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                   : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
               }`}
             >
-              Todos ({SIMULADO_PRESETS.length})
+              Todos ({presets.length})
             </button>
             <button
               onClick={() => setPresetCategoryFilter('oab-oficial')}
@@ -443,67 +533,117 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                   : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
               }`}
             >
-              Por Disciplina (20)
+              Por Disciplina (21)
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {SIMULADO_PRESETS.filter(p => presetCategoryFilter === 'all' || p.category === presetCategoryFilter).map(preset => (
-              <div
-                key={preset.id}
-                className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 hover:border-[#D4AF37] shadow-sm hover:shadow-md transition-all flex flex-col justify-between min-w-0"
-              >
-                <div className="space-y-2.5 min-w-0">
-                  <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
-                    <span className="text-[11px] bg-[#0B1F3A]/5 text-[#0B1F3A] px-2.5 py-0.5 rounded-full font-bold truncate max-w-full">
-                      {preset.level}
-                    </span>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {preset.badge && (
-                        <span className="bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#0B1F3A] text-[10px] font-extrabold px-2 py-0.5 rounded-md">
-                          {preset.badge}
+            {presets
+              .filter(p => presetCategoryFilter === 'all' || p.category === presetCategoryFilter)
+              .map(preset => {
+                const isLocked = Boolean(!serverIsPremium && preset.isLocked);
+                const isExpressFree = Boolean(preset.id === 'simulado-express-10');
+                return (
+                  <div
+                    key={preset.id}
+                    className={`bg-white p-4 sm:p-5 rounded-2xl border shadow-sm hover:shadow-md transition-all flex flex-col justify-between min-w-0 ${
+                      isExpressFree && !serverIsPremium
+                        ? 'border-emerald-300 ring-1 ring-emerald-200'
+                        : 'border-slate-200 hover:border-[#D4AF37]'
+                    }`}
+                  >
+                    <div className="space-y-2.5 min-w-0">
+                      <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
+                        <span className="text-[11px] bg-[#0B1F3A]/5 text-[#0B1F3A] px-2.5 py-0.5 rounded-full font-bold truncate max-w-full">
+                          {preset.level}
                         </span>
-                      )}
-                      <span className="text-xs text-slate-500 flex items-center gap-1 font-semibold">
-                        <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
-                        {preset.timeLimitMinutes} min
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {isExpressFree && !serverIsPremium && (
+                            <span className="bg-emerald-100 border border-emerald-200 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-md flex items-center gap-1">
+                              <Sparkles className="w-2.5 h-2.5" />
+                              Gratuito (1/dia)
+                            </span>
+                          )}
+                          {isLocked && (
+                            <span className="bg-amber-50 border border-amber-200 text-amber-900 text-[10px] font-extrabold px-2 py-0.5 rounded-md flex items-center gap-1">
+                              <Lock className="w-2.5 h-2.5" />
+                              Premium
+                            </span>
+                          )}
+                          {!isLocked && preset.badge && (
+                            <span className="bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#0B1F3A] text-[10px] font-extrabold px-2 py-0.5 rounded-md">
+                              {preset.badge}
+                            </span>
+                          )}
+                          <span className="text-xs text-slate-500 flex items-center gap-1 font-semibold">
+                            <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
+                            {preset.timeLimitMinutes} min
+                          </span>
+                        </div>
+                      </div>
+
+                      <h3 className="text-sm font-bold text-slate-900 leading-snug break-words">
+                        {preset.title}
+                      </h3>
+
+                      <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed break-words">
+                        {preset.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-4 mt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-slate-700">
+                        {preset.questionCount} Questões
                       </span>
+                      <button
+                        onClick={() => handleStartSimulado(preset)}
+                        disabled={starting || (isExpressFree && !serverIsPremium && simRemaining <= 0)}
+                        className={`px-3.5 py-2 text-xs font-bold rounded-lg shadow transition-colors flex items-center gap-1.5 ${
+                          isLocked
+                            ? 'bg-slate-100 hover:bg-[#0B1F3A] text-slate-700 hover:text-[#D4AF37] border border-slate-200'
+                            : isExpressFree && !serverIsPremium && simRemaining <= 0
+                            ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                            : 'bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37]'
+                        }`}
+                      >
+                        {isLocked ? (
+                          <>
+                            <Lock className="w-3 h-3" />
+                            <span>Premium</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-3 h-3 fill-current" />
+                            <span>
+                              {isExpressFree && !serverIsPremium && simRemaining <= 0
+                                ? 'Usado hoje'
+                                : 'Iniciar'}
+                            </span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
-
-                  <h3 className="text-sm font-bold text-slate-900 leading-snug break-words">
-                    {preset.title}
-                  </h3>
-
-                  <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed break-words">
-                    {preset.description}
-                  </p>
-                </div>
-
-                <div className="pt-4 mt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-bold text-slate-700">
-                    {preset.questionCount} Questões
-                  </span>
-                  <button
-                    onClick={() => handleStartSimulado(preset)}
-                    className="px-3.5 py-2 bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] text-xs font-bold rounded-lg shadow transition-colors flex items-center gap-1.5"
-                  >
-                    <Play className="w-3 h-3 fill-current" />
-                    <span>Iniciar</span>
-                  </button>
-                </div>
-              </div>
-            ))}
+                );
+              })}
           </div>
         </div>
 
         {/* Custom Simulado Builder */}
         <div className="bg-white p-4 sm:p-8 rounded-3xl border border-slate-200 space-y-6 shadow-sm min-w-0">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-            <Award className="w-5 h-5 text-[#D4AF37] shrink-0" />
-            <h2 className="text-base font-bold text-[#0B1F3A]">
-              Personalizar Simulado à Sua Medida
-            </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              <Award className="w-5 h-5 text-[#D4AF37] shrink-0" />
+              <h2 className="text-base font-bold text-[#0B1F3A]">
+                Personalizar Simulado à Sua Medida
+              </h2>
+            </div>
+            {!serverIsPremium && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-bold">
+                <Lock className="w-3 h-3" />
+                Exclusivo Plano Premium
+              </span>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
@@ -579,10 +719,13 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
           <div className="pt-2 flex justify-end">
             <button
               onClick={() => handleStartSimulado()}
+              disabled={starting}
               className="w-full sm:w-auto px-6 py-3 bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-2"
             >
-              <Play className="w-4 h-4 fill-current" />
-              <span>Iniciar Simulado Customizado</span>
+              {!serverIsPremium ? <Lock className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+              <span>
+                {!serverIsPremium ? 'Assinar Premium para Personalizar' : 'Iniciar Simulado Customizado'}
+              </span>
             </button>
           </div>
         </div>
@@ -598,9 +741,8 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
     const answeredCount = Object.keys(userAnswers).length;
     const unansweredCount = activeQuestions.length - answeredCount;
     const flaggedCount = Object.values(flaggedQuestions).filter(Boolean).length;
-    const isWarning = secondsRemaining < 300; // less than 5 min
+    const isWarning = secondsRemaining < 300;
 
-    // Filter questions in navigation matrix
     const filteredNavIndices = activeQuestions.map((_, i) => i).filter(idx => {
       if (navFilter === 'unanswered') return userAnswers[idx] === undefined;
       if (navFilter === 'flagged') return Boolean(flaggedQuestions[idx]);
@@ -609,7 +751,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
 
     return (
       <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6 animate-fade-in">
-        {/* Sticky Control Bar with Timer & Status */}
+        {/* Sticky Control Bar */}
         <div className="sticky top-[68px] sm:top-16 z-30 bg-[#0B1F3A] text-white p-3 sm:p-4 rounded-2xl shadow-xl border border-[#D4AF37]/30 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-3">
             <div
@@ -626,7 +768,6 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
             <button
               onClick={() => setIsTimerPaused(!isTimerPaused)}
               className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 text-xs flex items-center gap-1.5 transition-colors"
-              title={isTimerPaused ? 'Retomar Simulado' : 'Pausar Simulado'}
             >
               {isTimerPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">{isTimerPaused ? 'Retomar' : 'Pausar'}</span>
@@ -647,9 +788,10 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
 
           <button
             onClick={() => setShowSubmitModal(true)}
+            disabled={finishing}
             className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-[#D4AF37] to-[#C59F2A] hover:from-[#E6C86E] hover:to-[#D4AF37] text-[#0B1F3A] font-extrabold text-xs rounded-lg shadow transition-all text-center"
           >
-            Finalizar Simulado
+            {finishing ? 'Corrigindo...' : 'Finalizar Simulado'}
           </button>
         </div>
 
@@ -661,7 +803,6 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
               <span>Navegador de Questões</span>
             </div>
 
-            {/* Filter buttons */}
             <div className="flex flex-wrap items-center gap-1 text-[11px]">
               <button
                 onClick={() => setNavFilter('all')}
@@ -709,7 +850,6 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                       ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
-                  title={`Questão ${idx + 1}${isFlagged ? ' (Marcada para revisão)' : ''}`}
                 >
                   {idx + 1}
                   {isFlagged && (
@@ -724,7 +864,6 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
         {/* Active Question Card */}
         {currentQuestion && (
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-8 space-y-5 sm:space-y-6 min-w-0">
-            {/* Question Header */}
             <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 text-xs text-slate-500 border-b border-slate-100 pb-3">
               <div className="flex flex-wrap items-center gap-2 min-w-0">
                 <span className="px-2.5 py-1 rounded-md bg-[#0B1F3A] text-[#D4AF37] font-bold uppercase tracking-wider shrink-0">
@@ -737,7 +876,6 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                 <span className="text-slate-500 break-words">{currentQuestion.subject}</span>
               </div>
 
-              {/* Toggle Flag / Marcar para revisar button */}
               <button
                 onClick={() => handleToggleFlag(currentIndex)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 ${
@@ -751,12 +889,10 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
               </button>
             </div>
 
-            {/* Statement */}
             <p className="text-sm sm:text-base text-slate-900 leading-relaxed whitespace-pre-line font-normal break-words">
               {currentQuestion.statement}
             </p>
 
-            {/* Options */}
             <div className="space-y-3 pt-2">
               {currentQuestion.options.map(option => {
                 const isSelected = userAnswers[currentIndex] === option.id;
@@ -785,7 +921,6 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
               })}
             </div>
 
-            {/* Bottom Navigation */}
             <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
               <button
                 onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
@@ -808,7 +943,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
           </div>
         )}
 
-        {/* Confirmation Modal before Submit */}
+        {/* Confirmation Modal */}
         {showSubmitModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
             <div className="bg-white max-w-md w-full rounded-3xl p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl border border-slate-200 my-4 max-h-[92vh] overflow-y-auto">
@@ -840,7 +975,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
               {unansweredCount > 0 && (
                 <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 space-y-1">
                   <p className="font-bold">Atenção:</p>
-                  <p>Você ainda possui {unansweredCount} questão(ões) sem resposta. No exame da OAB, não há penalidade por chutar (questões erradas não anulam certas).</p>
+                  <p>Você ainda possui {unansweredCount} questão(ões) sem resposta. No exame da OAB, não há penalidade por chutar.</p>
                 </div>
               )}
 
@@ -853,9 +988,10 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                 </button>
                 <button
                   onClick={handleConfirmFinish}
+                  disabled={finishing}
                   className="px-4 py-2.5 bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] rounded-xl text-xs font-bold shadow transition-colors"
                 >
-                  Confirmar e Finalizar
+                  {finishing ? 'Corrigindo...' : 'Confirmar e Finalizar'}
                 </button>
               </div>
             </div>
@@ -866,7 +1002,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
   }
 
   // -------------------------------------------------------------
-  // RENDER: RESULTS SCREEN (Scorecard, by-discipline stats, review)
+  // RENDER: RESULTS SCREEN
   // -------------------------------------------------------------
   if (screen === 'result' && latestResult) {
     const total = latestResult.totalQuestions;
@@ -875,14 +1011,14 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
     const isApproved = percent >= 50;
 
     const wrongIndices: number[] = [];
-    activeQuestions.forEach((_, idx) => {
+    reviewQuestions.forEach((_, idx) => {
       if (!latestResult.answers[idx]?.isCorrect) {
         wrongIndices.push(idx);
       }
     });
 
     const flaggedIndices: number[] = [];
-    activeQuestions.forEach((_, idx) => {
+    reviewQuestions.forEach((_, idx) => {
       if (flaggedQuestions[idx]) {
         flaggedIndices.push(idx);
       }
@@ -893,7 +1029,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
         ? wrongIndices
         : resultFilter === 'flagged'
         ? flaggedIndices
-        : activeQuestions.map((_, i) => i);
+        : reviewQuestions.map((_, i) => i);
 
     return (
       <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 animate-fade-in">
@@ -948,8 +1084,17 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
                 className="w-full sm:w-auto px-5 py-2.5 bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] font-extrabold text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-1.5"
               >
                 <RotateCcw className="w-4 h-4" />
-                <span>Realizar Novo Simulado</span>
+                <span>Voltar aos Simulados</span>
               </button>
+              {!serverIsPremium && onOpenPremium && (
+                <button
+                  onClick={onOpenPremium}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-white/15 hover:bg-white/25 text-white font-bold text-xs rounded-xl border border-white/25 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <Crown className="w-4 h-4 text-[#D4AF37]" />
+                  <span>Assinar Premium para Simulados Ilimitados</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1014,7 +1159,6 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
               </h2>
             </div>
 
-            {/* Filter buttons */}
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
               <button
                 onClick={() => setResultFilter('wrong')}
@@ -1062,7 +1206,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({ onRefreshPerforman
           ) : (
             <div className="space-y-4">
               {displayIndices.map(idx => {
-                const questionObj = activeQuestions[idx];
+                const questionObj = reviewQuestions[idx];
                 if (!questionObj) return null;
 
                 const answerItem = latestResult.answers[idx];

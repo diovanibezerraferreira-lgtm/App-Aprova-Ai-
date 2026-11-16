@@ -51,6 +51,10 @@ export interface Question {
   examReference?: string;
 }
 
+export type QuestionItem = Omit<Question, 'correctOptionId'> & {
+  correctOptionId?: 'A' | 'B' | 'C' | 'D';
+};
+
 export interface QuestionAnswerRecord {
   questionId: string;
   selectedOptionId: 'A' | 'B' | 'C' | 'D';
@@ -68,6 +72,8 @@ export interface SimuladoConfig {
   questionCount: number;
   timeLimitMinutes: number;
   level: string;
+  isFree?: boolean;
+  isLocked?: boolean;
 }
 
 export interface SimuladoResult {
@@ -112,6 +118,17 @@ export interface LegalBrief {
     clientNeeds: string;
   };
   fullDraft: string;
+  isFree?: boolean;
+  isLocked?: boolean;
+  structureStepsCount?: number;
+}
+
+export interface StudyChapter {
+  title: string;
+  content: string;
+  keyStatutes: string[];
+  summaryPoints: string[];
+  isLocked?: boolean;
 }
 
 export interface StudyMaterial {
@@ -124,12 +141,9 @@ export interface StudyMaterial {
   pageCount?: number;
   isExtensiveManual?: boolean;
   edition?: string;
-  chapters: {
-    title: string;
-    content: string;
-    keyStatutes: string[];
-    summaryPoints: string[];
-  }[];
+  hasFreePreview?: boolean;
+  isFullyLocked?: boolean;
+  chapters: StudyChapter[];
 }
 
 export interface UserProfile {

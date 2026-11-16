@@ -23,6 +23,7 @@ function AppContent() {
   const {
     currentUser,
     userProfile,
+    isPremiumActive,
     authModalOpen,
     authModalMode,
     openAuthModal,
@@ -49,15 +50,18 @@ function AppContent() {
     setActiveTab('apostilas');
   };
 
-  const activeUserProfile: UserProfile = userProfile || {
-    name: currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Estudante',
-    email: currentUser?.email || 'estudante@aprovadireito.com.br',
-    isRegistered: !!currentUser,
-    studyFocus: 'OAB 1ª Fase',
-    dailyGoalQuestions: 20,
-    memberSince: 'Novembro de 2026',
-    isPremium: false
-  };
+  const activeUserProfile: UserProfile = userProfile
+    ? { ...userProfile, isPremium: isPremiumActive }
+    : {
+        name: currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Estudante',
+        email: currentUser?.email || 'estudante@aprovadireito.com.br',
+        isRegistered: !!currentUser,
+        studyFocus: 'OAB 1ª Fase',
+        dailyGoalQuestions: 20,
+        memberSince: 'Novembro de 2026',
+        isPremium: false,
+        subscriptionStatus: 'NONE'
+      };
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-clip bg-slate-50 text-slate-900 flex flex-col selection:bg-[#D4AF37]/25 selection:text-[#0B1F3A]">
@@ -94,19 +98,32 @@ function AppContent() {
         )}
 
         {activeTab === 'questoes' && (
-          <QuestionsView initialDisciplineId={targetedDisciplineForQuestions} />
+          <QuestionsView
+            initialDisciplineId={targetedDisciplineForQuestions}
+            onOpenAuth={() => openAuthModal('login')}
+            onOpenPremium={() => setPremiumModalOpen(true)}
+          />
         )}
 
         {activeTab === 'simulados' && (
-          <SimuladosView />
+          <SimuladosView
+            onOpenAuth={() => openAuthModal('login')}
+            onOpenPremium={() => setPremiumModalOpen(true)}
+          />
         )}
 
         {activeTab === 'pecas' && (
-          <LegalBriefsView />
+          <LegalBriefsView
+            onOpenAuth={() => openAuthModal('login')}
+            onOpenPremium={() => setPremiumModalOpen(true)}
+          />
         )}
 
         {activeTab === 'apostilas' && (
-          <StudyGuidesView />
+          <StudyGuidesView
+            onOpenAuth={() => openAuthModal('login')}
+            onOpenPremium={() => setPremiumModalOpen(true)}
+          />
         )}
 
         {activeTab === 'desempenho' && (
