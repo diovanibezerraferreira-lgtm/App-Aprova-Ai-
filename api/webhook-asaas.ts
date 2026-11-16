@@ -78,12 +78,47 @@ function sendJson(res: ServerResponse, status: number, payload: any) {
   res.end(JSON.stringify(payload));
 }
 
-function extractHeaderToken(req: RequestWithBody): string {
-  const raw = req.headers['asaas-access-token'] || req.headers['access_token'];
-  if (Array.isArray(raw)) {
-    return (raw[0] || '').trim();
+function cleanTokenValue(raw?: string | string[]): string {
+  const first = Array.isArray(raw) ? raw[0] : raw;
+  if (typeof first !== 'string') return '';
+  let value = first.trim();
+  let prev = '';
+  while (value !== prev) {
+    prev = value;
+    value = value.replace(/(\\r\\n|\\n|\\r)+$/g, '').trim();
+    if (
+      value.length >= 2 &&
+      ((value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'")))
+    ) {
+      value = value.slice(1, -1).trim();
+    }
   }
-  return typeof raw === 'string' ? raw.trim() : '';
+  return value;
+}
+
+function extractAsaasAccessToken(req: RequestWithBody): {
+  token: string;
+  headerPresent: boolean;
+} {
+  const headers = req.headers || {};
+  let rawHeader: string | string[] | undefined = headers['asaas-access-token'];
+
+  if (rawHeader === undefined) {
+    for (const [key, val] of Object.entries(headers)) {
+      const lower = key.toLowerCase();
+      if (lower === 'asaas-access-token' || lower === 'access_token') {
+        rawHeader = val;
+        break;
+      }
+    }
+  }
+
+  const token = cleanTokenValue(rawHeader);
+  return {
+    token,
+    headerPresent: rawHeader !== undefined && token.length > 0,
+  };
 }
 
 function tokensMatch(received: string, expected: string): boolean {
@@ -105,9 +140,10 @@ export default async function handler(req: RequestWithBody, res: ServerResponse)
 
   try {
     const config = getAsaasConfig();
+    const expectedWebhookToken = cleanTokenValue(process.env.ASAAS_WEBHOOK_TOKEN);
 
-    // 1. Validate Asaas webhook secret token (mandatory in all environments)
-    if (!config.webhookToken) {
+    // 1. Validate Asaas webhook secret token from asaas-access-token header (no Bearer/Basic Auth required)
+    if (!expectedWebhookToken) {
       console.error('ASAAS_WEBHOOK_TOKEN não configurado no servidor.');
       return sendJson(res, 500, {
         error:
@@ -115,10 +151,12 @@ export default async function handler(req: RequestWithBody, res: ServerResponse)
       });
     }
 
-    const headerToken = extractHeaderToken(req);
-    if (!tokensMatch(headerToken, config.webhookToken)) {
-      console.warn('Webhook rejeitado: Token inválido ou ausente.');
-      return sendJson(res, 401, { error: 'Token de webhook inválido' });
+    const { token: headerToken, headerPresent } = extractAsaasAccessToken(req);
+    if (!headerPresent || !tokensMatch(headerToken, expectedWebhookToken)) {
+      console.warn(
+        `Webhook rejeitado (401): header asaas-access-token ${headerPresent ? 'divergente' : 'ausente'} (receivedLen=${headerToken.length}, expectedLen=${expectedWebhookToken.length}).`
+      );
+      return sendJson(res, 401, { error: 'Token de webhook inválido ou ausente' });
     }
 
     const payload = await readBody(req);
