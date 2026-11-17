@@ -11,11 +11,28 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function getCliArg(name: string): string | undefined {
+  const args = process.argv.slice(2);
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === `--${name}` && i + 1 < args.length) {
+      return args[i + 1];
+    }
+    if (arg.startsWith(`--${name}=`)) {
+      return arg.slice(name.length + 3);
+    }
+  }
+  return undefined;
+}
+
 async function startServer() {
   const app = express();
   const httpServer = http.createServer(app);
-  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+  const cliPort = getCliArg('port');
+  const cliHost = getCliArg('host') || '0.0.0.0';
   const isProd = process.env.NODE_ENV === 'production';
+  const envPort = !isProd && process.env.PORT === '8080' ? undefined : process.env.PORT;
+  const PORT = parseInt(cliPort || envPort || '3000', 10) || 3000;
   const disableHmr = process.env.DISABLE_HMR === 'true';
 
   // Parse JSON bodies for API endpoints
@@ -144,9 +161,9 @@ async function startServer() {
     app.use(vite.middlewares);
   }
 
-  httpServer.listen(PORT, '0.0.0.0', () => {
+  httpServer.listen(PORT, cliHost, () => {
     console.log(
-      `Server running on http://0.0.0.0:${PORT} in ${isProd ? 'production' : 'development'} mode (HMR: ${disableHmr ? 'disabled' : 'attached'})`
+      `Server running on http://${cliHost}:${PORT} in ${isProd ? 'production' : 'development'} mode (HMR: ${disableHmr ? 'disabled' : 'attached'})`
     );
   });
 }

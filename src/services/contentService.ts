@@ -122,15 +122,15 @@ export class ApiAccessError extends Error {
   }
 }
 
-async function buildAuthHeaders(): Promise<Record<string, string>> {
+async function buildAuthHeaders(forceRefresh = false): Promise<Record<string, string>> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
   const user = auth.currentUser;
   if (user) {
     try {
-      const token = await user.getIdToken();
-      if (token) {
+      const token = await user.getIdToken(forceRefresh);
+      if (typeof token === 'string' && token.split('.').length === 3) {
         headers.Authorization = `Bearer ${token}`;
       }
     } catch (e) {
@@ -141,15 +141,22 @@ async function buildAuthHeaders(): Promise<Record<string, string>> {
 }
 
 async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
-  const headers = await buildAuthHeaders();
-  const res = await fetch(url, {
-    ...options,
-    credentials: 'same-origin',
-    headers: {
-      ...headers,
-      ...(options?.headers || {}),
-    },
-  });
+  const sendWithHeaders = async (authHeaders: Record<string, string>) => {
+    return fetch(url, {
+      ...options,
+      credentials: 'same-origin',
+      headers: {
+        ...authHeaders,
+        ...(options?.headers || {}),
+      },
+    });
+  };
+
+  let res = await sendWithHeaders(await buildAuthHeaders(false));
+
+  if (res.status === 401 && auth.currentUser) {
+    res = await sendWithHeaders(await buildAuthHeaders(true));
+  }
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
