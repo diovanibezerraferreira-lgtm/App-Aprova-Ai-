@@ -388,11 +388,11 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 shrink-0">
                 {!currentUser && onOpenAuth && (
                   <button
                     onClick={onOpenAuth}
-                    className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/20 transition-colors"
+                    className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/20 transition-colors text-center"
                   >
                     Entrar
                   </button>
@@ -400,9 +400,9 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                 {onOpenPremium && (
                   <button
                     onClick={onOpenPremium}
-                    className="px-4 py-2 rounded-xl bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] text-xs font-extrabold shadow transition-colors flex items-center gap-1.5"
+                    className="w-full sm:w-auto px-4 py-2 rounded-xl bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] text-xs font-extrabold shadow transition-colors flex items-center justify-center gap-1.5 text-center"
                   >
-                    <Crown className="w-3.5 h-3.5" />
+                    <Crown className="w-3.5 h-3.5 shrink-0" />
                     <span>Liberar {catalogTotal.toLocaleString('pt-BR')} Questões</span>
                   </button>
                 )}
@@ -436,22 +436,22 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 shrink-0">
               {!currentUser && onOpenAuth && (
                 <button
                   onClick={onOpenAuth}
-                  className="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-xs font-bold text-slate-800 flex items-center gap-1.5"
+                  className="w-full sm:w-auto px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-xs font-bold text-slate-800 flex items-center justify-center gap-1.5"
                 >
-                  <LogIn className="w-3.5 h-3.5" />
+                  <LogIn className="w-3.5 h-3.5 shrink-0" />
                   <span>Já sou assinante</span>
                 </button>
               )}
               {onOpenPremium && (
                 <button
                   onClick={onOpenPremium}
-                  className="px-4 py-2 rounded-xl bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] text-xs font-extrabold shadow flex items-center gap-1.5"
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] text-xs font-extrabold shadow flex items-center justify-center gap-1.5 text-center"
                 >
-                  <Crown className="w-3.5 h-3.5" />
+                  <Crown className="w-3.5 h-3.5 shrink-0" />
                   <span>Assinar Premium (R$ 29,90/mês)</span>
                 </button>
               )}
@@ -512,10 +512,10 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full max-w-full min-w-0 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex flex-wrap items-center gap-1.5 w-full max-w-full min-w-0">
             <button
               onClick={() => handleDisciplineChange('todas')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap shrink-0 transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg max-w-full break-words transition-colors ${
                 selectedDiscipline === 'todas'
                   ? 'bg-[#0B1F3A] text-[#D4AF37] shadow'
                   : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
@@ -530,7 +530,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                 <button
                   key={disc.id}
                   onClick={() => handleDisciplineChange(disc.id)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap shrink-0 transition-colors ${
+                  className={`px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg max-w-full break-words transition-colors ${
                     isSelected
                       ? 'bg-[#0B1F3A] text-[#D4AF37] font-semibold shadow'
                       : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
@@ -574,10 +574,10 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 w-full max-w-full min-w-0 overflow-x-auto pt-1 pb-1 scrollbar-none text-[11px]">
+          <div className="flex flex-wrap items-center gap-1.5 w-full max-w-full min-w-0 pt-1 text-[11px]">
             <button
               onClick={() => handleSubjectChange('todos')}
-              className={`px-2.5 py-1 rounded-md font-medium whitespace-nowrap shrink-0 transition-colors ${
+              className={`px-2.5 py-1 rounded-md font-medium max-w-full text-left break-words transition-colors ${
                 selectedSubject === 'todos'
                   ? 'bg-[#0B1F3A] text-[#D4AF37] font-bold'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -589,7 +589,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
               <button
                 key={s.name}
                 onClick={() => handleSubjectChange(s.name)}
-                className={`px-2.5 py-1 rounded-md whitespace-nowrap shrink-0 transition-colors ${
+                className={`px-2.5 py-1 rounded-md max-w-full text-left break-words transition-colors ${
                   selectedSubject === s.name
                     ? 'bg-[#0B1F3A] text-[#D4AF37] font-bold'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -776,7 +776,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
 
               {previousAnswer ? (
                 <span
-                  className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border flex items-center gap-1 ${
+                  className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border inline-flex items-center gap-1 max-w-full break-words ${
                     previousAnswer.isCorrect
                       ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                       : 'bg-amber-50 text-amber-900 border-amber-300'
@@ -786,7 +786,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                   <span>Revisão ({previousAnswer.isCorrect ? 'Acertada anterior' : 'Errou anterior'})</span>
                 </span>
               ) : (
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#0B1F3A]/5 text-[#0B1F3A] border border-[#0B1F3A]/20 flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#0B1F3A]/5 text-[#0B1F3A] border border-[#0B1F3A]/20 inline-flex items-center gap-1 max-w-full">
                   <BookmarkCheck className="w-3 h-3 text-[#D4AF37] shrink-0" />
                   <span>Inédita</span>
                 </span>
@@ -842,7 +842,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                     >
                       {option.id}
                     </span>
-                    <span className="text-xs sm:text-sm text-slate-800 leading-snug flex-1 min-w-0 break-words">
+                    <span className="text-xs sm:text-sm text-slate-800 leading-snug flex-1 min-w-0 break-words [overflow-wrap:anywhere]">
                       {option.text}
                     </span>
                     {isAnswered && activeSolution && isCorrect && (
@@ -857,16 +857,16 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
             </div>
 
             {/* Answer & Next Controls */}
-            <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-              <div>
+            <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-2.5 sm:gap-3">
+              <div className="w-full sm:w-auto">
                 {!isAnswered ? (
                   isFreeQuotaExhausted && !quota?.answeredQuestionIdsToday?.includes(currentQuestion.id) ? (
                     onOpenPremium && (
                       <button
                         onClick={onOpenPremium}
-                        className="px-5 py-2.5 rounded-xl font-extrabold text-xs bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] shadow-sm flex items-center gap-2"
+                        className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl font-extrabold text-xs bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] shadow-sm flex items-center justify-center gap-2 text-center"
                       >
-                        <Crown className="w-4 h-4" />
+                        <Crown className="w-4 h-4 shrink-0" />
                         <span>Desbloquear Questões Ilimitadas</span>
                       </button>
                     )
@@ -874,7 +874,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                     <button
                       onClick={handleConfirmAnswer}
                       disabled={!selectedOptionId || submitting}
-                      className={`px-6 py-2.5 rounded-xl font-bold text-xs transition-all shadow-sm ${
+                      className={`w-full sm:w-auto px-5 sm:px-6 py-2.5 rounded-xl font-bold text-xs transition-all shadow-sm text-center ${
                         selectedOptionId && !submitting
                           ? 'bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37]'
                           : 'bg-slate-200 text-slate-400 cursor-not-allowed'
@@ -886,21 +886,21 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                 ) : (
                   <button
                     onClick={handleResetCurrent}
-                    className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100 transition-colors flex items-center gap-1.5"
+                    className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100 transition-colors flex items-center justify-center gap-1.5"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
+                    <RotateCcw className="w-3.5 h-3.5 shrink-0" />
                     <span>Tentar Novamente</span>
                   </button>
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="w-full sm:w-auto flex items-center gap-2">
                 <button
                   onClick={handleNextQuestion}
-                  className="px-5 py-2.5 bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] font-bold text-xs rounded-xl shadow transition-all flex items-center gap-2"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-2"
                 >
                   <span>Próxima Questão</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 shrink-0" />
                 </button>
               </div>
             </div>

@@ -242,11 +242,11 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
           ) : !currentUser ? (
             /* Require Firebase Authentication before payment */
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-start gap-3">
+              <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-start gap-3">
                 <Lock className="w-5 h-5 text-[#0B1F3A] shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold text-[#0B1F3A]">Entre na sua conta antes de assinar</p>
-                  <p className="mt-1 leading-relaxed">
+                <div className="min-w-0">
+                  <p className="font-bold text-[#0B1F3A] break-words">Entre na sua conta antes de assinar</p>
+                  <p className="mt-1 leading-relaxed break-words">
                     Para vincular sua assinatura Premium ao seu perfil e liberar o acesso automaticamente após a confirmação do pagamento, faça login ou cadastre-se gratuitamente.
                   </p>
                 </div>
@@ -289,10 +289,10 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 href={checkoutUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3.5 px-4 bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+                className="w-full py-3.5 px-3 sm:px-4 bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-center"
               >
-                <span>Ir para Pagamento Seguro (R$ 29,90/mês)</span>
-                <ExternalLink className="w-4 h-4" />
+                <span className="break-words">Ir para Pagamento Seguro (R$ 29,90/mês)</span>
+                <ExternalLink className="w-4 h-4 shrink-0" />
               </a>
 
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 flex items-start gap-2">
@@ -439,9 +439,9 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 )}
               </button>
 
-              <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Pagamento processado em ambiente criptografado do Asaas · Sem fidelidade</span>
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 text-center">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span className="break-words">Pagamento processado em ambiente criptografado do Asaas · Sem fidelidade</span>
               </div>
             </form>
           )}

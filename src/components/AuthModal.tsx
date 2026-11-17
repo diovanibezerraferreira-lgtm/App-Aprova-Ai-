@@ -32,7 +32,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   initialMode = 'login'
 }) => {
-  const { signIn, signUp, signInGoogle, signInLocally, resetPassword } = useAuth();
+  const {
+    signIn,
+    signUp,
+    signInGoogle,
+    signInLocally,
+    resetPassword,
+    authRedirectError,
+    clearAuthRedirectError
+  } = useAuth();
 
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>(initialMode);
   const [name, setName] = useState('');
@@ -46,15 +54,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [showConsoleHelper, setShowConsoleHelper] = useState(false);
+  const [showPopupRetry, setShowPopupRetry] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setMode(initialMode);
-      setErrorMsg('');
       setSuccessMsg('');
       setShowConsoleHelper(false);
+      if (authRedirectError) {
+        setErrorMsg(authRedirectError);
+        setShowPopupRetry(authRedirectError.includes('auth/redirect-storage-blocked'));
+      } else {
+        setErrorMsg('');
+        setShowPopupRetry(false);
+      }
     }
-  }, [isOpen, initialMode]);
+  }, [isOpen, initialMode, authRedirectError]);
 
   if (!isOpen) return null;
 
@@ -132,21 +147,34 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = async (forcePopup: boolean = false) => {
     setErrorMsg('');
     setSuccessMsg('');
     setShowConsoleHelper(false);
+    setShowPopupRetry(false);
+    clearAuthRedirectError();
     setLoading(true);
     try {
-      await signInGoogle();
+      const outcome = await signInGoogle({ forcePopup });
+      if (outcome === 'redirecting') {
+        setSuccessMsg('Redirecionando para o login seguro do Google...');
+        return;
+      }
       setSuccessMsg('Login com Google realizado com sucesso!');
+      setLoading(false);
       setTimeout(() => {
         onClose();
       }, 1000);
     } catch (err: unknown) {
       console.warn('Google authentication notice:', err);
-      setErrorMsg(translateAuthError(err));
-    } finally {
+      const translated = translateAuthError(err);
+      if (isOperationNotAllowedError(err)) {
+        setShowConsoleHelper(true);
+      }
+      if (translated.includes('auth/redirect-storage-blocked')) {
+        setShowPopupRetry(true);
+      }
+      setErrorMsg(translated);
       setLoading(false);
     }
   };
@@ -226,9 +254,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
           
           {errorMsg && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-              <span>{errorMsg}</span>
+            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium space-y-2">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <span className="break-words min-w-0">{errorMsg}</span>
+              </div>
+              {showPopupRetry && (
+                <button
+                  type="button"
+                  onClick={() => handleGoogleLogin(true)}
+                  disabled={loading}
+                  className="w-full py-2 px-3 bg-white hover:bg-rose-100 text-[#0B1F3A] border border-rose-300 font-bold text-xs rounded-lg transition-colors"
+                >
+                  Tentar login Google via janela Pop-up
+                </button>
+              )}
             </div>
           )}
 
@@ -315,7 +355,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* Passwords (Login & Signup only) */}
           {mode !== 'forgot' && (
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                 <label className="block text-xs font-semibold text-slate-700">
                   Senha {mode === 'signup' && '(mínimo 6 caracteres)'}
                 </label>
@@ -323,7 +363,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <button
                     type="button"
                     onClick={() => { setMode('forgot'); setErrorMsg(''); setSuccessMsg(''); setShowConsoleHelper(false); }}
-                    className="text-[11px] text-[#0B1F3A] hover:text-[#D4AF37] font-semibold transition-colors"
+                    className="text-[11px] text-[#0B1F3A] hover:text-[#D4AF37] font-semibold transition-colors shrink-0"
                   >
                     Esqueceu a senha?
                   </button>
@@ -438,7 +478,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <button
                 type="button"
-                onClick={handleGoogleLogin}
+                onClick={() => handleGoogleLogin(false)}
                 disabled={loading}
                 className="w-full py-2.5 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
               >
@@ -466,8 +506,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
 
           <div className="pt-2 text-center text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Autenticação protegida via Firebase Authentication</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span className="break-words">Autenticação protegida via Firebase Authentication</span>
           </div>
 
         </form>

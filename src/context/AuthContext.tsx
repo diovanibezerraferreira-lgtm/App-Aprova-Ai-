@@ -1,16 +1,17 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import {
   ExtendedUserProfile,
-  fetchUserProfile,
+  ensureUserProfile,
   registerWithEmail,
   loginWithEmail,
   loginWithGoogle,
+  resolveGoogleRedirectResult,
+  translateAuthError,
   requestPasswordReset,
   logout,
   updateUserProfileDoc,
-  createUserProfileDoc,
   createLocalFallbackProfile
 } from '../services/authService';
 import {
@@ -34,12 +35,14 @@ interface AuthContextType {
   loading: boolean;
   authModalOpen: boolean;
   authModalMode: 'login' | 'signup' | 'forgot';
+  authRedirectError: string | null;
+  clearAuthRedirectError: () => void;
   openAuthModal: (mode?: 'login' | 'signup' | 'forgot') => void;
   closeAuthModal: () => void;
   getAuthHeaders: () => Promise<Record<string, string>>;
   signUp: (name: string, email: string, pass: string, focus: UserProfile['studyFocus']) => Promise<void>;
   signIn: (email: string, pass: string) => Promise<void>;
-  signInGoogle: () => Promise<void>;
+  signInGoogle: (options?: { forcePopup?: boolean }) => Promise<'authenticated' | 'redirecting'>;
   signInLocally: (name: string, email: string, focus: UserProfile['studyFocus']) => void;
   resetPassword: (email: string) => Promise<void>;
   signOutUser: () => Promise<void>;
@@ -59,31 +62,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | 'forgot'>('login');
+  const [authRedirectError, setAuthRedirectError] = useState<string | null>(null);
+
+  const hydratedUidRef = useRef<string | null>(null);
+  const listenerUidRef = useRef<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     let unsubscribeDoc: (() => void) | null = null;
+    let authInitialized = false;
+    let redirectSettled = false;
 
-    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-      if (unsubscribeDoc) {
-        unsubscribeDoc();
-        unsubscribeDoc = null;
+    const finishLoadingIfReady = () => {
+      if (isMounted && authInitialized && redirectSettled) {
+        setLoading(false);
       }
+    };
 
-      setCurrentUser(user);
-      if (user) {
-        try {
-          let profile = await fetchUserProfile(user.uid);
-          if (!profile) {
-            profile = await createUserProfileDoc(
-              user,
-              user.displayName || user.email?.split('@')[0] || 'Estudante',
-              'OAB 1ª Fase'
-            );
-          }
-          setUserProfile(profile);
-          saveStoredProfile(profile);
+    const hydrateSessionForUser = async (user: User) => {
+      try {
+        const profile = await ensureUserProfile(
+          user,
+          user.displayName || user.email?.split('@')[0] || 'Estudante',
+          'OAB 1ª Fase'
+        );
+        if (!isMounted) return;
+        setUserProfile(profile);
+        saveStoredProfile(profile);
 
-          // Hydrate cloud study progress on login
+        // Hydrate cloud study progress once per UID session
+        if (hydratedUidRef.current !== user.uid) {
+          hydratedUidRef.current = user.uid;
           Promise.all([
             loadUserAnswersFromFirestore(),
             loadUserSimuladosFromFirestore()
@@ -91,12 +100,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             mergeRemoteAnswersIntoStorage(remoteAnswers);
             mergeRemoteSimuladosIntoStorage(remoteSimulados);
           }).catch(() => {});
+        }
 
-          // Real-time listener: When Asaas Webhook updates user doc, UI updates automatically!
+        // Attach real-time profile listener once per UID
+        if (listenerUidRef.current !== user.uid) {
+          if (unsubscribeDoc) {
+            unsubscribeDoc();
+            unsubscribeDoc = null;
+          }
+          listenerUidRef.current = user.uid;
           try {
             const { doc, onSnapshot } = await import('firebase/firestore');
             const { db } = await import('../services/firebase');
+            if (!isMounted) return;
             unsubscribeDoc = onSnapshot(doc(db, 'users', user.uid), (snapshot) => {
+              if (!isMounted) return;
               if (snapshot.exists()) {
                 const updatedData = snapshot.data() as ExtendedUserProfile;
                 setUserProfile(updatedData);
@@ -108,28 +126,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } catch (listenerErr) {
             console.warn('Could not attach profile listener:', listenerErr);
           }
-        } catch (e) {
-          console.error('Error fetching user profile:', e);
-          const fallback = getStoredProfile();
-          const fallbackExt: ExtendedUserProfile = {
-            ...fallback,
-            id: user.uid,
-            plan: 'gratuito',
-            isPremium: false,
-            subscriptionStatus: 'NONE',
-            termsAccepted: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-          setUserProfile(fallbackExt);
         }
+      } catch (e) {
+        console.error('Error hydrating user profile:', e);
+        if (!isMounted) return;
+        const fallback = getStoredProfile();
+        const fallbackExt: ExtendedUserProfile = {
+          ...fallback,
+          id: user.uid,
+          plan: 'gratuito',
+          isPremium: false,
+          subscriptionStatus: 'NONE',
+          termsAccepted: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        setUserProfile(fallbackExt);
+      }
+    };
+
+    // 1. Handle Google Redirect return (deduplicated singleton across StrictMode)
+    resolveGoogleRedirectResult()
+      .then((res) => {
+        if (!isMounted) return;
+        if (res.status === 'authenticated') {
+          setAuthRedirectError(null);
+          setCurrentUser(res.user);
+          setUserProfile(res.profile);
+          saveStoredProfile(res.profile);
+          setAuthModalOpen(false);
+        } else if (res.status === 'pending_without_result' && !auth.currentUser) {
+          setAuthRedirectError(
+            'O navegador móvel não preservou a sessão após o redirecionamento do Google (cookies/armazenamento entre domínios). Toque em "Tentar via Pop-up" ou abra no Chrome padrão. (auth/redirect-storage-blocked)'
+          );
+          setAuthModalMode('login');
+          setAuthModalOpen(true);
+        }
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.warn('Google redirect authentication notice:', err);
+        setAuthRedirectError(translateAuthError(err));
+        setAuthModalMode('login');
+        setAuthModalOpen(true);
+      })
+      .finally(() => {
+        redirectSettled = true;
+        finishLoadingIfReady();
+      });
+
+    // 2. Listen to Firebase Auth state changes
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) return;
+      setCurrentUser(user);
+
+      if (user) {
+        setAuthRedirectError(null);
+        await hydrateSessionForUser(user);
       } else {
+        hydratedUidRef.current = null;
+        listenerUidRef.current = null;
+        if (unsubscribeDoc) {
+          unsubscribeDoc();
+          unsubscribeDoc = null;
+        }
         setUserProfile(null);
       }
-      setLoading(false);
+
+      authInitialized = true;
+      finishLoadingIfReady();
     });
 
     return () => {
+      isMounted = false;
       unsubscribeAuth();
       if (unsubscribeDoc) {
         unsubscribeDoc();
@@ -150,6 +219,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const clearAuthRedirectError = useCallback(() => {
+    setAuthRedirectError(null);
+  }, []);
+
   const openAuthModal = (mode: 'login' | 'signup' | 'forgot' = 'login') => {
     setAuthModalMode(mode);
     setAuthModalOpen(true);
@@ -160,25 +233,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signUp = async (name: string, email: string, pass: string, focus: UserProfile['studyFocus']) => {
+    setAuthRedirectError(null);
     const profile = await registerWithEmail(name, email, pass, focus);
     setUserProfile(profile);
     saveStoredProfile(profile);
   };
 
   const signIn = async (email: string, pass: string) => {
+    setAuthRedirectError(null);
     const user = await loginWithEmail(email, pass);
-    let profile = await fetchUserProfile(user.uid);
-    if (!profile) {
-      profile = await createUserProfileDoc(user, user.displayName || email.split('@')[0], 'OAB 1ª Fase');
-    }
+    const profile = await ensureUserProfile(
+      user,
+      user.displayName || email.split('@')[0],
+      'OAB 1ª Fase'
+    );
     setUserProfile(profile);
     saveStoredProfile(profile);
   };
 
-  const signInGoogle = async () => {
-    const profile = await loginWithGoogle();
-    setUserProfile(profile);
-    saveStoredProfile(profile);
+  const signInGoogle = async (options?: { forcePopup?: boolean }): Promise<'authenticated' | 'redirecting'> => {
+    setAuthRedirectError(null);
+    const res = await loginWithGoogle(options);
+    if (res.status === 'authenticated') {
+      setCurrentUser(res.user);
+      setUserProfile(res.profile);
+      saveStoredProfile(res.profile);
+      return 'authenticated';
+    }
+    return 'redirecting';
   };
 
   const signInLocally = (name: string, email: string, focus: UserProfile['studyFocus']) => {
@@ -202,8 +284,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.warn('Notice during signOut:', e);
     }
+    hydratedUidRef.current = null;
+    listenerUidRef.current = null;
     setCurrentUser(null);
     setUserProfile(null);
+    setAuthRedirectError(null);
     clearStoredProfile();
     resetUserProgress();
   };
@@ -227,6 +312,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         authModalOpen,
         authModalMode,
+        authRedirectError,
+        clearAuthRedirectError,
         openAuthModal,
         closeAuthModal,
         getAuthHeaders,

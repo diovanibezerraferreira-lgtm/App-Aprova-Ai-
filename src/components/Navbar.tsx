@@ -55,22 +55,22 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full max-w-full bg-[#0B1F3A] text-white border-b border-[#D4AF37]/30 shadow-md">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-2 sm:gap-4 min-w-0">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-1.5 sm:gap-4 min-w-0">
           
           {/* Zone 1: Brand Wordmark with discreet legal symbol */}
           <button
             onClick={() => handleNavClick('inicio')}
-            className="flex items-center gap-2 sm:gap-2.5 text-left focus:outline-none group min-w-0 shrink"
+            className="flex items-center gap-1.5 sm:gap-2.5 text-left focus:outline-none group min-w-0 shrink"
             aria-label="Ir para a página inicial do Aprova Direito"
           >
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#B89326] p-0.5 flex items-center justify-center shadow-inner shrink-0">
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#B89326] p-0.5 flex items-center justify-center shadow-inner shrink-0">
               <div className="w-full h-full bg-[#0B1F3A] rounded-[7px] flex items-center justify-center group-hover:bg-[#0E274A] transition-colors">
-                <Scale className="w-4 h-4 sm:w-5 sm:h-5 text-[#D4AF37]" strokeWidth={2.2} />
+                <Scale className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#D4AF37]" strokeWidth={2.2} />
               </div>
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="font-serif text-sm sm:text-lg font-bold tracking-tight text-white group-hover:text-[#F6ECCE] transition-colors whitespace-nowrap truncate">
+              <span className="font-serif text-[13px] min-[360px]:text-sm sm:text-lg font-bold tracking-tight text-white group-hover:text-[#F6ECCE] transition-colors whitespace-nowrap truncate">
                 APROVA <span className="text-[#D4AF37]">DIREITO</span>
               </span>
               <span className="text-[10px] tracking-wider uppercase text-slate-300 font-medium -mt-1 hidden sm:block truncate">
@@ -100,9 +100,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Zone 3: Primary Action & Profile Zone */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-            {/* PWA Install Button */}
-            <PWAInstallButton variant="header" />
+          <div className="flex items-center gap-1 min-[360px]:gap-1.5 sm:gap-3 shrink-0">
+            {/* PWA Install Button (desktop/tablet header; mobile uses drawer + home CTA) */}
+            <div className="hidden sm:block shrink-0">
+              <PWAInstallButton variant="header" />
+            </div>
 
             {/* Premium CTA Button */}
             <button
@@ -178,10 +180,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             ) : (
               <button
                 onClick={onOpenAuth}
+                aria-label="Entrar na conta"
                 className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors whitespace-nowrap"
               >
                 <User className="w-3.5 h-3.5 shrink-0" />
-                <span>Entrar</span>
+                <span className="hidden min-[360px]:inline">Entrar</span>
               </button>
             )}
 
@@ -222,8 +225,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <PWAInstallButton variant="menu" />
           </div>
 
-          <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-            <span>
+          <div className="pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+            <span className="min-w-0 break-words">
               {currentUser
                 ? `Conectado como: ${activeUser?.name?.split(' ')[0]}`
                 : 'Você está navegando como visitante'}
@@ -231,7 +234,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {currentUser ? (
               <button
                 onClick={handleLogout}
-                className="text-rose-400 font-semibold hover:underline flex items-center gap-1"
+                className="text-rose-400 font-semibold hover:underline flex items-center gap-1 shrink-0"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Sair</span>
@@ -242,7 +245,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setMobileMenuOpen(false);
                   onOpenAuth();
                 }}
-                className="text-[#D4AF37] font-medium hover:underline"
+                className="text-[#D4AF37] font-medium hover:underline shrink-0"
               >
                 Entrar / Cadastrar
               </button>

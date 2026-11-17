@@ -68,11 +68,11 @@ export const DisciplineModal: React.FC<DisciplineModalProps> = ({
               <Scale className="w-4 h-4 text-[#0B1F3A] shrink-0" />
               Legislação e Súmulas Essenciais:
             </h4>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 min-w-0">
               {discipline.keyArticles.map((art, idx) => (
                 <span
                   key={idx}
-                  className="px-2.5 py-1 rounded bg-[#0B1F3A]/5 border border-[#0B1F3A]/15 text-slate-800 text-xs font-medium break-words"
+                  className="px-2.5 py-1 rounded bg-[#0B1F3A]/5 border border-[#0B1F3A]/15 text-slate-800 text-xs font-medium break-words [overflow-wrap:anywhere] max-w-full"
                 >
                   {art}
                 </span>

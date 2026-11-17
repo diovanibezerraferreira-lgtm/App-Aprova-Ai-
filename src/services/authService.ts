@@ -2,13 +2,18 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  setPersistence,
+  browserLocalPersistence,
   sendPasswordResetEmail,
   signOut,
   updateProfile,
-  User
+  User,
+  UserCredential
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { auth, db, googleProvider, handleFirestoreError, OperationType } from './firebase';
+import { auth, db, googleProvider } from './firebase';
 import { UserProfile } from '../types';
 import firebaseConfig from '../../firebase-applet-config.json';
 
@@ -21,74 +26,208 @@ export interface ExtendedUserProfile extends UserProfile {
   isLocalOnly?: boolean;
 }
 
-export function isOperationNotAllowedError(error: unknown): boolean {
-  const str = String(error).toLowerCase();
-  return str.includes('operation-not-allowed') || str.includes('operation_not_allowed');
+export type GoogleLoginResult =
+  | { status: 'authenticated'; profile: ExtendedUserProfile; user: User }
+  | { status: 'redirecting' };
+
+export type GoogleRedirectCheckResult =
+  | { status: 'authenticated'; profile: ExtendedUserProfile; user: User }
+  | { status: 'pending_without_result' }
+  | { status: 'none' };
+
+const REDIRECT_PENDING_KEY = 'aprova_google_redirect_pending';
+const REDIRECT_PENDING_TTL_MS = 5 * 60 * 1000;
+
+let redirectResultPromise: Promise<GoogleRedirectCheckResult> | null = null;
+const inFlightProfilePromises = new Map<string, Promise<ExtendedUserProfile>>();
+
+export function isInsideIframe(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
 }
 
-export function translateAuthError(codeOrMessage: unknown): string {
-  const code = String(codeOrMessage || '').toLowerCase();
+export function isMobileOrStandalone(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const isMobileUa = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
+  const isStandalone =
+    (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches) ||
+    Boolean((navigator as any).standalone);
+  return isMobileUa || isStandalone;
+}
 
-  if (code.includes('auth/operation-not-allowed') || code.includes('operation_not_allowed')) {
-    return 'O provedor de autenticação por E-mail e Senha ainda não está ativado no Firebase Console deste projeto. É necessário ativá-lo nas configurações do Firebase.';
+export function clearRedirectPending(): void {
+  try {
+    sessionStorage.removeItem(REDIRECT_PENDING_KEY);
+  } catch {
+    // Ignore storage access errors
   }
-  if (code.includes('auth/email-already-in-use') || code.includes('email_exists')) {
-    return 'Este endereço de e-mail já está em uso por outra conta. Tente fazer login ou recupere sua senha.';
+}
+
+function markRedirectPending(): void {
+  try {
+    sessionStorage.setItem(REDIRECT_PENDING_KEY, String(Date.now()));
+  } catch {
+    // Ignore storage access errors
   }
-  if (code.includes('auth/invalid-email')) {
-    return 'O formato do e-mail informado não é válido.';
+}
+
+function consumeRedirectPendingFlag(): boolean {
+  try {
+    const raw = sessionStorage.getItem(REDIRECT_PENDING_KEY);
+    sessionStorage.removeItem(REDIRECT_PENDING_KEY);
+    if (!raw) return false;
+    const ts = Number(raw);
+    return Number.isFinite(ts) && Date.now() - ts < REDIRECT_PENDING_TTL_MS;
+  } catch {
+    return false;
   }
-  if (code.includes('auth/weak-password')) {
-    return 'A senha é muito fraca. Utilize pelo menos 6 caracteres.';
+}
+
+export function extractFirebaseErrorDetails(error: unknown): { code: string; message: string } {
+  if (error && typeof error === 'object') {
+    const errObj = error as { code?: unknown; message?: unknown; customData?: { _tokenResponse?: { error?: { message?: string } } } };
+    let code = typeof errObj.code === 'string' ? errObj.code.trim() : '';
+    const rawMessage = typeof errObj.message === 'string' ? errObj.message.trim() : String(error);
+    if (!code) {
+      const codeMatch = rawMessage.match(/auth\/[a-z0-9-]+/i);
+      if (codeMatch) {
+        code = codeMatch[0].toLowerCase();
+      }
+    }
+    return { code, message: rawMessage };
+  }
+
+  if (typeof error === 'string') {
+    const codeMatch = error.match(/auth\/[a-z0-9-]+/i);
+    return { code: codeMatch ? codeMatch[0].toLowerCase() : '', message: error.trim() };
+  }
+
+  return { code: '', message: '' };
+}
+
+export function isOperationNotAllowedError(error: unknown): boolean {
+  const { code, message } = extractFirebaseErrorDetails(error);
+  const combined = `${code} ${message}`.toLowerCase();
+  return combined.includes('operation-not-allowed') || combined.includes('operation_not_allowed');
+}
+
+export function isUnauthorizedDomainError(error: unknown): boolean {
+  const { code, message } = extractFirebaseErrorDetails(error);
+  const combined = `${code} ${message}`.toLowerCase();
+  return combined.includes('unauthorized-domain') || combined.includes('unauthorized_domain');
+}
+
+export function translateAuthError(error: unknown): string {
+  const { code, message } = extractFirebaseErrorDetails(error);
+  const normalizedCode = code.toLowerCase();
+  const normalizedMsg = message.toLowerCase();
+  const displayCode = normalizedCode || 'erro-desconhecido';
+  const currentHost = typeof window !== 'undefined' ? window.location.hostname : '';
+
+  if (normalizedCode === 'auth/unauthorized-domain' || normalizedMsg.includes('unauthorized-domain')) {
+    return `O domínio "${currentHost || 'atual'}" não está autorizado no Firebase Authentication (${displayCode}). Verifique Authentication > Settings > Authorized domains no Firebase Console.`;
+  }
+  if (normalizedCode === 'auth/operation-not-allowed' || normalizedMsg.includes('operation_not_allowed')) {
+    return `Este método de login ainda não está ativado no Firebase Console deste projeto (${displayCode}).`;
+  }
+  if (normalizedCode === 'auth/popup-blocked') {
+    return `O navegador bloqueou a janela pop-up de login do Google (${displayCode}). Libere pop-ups ou utilize o redirecionamento.`;
+  }
+  if (normalizedCode === 'auth/popup-closed-by-user') {
+    return `A janela de login com o Google foi fechada antes da conclusão (${displayCode}).`;
+  }
+  if (normalizedCode === 'auth/cancelled-popup-request') {
+    return `A solicitação de login com o Google foi interrompida ou substituída pelo navegador (${displayCode}). Tente novamente.`;
+  }
+  if (normalizedCode === 'auth/account-exists-with-different-credential') {
+    return `Já existe uma conta com este e-mail vinculada a outro método de login (ex.: E-mail e Senha). Entre com o método original primeiro (${displayCode}).`;
+  }
+  if (normalizedCode === 'auth/redirect-cancelled-by-user') {
+    return `O redirecionamento de login com o Google foi cancelado antes da conclusão (${displayCode}).`;
+  }
+  if (normalizedCode === 'auth/redirect-operation-pending') {
+    return `Já existe uma operação de login com o Google em andamento (${displayCode}). Aguarde alguns segundos e tente novamente.`;
+  }
+  if (normalizedCode === 'auth/operation-not-supported-in-this-environment') {
+    return `Este navegador ou ambiente não suporta o método de autenticação escolhido (${displayCode}).`;
+  }
+  if (normalizedCode === 'auth/web-storage-unsupported' || normalizedMsg.includes('web storage')) {
+    return `Os cookies ou Web Storage estão bloqueados neste navegador. Ative os cookies para entrar com o Google (${displayCode}).`;
+  }
+  if (normalizedCode === 'auth/email-already-in-use' || normalizedMsg.includes('email_exists')) {
+    return `Este endereço de e-mail já está em uso. Tente fazer login ou entre com o Google (${displayCode}).`;
+  }
+  if (normalizedCode === 'auth/invalid-email') {
+    return `O formato do e-mail informado não é válido (${displayCode}).`;
+  }
+  if (normalizedCode === 'auth/weak-password') {
+    return `A senha é muito fraca. Utilize pelo menos 6 caracteres (${displayCode}).`;
   }
   if (
-    code.includes('auth/wrong-password') ||
-    code.includes('auth/user-not-found') ||
-    code.includes('auth/invalid-credential')
+    normalizedCode === 'auth/wrong-password' ||
+    normalizedCode === 'auth/user-not-found' ||
+    normalizedCode === 'auth/invalid-credential'
   ) {
-    return 'E-mail ou senha incorretos. Por favor, verifique os dados digitados.';
+    return `E-mail ou senha incorretos. Se você criou sua conta pelo Google, use o botão "Entrar com o Google" ou clique em "Esqueceu a senha?" (${displayCode}).`;
   }
-  if (code.includes('auth/user-disabled')) {
-    return 'Esta conta de usuário foi temporariamente desativada.';
+  if (normalizedCode === 'auth/user-disabled') {
+    return `Esta conta de usuário foi temporariamente desativada (${displayCode}).`;
   }
-  if (code.includes('auth/popup-closed-by-user')) {
-    return 'A janela de autenticação foi fechada antes da conclusão do login.';
+  if (normalizedCode === 'auth/too-many-requests') {
+    return `Muitas tentativas consecutivas detectadas pelo Firebase. Aguarde alguns instantes e tente novamente (${displayCode}).`;
   }
-  if (code.includes('auth/popup-blocked')) {
-    return 'O navegador bloqueou a janela pop-up. Por favor, permita pop-ups para este site.';
+  if (normalizedCode === 'auth/network-request-failed') {
+    return `Falha de conexão de rede ao contatar o Firebase/Google. Verifique sua internet (${displayCode}).`;
   }
-  if (code.includes('auth/too-many-requests')) {
-    return 'Muitas tentativas malsucedidas. Por motivos de segurança, tente novamente em alguns instantes.';
+  if (normalizedCode === 'auth/internal-error') {
+    return `Erro interno retornado pelo Firebase Authentication (${displayCode}): ${message || 'falha de comunicação com o provedor Google'}`;
   }
-  if (code.includes('auth/network-request-failed')) {
-    return 'Falha na conexão de rede. Verifique sua conexão com a internet.';
+  if (
+    normalizedCode === 'auth/invalid-api-key' ||
+    normalizedCode === 'auth/app-not-authorized' ||
+    normalizedCode === 'auth/configuration-not-found'
+  ) {
+    return `Configuração do projeto Firebase inválida ou não autorizada para este aplicativo (${displayCode}).`;
   }
-  if (code.includes('permission-denied') || code.includes('missing or insufficient permissions')) {
-    return 'Permissão insuficiente no Firestore. Suas credenciais não têm autorização para esta operação.';
-  }
-
-  // If there's an actual message, show it cleanly
-  if (typeof codeOrMessage === 'string' && codeOrMessage.trim().length > 0 && !codeOrMessage.includes('[object')) {
-    // strip Firebase technical prefixes if present
-    const cleanMsg = codeOrMessage.replace(/FirebaseError:\s*Firebase:\s*/i, '').replace(/Error\s*\((.*?)\):?/i, '');
-    if (cleanMsg.trim()) {
-      return `Não foi possível concluir: ${cleanMsg.trim()}`;
-    }
+  if (normalizedMsg.includes('permission-denied') || normalizedMsg.includes('missing or insufficient permissions')) {
+    return `Permissão insuficiente no Firestore para ler ou gravar o perfil do usuário (${normalizedCode || 'permission-denied'}).`;
   }
 
-  return 'Ocorreu um erro ao processar sua solicitação. Verifique os dados e tente novamente.';
+  // Never hide real Firebase errors: always expose code + clean message
+  const cleanMsg = message
+    .replace(/^FirebaseError:\s*/i, '')
+    .replace(/^Firebase:\s*/i, '')
+    .trim();
+
+  if (normalizedCode && cleanMsg) {
+    return `Erro Firebase (${normalizedCode}): ${cleanMsg}`;
+  }
+  if (normalizedCode) {
+    return `Erro Firebase (${normalizedCode}).`;
+  }
+  if (cleanMsg && !cleanMsg.includes('[object')) {
+    return `Erro na autenticação: ${cleanMsg}`;
+  }
+
+  return 'Não foi possível concluir a autenticação (código não retornado pelo navegador).';
 }
 
-export async function fetchUserProfile(uid: string): Promise<ExtendedUserProfile | null> {
-  const path = `users/${uid}`;
+export async function fetchUserProfile(uid: string): Promise<{ profile: ExtendedUserProfile | null; readFailed: boolean }> {
   try {
     const docRef = doc(db, 'users', uid);
     const snap = await getDoc(docRef);
-    if (!snap.exists()) return null;
-    return snap.data() as ExtendedUserProfile;
+    if (!snap.exists()) {
+      return { profile: null, readFailed: false };
+    }
+    return { profile: snap.data() as ExtendedUserProfile, readFailed: false };
   } catch (error) {
     console.warn('Notice reading user profile from Firestore:', error);
-    return null;
+    return { profile: null, readFailed: true };
   }
 }
 
@@ -110,21 +249,79 @@ export async function createUserProfileDoc(
     memberSince: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
     termsAccepted: true,
     isPremium: false,
+    subscriptionStatus: 'NONE',
     createdAt: now,
     updatedAt: now
   };
 
-  const path = `users/${user.uid}`;
   try {
-    await setDoc(doc(db, 'users', user.uid), profile);
+    const docRef = doc(db, 'users', user.uid);
+    const existing = await getDoc(docRef);
+    if (existing.exists()) {
+      return existing.data() as ExtendedUserProfile;
+    }
+    await setDoc(docRef, profile);
   } catch (error) {
     console.warn('Notice saving profile in Firestore, keeping in session cache:', error);
   }
   return profile;
 }
 
+/**
+ * Ensures at most ONE Firestore read/create runs per UID at a time,
+ * avoiding race conditions or duplicate sessions between getRedirectResult,
+ * signInWithPopup, and onAuthStateChanged.
+ */
+export async function ensureUserProfile(
+  user: User,
+  fallbackName?: string,
+  studyFocus: UserProfile['studyFocus'] = 'OAB 1ª Fase'
+): Promise<ExtendedUserProfile> {
+  const existingPromise = inFlightProfilePromises.get(user.uid);
+  if (existingPromise) {
+    return existingPromise;
+  }
+
+  const task: Promise<ExtendedUserProfile> = (async (): Promise<ExtendedUserProfile> => {
+    const { profile, readFailed } = await fetchUserProfile(user.uid);
+    if (profile) {
+      return profile;
+    }
+
+    if (readFailed) {
+      // Do NOT attempt setDoc overwrite if Firestore read failed (e.g. offline)
+      const now = new Date().toISOString();
+      return {
+        id: user.uid,
+        name: fallbackName || user.displayName || user.email?.split('@')[0] || 'Estudante',
+        email: user.email || '',
+        isRegistered: true,
+        plan: 'gratuito',
+        studyFocus,
+        dailyGoalQuestions: 20,
+        memberSince: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+        termsAccepted: true,
+        isPremium: false,
+        subscriptionStatus: 'NONE',
+        createdAt: now,
+        updatedAt: now
+      };
+    }
+
+    return createUserProfileDoc(
+      user,
+      fallbackName || user.displayName || user.email?.split('@')[0] || 'Estudante',
+      studyFocus
+    );
+  })().finally(() => {
+    inFlightProfilePromises.delete(user.uid);
+  });
+
+  inFlightProfilePromises.set(user.uid, task);
+  return task;
+}
+
 export async function updateUserProfileDoc(uid: string, data: Partial<ExtendedUserProfile>): Promise<void> {
-  const path = `users/${uid}`;
   try {
     const docRef = doc(db, 'users', uid);
     await updateDoc(docRef, {
@@ -142,6 +339,12 @@ export async function registerWithEmail(
   pass: string,
   studyFocus: UserProfile['studyFocus']
 ): Promise<ExtendedUserProfile> {
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+  } catch {
+    // Continue with default persistence
+  }
+
   const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
   const user = userCredential.user;
 
@@ -153,24 +356,133 @@ export async function registerWithEmail(
     }
   }
 
-  const profile = await createUserProfileDoc(user, name, studyFocus);
-  return profile;
+  return ensureUserProfile(user, name, studyFocus);
 }
 
 export async function loginWithEmail(email: string, pass: string): Promise<User> {
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+  } catch {
+    // Continue with default persistence
+  }
   const userCredential = await signInWithEmailAndPassword(auth, email, pass);
   return userCredential.user;
 }
 
-export async function loginWithGoogle(): Promise<ExtendedUserProfile> {
-  const result = await signInWithPopup(auth, googleProvider);
-  const user = result.user;
-
-  let profile = await fetchUserProfile(user.uid);
-  if (!profile) {
-    profile = await createUserProfileDoc(user, user.displayName || '', 'OAB 1ª Fase');
+async function startGoogleRedirect(): Promise<GoogleLoginResult> {
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+  } catch {
+    // Continue with default persistence
   }
-  return profile;
+
+  markRedirectPending();
+  try {
+    await signInWithRedirect(auth, googleProvider);
+    return { status: 'redirecting' };
+  } catch (err) {
+    clearRedirectPending();
+    throw err;
+  }
+}
+
+function shouldFallbackToRedirect(error: unknown): boolean {
+  const { code } = extractFirebaseErrorDetails(error);
+  return (
+    code === 'auth/popup-blocked' ||
+    code === 'auth/operation-not-supported-in-this-environment' ||
+    code === 'auth/internal-error'
+  );
+}
+
+export async function loginWithGoogle(options?: { forcePopup?: boolean }): Promise<GoogleLoginResult> {
+  const forcePopup = Boolean(options?.forcePopup);
+  const inIframe = isInsideIframe();
+  const isMobile = isMobileOrStandalone();
+
+  // On mobile/Android/standalone PWA (outside iframe), use signInWithRedirect directly
+  // so Android Chrome / Custom Tabs / PWA don't get stuck on popup windows.
+  if (!forcePopup && !inIframe && isMobile) {
+    return startGoogleRedirect();
+  }
+
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+  } catch {
+    // Continue with default persistence
+  }
+
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    clearRedirectPending();
+    const user = result.user;
+    const profile = await ensureUserProfile(user, user.displayName || '', 'OAB 1ª Fase');
+    return { status: 'authenticated', profile, user };
+  } catch (err) {
+    if (!forcePopup && !inIframe && shouldFallbackToRedirect(err)) {
+      return startGoogleRedirect();
+    }
+    throw err;
+  }
+}
+
+/**
+ * Resolves Google redirect result at most ONCE per page load (React StrictMode safe).
+ */
+export async function resolveGoogleRedirectResult(): Promise<GoogleRedirectCheckResult> {
+  if (redirectResultPromise) {
+    return redirectResultPromise;
+  }
+
+  redirectResultPromise = (async (): Promise<GoogleRedirectCheckResult> => {
+    const wasPending = consumeRedirectPendingFlag();
+    let result: UserCredential | null = null;
+
+    try {
+      result = await getRedirectResult(auth);
+    } catch (err) {
+      clearRedirectPending();
+      throw err;
+    }
+
+    if (result?.user) {
+      const profile = await ensureUserProfile(
+        result.user,
+        result.user.displayName || '',
+        'OAB 1ª Fase'
+      );
+      return {
+        status: 'authenticated',
+        profile,
+        user: result.user,
+      };
+    }
+
+    if (wasPending) {
+      try {
+        await auth.authStateReady();
+      } catch {
+        // Ignore
+      }
+      if (auth.currentUser) {
+        const profile = await ensureUserProfile(
+          auth.currentUser,
+          auth.currentUser.displayName || '',
+          'OAB 1ª Fase'
+        );
+        return {
+          status: 'authenticated',
+          profile,
+          user: auth.currentUser,
+        };
+      }
+      return { status: 'pending_without_result' };
+    }
+
+    return { status: 'none' };
+  })();
+
+  return redirectResultPromise;
 }
 
 export async function requestPasswordReset(email: string): Promise<void> {
@@ -178,6 +490,7 @@ export async function requestPasswordReset(email: string): Promise<void> {
 }
 
 export async function logout(): Promise<void> {
+  clearRedirectPending();
   await signOut(auth);
 }
 

@@ -279,10 +279,10 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
       )}
 
       {/* Main Filter Tabs */}
-      <div className="bg-[#0B1F3A]/5 p-1.5 rounded-2xl flex flex-wrap gap-2 text-xs font-bold">
+      <div className="bg-[#0B1F3A]/5 p-1.5 rounded-2xl grid grid-cols-1 sm:flex sm:flex-wrap gap-1.5 sm:gap-2 text-xs font-bold">
         <button
           onClick={() => setManualTypeFilter('all')}
-          className={`px-4 py-2 rounded-xl transition-all ${
+          className={`px-3 sm:px-4 py-2 rounded-xl transition-all text-left sm:text-center max-w-full ${
             manualTypeFilter === 'all'
               ? 'bg-[#0B1F3A] text-[#D4AF37] shadow-sm'
               : 'text-slate-700 hover:text-[#0B1F3A]'
@@ -292,18 +292,18 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
         </button>
         <button
           onClick={() => setManualTypeFilter('extensive')}
-          className={`px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 ${
+          className={`px-3 sm:px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 text-left sm:text-center max-w-full ${
             manualTypeFilter === 'extensive'
               ? 'bg-[#0B1F3A] text-[#D4AF37] shadow-sm'
               : 'text-slate-700 hover:text-[#0B1F3A]'
           }`}
         >
-          <Layers className="w-4 h-4 text-[#D4AF37]" />
-          <span>Manuais Extensivos (50+ Páginas) ({extensiveCount})</span>
+          <Layers className="w-4 h-4 text-[#D4AF37] shrink-0" />
+          <span className="break-words">Manuais Extensivos (50+ Páginas) ({extensiveCount})</span>
         </button>
         <button
           onClick={() => setManualTypeFilter('summaries')}
-          className={`px-4 py-2 rounded-xl transition-all ${
+          className={`px-3 sm:px-4 py-2 rounded-xl transition-all text-left sm:text-center max-w-full ${
             manualTypeFilter === 'summaries'
               ? 'bg-[#0B1F3A] text-[#D4AF37] shadow-sm'
               : 'text-slate-700 hover:text-[#0B1F3A]'
@@ -544,7 +544,7 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
 
       {/* Advanced In-App Book Reader Modal */}
       {selectedMaterial && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-xs animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-1.5 sm:p-4 bg-black/70 backdrop-blur-xs animate-fade-in">
           <div className="relative w-full max-w-5xl max-h-[94vh] bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col min-w-0">
             {/* Top Reader Bar */}
             <div className="p-3 sm:p-4 bg-[#0B1F3A] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-b border-[#D4AF37]/30 shrink-0 min-w-0">
@@ -671,9 +671,9 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
             </div>
 
             {/* Reader Body */}
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-12 min-h-0 overflow-hidden">
+            <div className="flex-1 flex flex-col md:grid md:grid-cols-12 min-h-0 overflow-hidden">
               {/* Sidebar TOC */}
-              <div className="md:col-span-4 min-w-0 max-h-40 md:max-h-none bg-slate-50 border-b md:border-b-0 md:border-r border-slate-200 p-3 sm:p-4 overflow-y-auto space-y-2 shrink-0">
+              <div className="md:col-span-4 min-w-0 max-h-36 sm:max-h-44 md:max-h-none bg-slate-50 border-b md:border-b-0 md:border-r border-slate-200 p-2.5 sm:p-4 overflow-y-auto space-y-1.5 sm:space-y-2 shrink-0">
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
                   Sumário do Manual ({selectedMaterial.chapters.length} partes):
                 </div>
@@ -709,7 +709,7 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
               </div>
 
               {/* Main Reading Window */}
-              <div className="md:col-span-8 min-w-0 p-4 sm:p-8 lg:p-10 overflow-y-auto overflow-x-hidden space-y-8">
+              <div className="flex-1 md:col-span-8 min-w-0 min-h-0 p-3.5 sm:p-8 lg:p-10 overflow-y-auto overflow-x-hidden space-y-6 sm:space-y-8">
                 {viewMode === 'chapters' && activeChapter && (
                   <div className="space-y-6 min-w-0">
                     <div className="border-b border-slate-200 pb-4">
@@ -748,11 +748,11 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
                             <Scale className="w-4 h-4 text-amber-700 shrink-0" />
                             <span>Dispositivos Legais e Fundamentação Jurisprudencial:</span>
                           </span>
-                          <div className="flex flex-wrap gap-1.5">
+                          <div className="flex flex-wrap gap-1.5 min-w-0">
                             {activeChapter.keyStatutes.map((st, i) => (
                               <span
                                 key={i}
-                                className="px-2.5 py-1 rounded-lg bg-white border border-amber-200 text-amber-950 text-xs font-semibold shadow-2xs break-words max-w-full"
+                                className="px-2.5 py-1 rounded-lg bg-white border border-amber-200 text-amber-950 text-xs font-semibold shadow-2xs break-words [overflow-wrap:anywhere] max-w-full"
                               >
                                 {st}
                               </span>
@@ -777,11 +777,11 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
                     )}
 
                     {/* Prev / Next Pagination controls */}
-                    <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="pt-6 border-t border-slate-100 grid grid-cols-2 sm:flex sm:items-center sm:justify-between gap-2 text-xs">
                       <button
                         onClick={() => setActiveChapterIndex(prev => Math.max(0, prev - 1))}
                         disabled={activeChapterIndex === 0}
-                        className="px-3 sm:px-4 py-2 rounded-xl border border-slate-300 font-bold disabled:opacity-30 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+                        className="px-2.5 sm:px-4 py-2 rounded-xl border border-slate-300 font-bold disabled:opacity-30 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5"
                       >
                         <ChevronLeft className="w-4 h-4 shrink-0" />
                         <span>Anterior</span>
@@ -794,9 +794,10 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
                           )
                         }
                         disabled={activeChapterIndex === selectedMaterial.chapters.length - 1}
-                        className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-[#0B1F3A] text-white font-bold disabled:opacity-30 hover:bg-[#16365C] transition-colors flex items-center gap-1.5 shadow"
+                        className="px-2.5 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-[#0B1F3A] text-white font-bold disabled:opacity-30 hover:bg-[#16365C] transition-colors flex items-center justify-center gap-1.5 shadow"
                       >
-                        <span>Próximo Capítulo</span>
+                        <span className="sm:hidden">Próximo</span>
+                        <span className="hidden sm:inline">Próximo Capítulo</span>
                         <ChevronRight className="w-4 h-4 shrink-0" />
                       </button>
                     </div>
@@ -834,9 +835,9 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
 
                           <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs min-w-0">
                             <strong className="text-amber-900 block mb-1">Dispositivos Aplicados:</strong>
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-1 min-w-0">
                               {ch.keyStatutes.map((st, i) => (
-                                <span key={i} className="px-2 py-0.5 rounded bg-white border border-amber-200 text-amber-900 text-[11px] break-words max-w-full">
+                                <span key={i} className="px-2 py-0.5 rounded bg-white border border-amber-200 text-amber-900 text-[11px] break-words [overflow-wrap:anywhere] max-w-full">
                                   {st}
                                 </span>
                               ))}

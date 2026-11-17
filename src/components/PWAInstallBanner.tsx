@@ -60,9 +60,9 @@ export const PWAInstallButton: React.FC<{ variant?: 'header' | 'hero' | 'menu' }
       <>
         <button
           onClick={handleInstallClick}
-          className="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B89628] hover:from-[#E5C158] hover:to-[#C9A434] text-[#0B1F3A] font-bold text-sm shadow-lg shadow-[#D4AF37]/20 hover:shadow-[#D4AF37]/35 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B89628] hover:from-[#E5C158] hover:to-[#C9A434] text-[#0B1F3A] font-bold text-sm shadow-lg shadow-[#D4AF37]/20 hover:shadow-[#D4AF37]/35 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
         >
-          <Download className="w-4 h-4" />
+          <Download className="w-4 h-4 shrink-0" />
           <span>Instalar no Celular / PC</span>
         </button>
 
@@ -90,19 +90,19 @@ export const PWAInstallButton: React.FC<{ variant?: 'header' | 'hero' | 'menu' }
 
 export const PWAInstallModal: React.FC<{ onClose: () => void; isIOS: boolean }> = ({ onClose, isIOS }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-md rounded-2xl bg-[#0B1F3A] border border-[#D4AF37]/30 p-6 text-white shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-md max-h-[92vh] overflow-y-auto rounded-2xl bg-[#0B1F3A] border border-[#D4AF37]/30 p-4 sm:p-6 text-white shadow-2xl">
         {/* Glow corner */}
         <div className="absolute -top-16 -right-16 w-32 h-32 bg-[#D4AF37]/20 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="flex items-center justify-between pb-4 border-b border-slate-700/60">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0F284D] to-[#08162B] border border-[#D4AF37]/40 flex items-center justify-center shadow-md">
+        <div className="flex items-center justify-between gap-2 pb-4 border-b border-slate-700/60">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0F284D] to-[#08162B] border border-[#D4AF37]/40 flex items-center justify-center shadow-md shrink-0">
               <img src="/icons/icon-192.png" alt="Aprova Direito" className="w-7 h-7 object-contain" />
             </div>
-            <div>
-              <h3 className="font-serif text-lg font-bold text-white tracking-wide">Aprova Direito</h3>
-              <p className="text-xs text-[#D4AF37] font-medium">Aplicativo Web Progressivo (PWA)</p>
+            <div className="min-w-0">
+              <h3 className="font-serif text-base sm:text-lg font-bold text-white tracking-wide break-words">Aprova Direito</h3>
+              <p className="text-xs text-[#D4AF37] font-medium break-words">Aplicativo Web Progressivo (PWA)</p>
             </div>
           </div>
           <button

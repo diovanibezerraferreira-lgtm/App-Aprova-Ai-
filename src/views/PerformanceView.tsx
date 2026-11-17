@@ -278,8 +278,8 @@ export const PerformanceView: React.FC<PerformanceViewProps> = ({
                     key={i}
                     className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-2 min-w-0"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="font-bold text-xs text-slate-900 min-w-0 break-words">
+                    <div className="flex items-start justify-between gap-2 min-w-0">
+                      <span className="font-bold text-xs text-slate-900 min-w-0 break-words [overflow-wrap:anywhere]">
                         {sim.configTitle}
                       </span>
                       <span
@@ -290,25 +290,25 @@ export const PerformanceView: React.FC<PerformanceViewProps> = ({
                         {pass ? 'Aprovado' : 'Revisar'}
                       </span>
                     </div>
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-slate-600 pt-1 border-t border-slate-200/70">
-                      <div>
+                    <div className="grid grid-cols-2 gap-x-2.5 gap-y-1 text-[11px] text-slate-600 pt-1 border-t border-slate-200/70">
+                      <div className="min-w-0 break-words">
                         <span className="text-slate-400">Data:</span>{' '}
                         <span className="font-medium text-slate-800">{sim.date}</span>
                       </div>
-                      <div>
+                      <div className="min-w-0 break-words">
                         <span className="text-slate-400">Tempo:</span>{' '}
                         <span className="font-medium text-slate-800 tabular-nums">
                           {Math.round(sim.timeSpentSeconds / 60)} min
                         </span>
                       </div>
-                      <div>
+                      <div className="min-w-0 break-words">
                         <span className="text-slate-400">Acertos:</span>{' '}
                         <span className="font-semibold text-slate-800 tabular-nums">
                           {sim.correctAnswers} / {sim.totalQuestions}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-slate-400">Aproveitamento:</span>{' '}
+                      <div className="min-w-0 break-words">
+                        <span className="text-slate-400">Aproveit.:</span>{' '}
                         <span className="font-bold text-[#0B1F3A] tabular-nums">{perc}%</span>
                       </div>
                     </div>

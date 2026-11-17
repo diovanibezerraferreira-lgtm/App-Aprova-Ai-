@@ -234,20 +234,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3">
             {OAB_DISCIPLINES.map(disc => {
               const isHighlight = disc.id === 'etica' || disc.id === 'constitucional';
               return (
                 <button
                   key={disc.id}
                   onClick={() => onSelectDiscipline(disc)}
-                  className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all group flex flex-col justify-between min-h-[110px] min-w-0 w-full ${
+                  className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all group flex flex-col justify-between min-h-[104px] sm:min-h-[110px] min-w-0 w-full ${
                     isHighlight
                       ? 'bg-amber-50/70 border-[#D4AF37]/50 hover:border-[#D4AF37] hover:shadow-md'
                       : 'bg-white border-slate-200 hover:border-[#0B1F3A]/40 hover:shadow-sm'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-1 w-full min-w-0">
+                  <div className="flex flex-col min-[460px]:flex-row items-start justify-between gap-1.5 w-full min-w-0">
                     <span className="text-xs font-semibold text-slate-900 group-hover:text-[#0B1F3A] line-clamp-2 min-w-0 break-words">
                       {disc.name}
                     </span>
@@ -282,17 +282,17 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <p className="text-sm text-slate-300 leading-relaxed">
               Não perca pontos em endereçamento, tempestividade ou falta de pedidos. Treine as {TOTAL_LEGAL_BRIEFS_COUNT} principais peças cobradas nas 2ª fases da OAB (Civil, Processo Civil, Penal, Trabalho, Constitucional, Tributário e Empresarial) com casos hipotéticos e modelos demonstrativos redigidos.
             </p>
-            <div className="flex flex-wrap gap-2 pt-2">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 pt-2">
               <button
                 onClick={() => onSelectTab('pecas')}
-                className="px-5 py-2.5 bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] font-bold text-xs rounded-lg transition-colors flex items-center gap-2 shadow"
+                className="w-full sm:w-auto px-5 py-2.5 bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] font-bold text-xs rounded-lg transition-colors flex items-center justify-center gap-2 shadow"
               >
                 <span>Acessar Laboratório de Peças</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </button>
               <button
                 onClick={() => onSelectTab('apostilas')}
-                className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-lg border border-white/20 transition-colors"
+                className="w-full sm:w-auto px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-lg border border-white/20 transition-colors text-center"
               >
                 Consultar Apostilas Doutrinárias
               </button>

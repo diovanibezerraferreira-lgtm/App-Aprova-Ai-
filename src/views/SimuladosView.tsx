@@ -55,6 +55,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
   const [serverIsPremium, setServerIsPremium] = useState<boolean>(false);
   const [quota, setQuota] = useState<DailyQuotaInfo | null>(null);
   const [loadingCatalog, setLoadingCatalog] = useState<boolean>(true);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
   const [starting, setStarting] = useState<boolean>(false);
   const [finishing, setFinishing] = useState<boolean>(false);
   const [accessBannerMsg, setAccessBannerMsg] = useState<string | null>(null);
@@ -89,6 +90,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
 
   const loadCatalog = useCallback(async () => {
     setLoadingCatalog(true);
+    setCatalogError(null);
     try {
       const res = await fetchSimuladosCatalog();
       setPresets(res.presets);
@@ -96,6 +98,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
       setQuota(res.quota);
     } catch (err: any) {
       console.warn('Could not load simulados catalog:', err);
+      setCatalogError(err?.message || 'Não foi possível sincronizar o catálogo de simulados com o servidor.');
     } finally {
       setLoadingCatalog(false);
     }
@@ -312,6 +315,19 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
           </div>
         </div>
 
+        {catalogError && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex flex-wrap items-center justify-between gap-2">
+            <span className="min-w-0 break-words">{catalogError}</span>
+            <button
+              onClick={loadCatalog}
+              className="px-3 py-1 rounded-lg bg-white border border-rose-300 font-semibold flex items-center gap-1 shrink-0"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Tentar Novamente</span>
+            </button>
+          </div>
+        )}
+
         {/* Freemium Free Express Card + Daily Quota Strip */}
         {!loadingCatalog && !serverIsPremium && (
           <div className="rounded-3xl bg-white border-2 border-[#D4AF37]/60 shadow-md p-4 sm:p-6 space-y-4">
@@ -325,25 +341,25 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
                     Cota de hoje: {simUsed} de {simLimit} usado
                   </span>
                 </div>
-                <h2 className="text-lg sm:text-xl font-bold font-serif text-[#0B1F3A]">
+                <h2 className="text-lg sm:text-xl font-bold font-serif text-[#0B1F3A] break-words">
                   Simulado Express Gratuito (10 Questões · 15 min)
                 </h2>
-                <p className="text-xs text-slate-600 leading-relaxed">
+                <p className="text-xs text-slate-600 leading-relaxed break-words">
                   Experimente a correção oficial com gabarito comentado ao final. Para acessar as 80 questões oficiais OAB, concursos e simulados ilimitados, assine o Plano Premium.
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 shrink-0">
                 <button
                   onClick={() => expressPreset && handleStartSimulado(expressPreset)}
                   disabled={starting || simRemaining <= 0}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 shadow transition-all ${
+                  className={`w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 shadow transition-all text-center ${
                     simRemaining > 0 && !starting
                       ? 'bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37]'
                       : 'bg-slate-200 text-slate-500 cursor-not-allowed'
                   }`}
                 >
-                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <Play className="w-3.5 h-3.5 fill-current shrink-0" />
                   <span>
                     {starting
                       ? 'Iniciando...'
@@ -356,9 +372,9 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
                 {onOpenPremium && (
                   <button
                     onClick={onOpenPremium}
-                    className="px-4 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] text-xs font-extrabold shadow flex items-center gap-1.5"
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] text-xs font-extrabold shadow flex items-center justify-center gap-1.5 text-center"
                   >
-                    <Crown className="w-3.5 h-3.5" />
+                    <Crown className="w-3.5 h-3.5 shrink-0" />
                     <span>Liberar Todos · R$ 29,90</span>
                   </button>
                 )}
@@ -752,29 +768,44 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
     return (
       <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6 animate-fade-in">
         {/* Sticky Control Bar */}
-        <div className="sticky top-[68px] sm:top-16 z-30 bg-[#0B1F3A] text-white p-3 sm:p-4 rounded-2xl shadow-xl border border-[#D4AF37]/30 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div
-              className={`flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg font-mono font-bold text-xs sm:text-sm border transition-colors ${
-                isWarning
-                  ? 'bg-rose-950/80 border-rose-500 text-rose-300 animate-pulse'
-                  : 'bg-white/10 border-white/20 text-[#D4AF37]'
-              }`}
-            >
-              <Clock className="w-4 h-4 shrink-0" />
-              <span>{formatTimer(secondsRemaining)}</span>
+        <div className="sticky top-[66px] sm:top-16 z-30 bg-[#0B1F3A] text-white p-2.5 sm:p-4 rounded-2xl shadow-xl border border-[#D4AF37]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+          <div className="flex items-center justify-between gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+              <div
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-mono font-bold text-xs sm:text-sm border transition-colors shrink-0 ${
+                  isWarning
+                    ? 'bg-rose-950/80 border-rose-500 text-rose-300 animate-pulse'
+                    : 'bg-white/10 border-white/20 text-[#D4AF37]'
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span className="tabular-nums">{formatTimer(secondsRemaining)}</span>
+              </div>
+
+              <button
+                onClick={() => setIsTimerPaused(!isTimerPaused)}
+                aria-label={isTimerPaused ? 'Retomar cronômetro' : 'Pausar cronômetro'}
+                className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 text-xs flex items-center gap-1 transition-colors shrink-0"
+              >
+                {isTimerPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5" />}
+                <span className="hidden sm:inline">{isTimerPaused ? 'Retomar' : 'Pausar'}</span>
+              </button>
             </div>
 
-            <button
-              onClick={() => setIsTimerPaused(!isTimerPaused)}
-              className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 text-xs flex items-center gap-1.5 transition-colors"
-            >
-              {isTimerPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{isTimerPaused ? 'Retomar' : 'Pausar'}</span>
-            </button>
+            <div className="flex items-center gap-2 text-[11px] sm:text-xs text-slate-300 shrink-0 sm:hidden">
+              <span className="tabular-nums">
+                <strong className="text-white">{answeredCount}</strong>/{activeQuestions.length}
+              </span>
+              {flaggedCount > 0 && (
+                <span className="text-amber-400 flex items-center gap-0.5 font-semibold tabular-nums">
+                  <Flag className="w-3 h-3 fill-current" />
+                  {flaggedCount}
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-slate-300">
+          <div className="hidden sm:flex flex-wrap items-center gap-4 text-xs text-slate-300">
             <div>
               Respondidas: <strong className="text-white">{answeredCount}</strong> / {activeQuestions.length}
             </div>
@@ -789,7 +820,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
           <button
             onClick={() => setShowSubmitModal(true)}
             disabled={finishing}
-            className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-[#D4AF37] to-[#C59F2A] hover:from-[#E6C86E] hover:to-[#D4AF37] text-[#0B1F3A] font-extrabold text-xs rounded-lg shadow transition-all text-center"
+            className="w-full sm:w-auto px-4 py-1.5 sm:py-2 bg-gradient-to-r from-[#D4AF37] to-[#C59F2A] hover:from-[#E6C86E] hover:to-[#D4AF37] text-[#0B1F3A] font-extrabold text-xs rounded-lg shadow transition-all text-center shrink-0"
           >
             {finishing ? 'Corrigindo...' : 'Finalizar Simulado'}
           </button>
@@ -913,7 +944,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
                     >
                       {option.id}
                     </span>
-                    <span className="text-xs sm:text-sm text-slate-800 leading-snug flex-1 min-w-0 break-words">
+                    <span className="text-xs sm:text-sm text-slate-800 leading-snug flex-1 min-w-0 break-words [overflow-wrap:anywhere]">
                       {option.text}
                     </span>
                   </button>
@@ -921,23 +952,25 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
               })}
             </div>
 
-            <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+            <div className="pt-4 border-t border-slate-100 grid grid-cols-2 sm:flex sm:items-center sm:justify-between gap-2">
               <button
                 onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
                 disabled={currentIndex === 0}
-                className="px-3 sm:px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 disabled:opacity-40 flex items-center gap-1.5 transition-colors"
+                className="px-2.5 sm:px-4 py-2 rounded-xl border border-slate-200 sm:border-transparent text-xs font-bold text-slate-600 hover:text-slate-900 disabled:opacity-40 flex items-center justify-center gap-1.5 transition-colors"
               >
-                <ChevronLeft className="w-4 h-4" />
-                <span>Questão Anterior</span>
+                <ChevronLeft className="w-4 h-4 shrink-0" />
+                <span className="sm:hidden">Anterior</span>
+                <span className="hidden sm:inline">Questão Anterior</span>
               </button>
 
               <button
                 onClick={() => setCurrentIndex(prev => Math.min(activeQuestions.length - 1, prev + 1))}
                 disabled={currentIndex === activeQuestions.length - 1}
-                className="px-4 sm:px-5 py-2.5 bg-[#0B1F3A] text-white hover:bg-[#16365C] rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition-colors disabled:opacity-40"
+                className="px-3 sm:px-5 py-2 sm:py-2.5 bg-[#0B1F3A] text-white hover:bg-[#16365C] rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow transition-colors disabled:opacity-40"
               >
-                <span>Próxima Questão</span>
-                <ChevronRight className="w-4 h-4" />
+                <span className="sm:hidden">Próxima</span>
+                <span className="hidden sm:inline">Próxima Questão</span>
+                <ChevronRight className="w-4 h-4 shrink-0" />
               </button>
             </div>
           </div>
@@ -946,29 +979,29 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
         {/* Confirmation Modal */}
         {showSubmitModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
-            <div className="bg-white max-w-md w-full rounded-3xl p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl border border-slate-200 my-4 max-h-[92vh] overflow-y-auto">
+            <div className="bg-white max-w-md w-full rounded-3xl p-4 sm:p-8 space-y-4 sm:space-y-6 shadow-2xl border border-slate-200 my-4 max-h-[92vh] overflow-y-auto">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-lg font-bold text-slate-900">Entregar Simulado?</h3>
-                  <p className="text-xs text-slate-500">Revise seu progresso antes de concluir a prova.</p>
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 break-words">Entregar Simulado?</h3>
+                  <p className="text-xs text-slate-500 break-words">Revise seu progresso antes de concluir a prova.</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-3 p-2.5 sm:p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center">
                 <div className="min-w-0">
-                  <span className="block text-lg sm:text-xl font-bold text-emerald-600">{answeredCount}</span>
-                  <span className="text-[11px] text-slate-500 font-medium">Respondidas</span>
+                  <span className="block text-base sm:text-xl font-bold text-emerald-600 tabular-nums">{answeredCount}</span>
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium block truncate">Respondidas</span>
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-lg sm:text-xl font-bold text-rose-500">{unansweredCount}</span>
-                  <span className="text-[11px] text-slate-500 font-medium">Em Branco</span>
+                  <span className="block text-base sm:text-xl font-bold text-rose-500 tabular-nums">{unansweredCount}</span>
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium block truncate">Em Branco</span>
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-lg sm:text-xl font-bold text-amber-600">{flaggedCount}</span>
-                  <span className="text-[11px] text-slate-500 font-medium">Marcadas</span>
+                  <span className="block text-base sm:text-xl font-bold text-amber-600 tabular-nums">{flaggedCount}</span>
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium block truncate">Marcadas</span>
                 </div>
               </div>
 
@@ -1059,22 +1092,22 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
 
             <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4 border-t border-white/10 max-w-md">
               <div className="min-w-0">
-                <span className="block text-xl sm:text-3xl font-extrabold text-[#D4AF37] tabular-nums">
+                <span className="block text-lg sm:text-3xl font-extrabold text-[#D4AF37] tabular-nums">
                   {percent}%
                 </span>
-                <span className="text-[11px] sm:text-xs text-slate-300">Aproveitamento</span>
+                <span className="text-[10px] sm:text-xs text-slate-300 block truncate">Aproveit.</span>
               </div>
               <div className="min-w-0">
-                <span className="block text-xl sm:text-3xl font-extrabold text-white tabular-nums">
+                <span className="block text-lg sm:text-3xl font-extrabold text-white tabular-nums">
                   {correct}/{total}
                 </span>
-                <span className="text-[11px] sm:text-xs text-slate-300">Acertos</span>
+                <span className="text-[10px] sm:text-xs text-slate-300 block truncate">Acertos</span>
               </div>
               <div className="min-w-0">
-                <span className="block text-xl sm:text-3xl font-extrabold text-white tabular-nums">
+                <span className="block text-lg sm:text-3xl font-extrabold text-white tabular-nums">
                   {Math.round(latestResult.timeSpentSeconds / 60)} min
                 </span>
-                <span className="text-[11px] sm:text-xs text-slate-300">Tempo Gasto</span>
+                <span className="text-[10px] sm:text-xs text-slate-300 block truncate">Tempo Gasto</span>
               </div>
             </div>
 
