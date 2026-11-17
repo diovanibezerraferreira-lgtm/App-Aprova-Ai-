@@ -236,11 +236,11 @@ export const LegalBriefsView: React.FC<LegalBriefsViewProps> = ({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 min-w-0">
             {!currentUser && onOpenAuth && (
               <button
                 onClick={onOpenAuth}
-                className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/20 transition-colors"
+                className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/20 transition-colors text-center"
               >
                 Entrar
               </button>
@@ -248,9 +248,9 @@ export const LegalBriefsView: React.FC<LegalBriefsViewProps> = ({
             {onOpenPremium && (
               <button
                 onClick={onOpenPremium}
-                className="px-4 py-2 rounded-xl bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] text-xs font-extrabold shadow transition-colors flex items-center gap-1.5"
+                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] text-xs font-extrabold shadow transition-colors flex items-center justify-center gap-1.5 text-center"
               >
-                <Crown className="w-3.5 h-3.5" />
+                <Crown className="w-3.5 h-3.5 shrink-0" />
                 <span>Desbloquear 42 Peças · R$ 29,90</span>
               </button>
             )}
@@ -287,7 +287,7 @@ export const LegalBriefsView: React.FC<LegalBriefsViewProps> = ({
             </button>
             <button
               onClick={() => { setSelectedArea('Direito Processual Civil'); }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap shrink-0 transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg max-w-full text-left break-words transition-colors ${
                 selectedArea === 'Direito Processual Civil'
                   ? 'bg-sky-700 text-white shadow'
                   : 'bg-sky-50 text-sky-800 border border-sky-200 hover:bg-sky-100'
@@ -297,7 +297,7 @@ export const LegalBriefsView: React.FC<LegalBriefsViewProps> = ({
             </button>
             <button
               onClick={() => { setSelectedArea('Direito Civil'); }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap shrink-0 transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg max-w-full text-left break-words transition-colors ${
                 selectedArea === 'Direito Civil'
                   ? 'bg-blue-700 text-white shadow'
                   : 'bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100'
@@ -307,7 +307,7 @@ export const LegalBriefsView: React.FC<LegalBriefsViewProps> = ({
             </button>
             <button
               onClick={() => { setSelectedArea('Direito Empresarial'); }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap shrink-0 transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg max-w-full text-left break-words transition-colors ${
                 selectedArea === 'Direito Empresarial'
                   ? 'bg-indigo-700 text-white shadow'
                   : 'bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100'
@@ -317,7 +317,7 @@ export const LegalBriefsView: React.FC<LegalBriefsViewProps> = ({
             </button>
             <button
               onClick={() => { setSelectedArea('Direito Penal'); }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap shrink-0 transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg max-w-full text-left break-words transition-colors ${
                 selectedArea === 'Direito Penal'
                   ? 'bg-rose-700 text-white shadow'
                   : 'bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100'
@@ -327,7 +327,7 @@ export const LegalBriefsView: React.FC<LegalBriefsViewProps> = ({
             </button>
             <button
               onClick={() => { setSelectedArea('Direito do Trabalho'); }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap shrink-0 transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg max-w-full text-left break-words transition-colors ${
                 selectedArea === 'Direito do Trabalho'
                   ? 'bg-emerald-700 text-white shadow'
                   : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
@@ -337,7 +337,7 @@ export const LegalBriefsView: React.FC<LegalBriefsViewProps> = ({
             </button>
             <button
               onClick={() => { setSelectedArea('Direito Constitucional'); }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap shrink-0 transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg max-w-full text-left break-words transition-colors ${
                 selectedArea === 'Direito Constitucional'
                   ? 'bg-amber-700 text-white shadow'
                   : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
@@ -347,7 +347,7 @@ export const LegalBriefsView: React.FC<LegalBriefsViewProps> = ({
             </button>
             <button
               onClick={() => { setSelectedArea('Direito Tributário'); }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap shrink-0 transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg max-w-full text-left break-words transition-colors ${
                 selectedArea === 'Direito Tributário'
                   ? 'bg-purple-700 text-white shadow'
                   : 'bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100'
@@ -357,7 +357,7 @@ export const LegalBriefsView: React.FC<LegalBriefsViewProps> = ({
             </button>
           </div>
 
-          <div className="relative w-full md:w-64 min-w-0 shrink-0">
+          <div className="relative w-full md:w-64 min-w-0">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
@@ -639,7 +639,7 @@ export const LegalBriefsView: React.FC<LegalBriefsViewProps> = ({
                       </span>
                     </div>
                     <div className="relative w-full min-w-0">
-                      <pre className="w-full max-w-full p-3 sm:p-6 bg-slate-900 text-slate-100 rounded-xl text-[11px] sm:text-sm font-mono overflow-x-hidden whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed max-h-[600px] overflow-y-auto border border-slate-800">
+                      <pre className="w-full max-w-full p-3 sm:p-6 bg-slate-900 text-slate-100 rounded-xl text-[11px] sm:text-sm font-mono whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed max-h-[600px] overflow-y-auto border border-slate-800">
                         {selectedBrief.fullDraft}
                       </pre>
                     </div>

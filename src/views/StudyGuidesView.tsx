@@ -153,16 +153,16 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2.5 pt-2">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 pt-2 min-w-0">
         {onOpenPremium && (
           <button
             onClick={() => {
               setSelectedMaterialId(null);
               onOpenPremium();
             }}
-            className="px-4 py-2.5 bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] font-extrabold text-xs rounded-xl shadow transition-colors flex items-center gap-1.5"
+            className="w-full sm:w-auto px-4 py-2.5 bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] font-extrabold text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-1.5 text-center"
           >
-            <Crown className="w-4 h-4" />
+            <Crown className="w-4 h-4 shrink-0" />
             <span>Assinar Premium (R$ 29,90/mês)</span>
           </button>
         )}
@@ -172,7 +172,7 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
               setViewMode('chapters');
               setActiveChapterIndex(0);
             }}
-            className="px-4 py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-100 text-xs font-bold rounded-xl transition-colors"
+            className="w-full sm:w-auto px-4 py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-100 text-xs font-bold rounded-xl transition-colors text-center"
           >
             Ler Capítulo 1 Gratuito
           </button>
@@ -183,9 +183,9 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
               setSelectedMaterialId(null);
               onOpenAuth();
             }}
-            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-xl border border-white/20 transition-colors flex items-center gap-1.5"
+            className="w-full sm:w-auto px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-xl border border-white/20 transition-colors flex items-center justify-center gap-1.5 text-center"
           >
-            <LogIn className="w-4 h-4 text-[#D4AF37]" />
+            <LogIn className="w-4 h-4 text-[#D4AF37] shrink-0" />
             <span>Já sou assinante · Entrar</span>
           </button>
         )}
@@ -243,11 +243,11 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 min-w-0">
             {!currentUser && onOpenAuth && (
               <button
                 onClick={onOpenAuth}
-                className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/20 transition-colors"
+                className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/20 transition-colors text-center"
               >
                 Entrar
               </button>
@@ -255,9 +255,9 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
             {onOpenPremium && (
               <button
                 onClick={onOpenPremium}
-                className="px-4 py-2 rounded-xl bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] text-xs font-extrabold shadow transition-colors flex items-center gap-1.5"
+                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] text-xs font-extrabold shadow transition-colors flex items-center justify-center gap-1.5 text-center"
               >
-                <Crown className="w-3.5 h-3.5" />
+                <Crown className="w-3.5 h-3.5 shrink-0" />
                 <span>Liberar Acervo Completo · R$ 29,90</span>
               </button>
             )}
@@ -373,7 +373,7 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
           <select
             value={disciplineFilter}
             onChange={e => setDisciplineFilter(e.target.value)}
-            className="w-full sm:w-auto min-w-0 max-w-full flex-1 px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#0B1F3A]"
+            className="flex-1 sm:w-auto min-w-0 max-w-full overflow-hidden text-ellipsis px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#0B1F3A]"
           >
             <option value="todas">Filtrar por disciplina...</option>
             {OAB_DISCIPLINES.map(d => (
@@ -429,7 +429,7 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
                     <span className="font-semibold text-[#D4AF37] uppercase tracking-wider min-w-0 break-words">
                       {discipline?.name || mat.disciplineId}
                     </span>
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex flex-wrap items-center gap-1.5 min-w-0 max-w-full">
                       {!serverIsPremium && mat.hasFreePreview && (
                         <span className="bg-emerald-500 text-white px-2 py-0.5 rounded-md text-[10px] font-extrabold">
                           Cap. 1 Gratuito
@@ -575,7 +575,7 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
                 </button>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 shrink-0">
+              <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 min-w-0 max-w-full">
                 <div className="flex items-center bg-white/10 rounded-lg p-0.5 text-[11px] sm:text-xs">
                   <button
                     onClick={() => setViewMode('chapters')}
@@ -709,7 +709,7 @@ export const StudyGuidesView: React.FC<StudyGuidesViewProps> = ({
               </div>
 
               {/* Main Reading Window */}
-              <div className="flex-1 md:col-span-8 min-w-0 min-h-0 p-3.5 sm:p-8 lg:p-10 overflow-y-auto overflow-x-hidden space-y-6 sm:space-y-8">
+              <div className="flex-1 md:col-span-8 min-w-0 min-h-0 p-3.5 sm:p-8 lg:p-10 overflow-y-auto space-y-6 sm:space-y-8">
                 {viewMode === 'chapters' && activeChapter && (
                   <div className="space-y-6 min-w-0">
                     <div className="border-b border-slate-200 pb-4">

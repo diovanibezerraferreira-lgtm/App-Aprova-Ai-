@@ -388,7 +388,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 shrink-0">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 min-w-0">
                 {!currentUser && onOpenAuth && (
                   <button
                     onClick={onOpenAuth}
@@ -436,7 +436,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                 </p>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 min-w-0">
               {!currentUser && onOpenAuth && (
                 <button
                   onClick={onOpenAuth}
@@ -500,7 +500,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
               <select
                 value={selectedDiscipline}
                 onChange={e => handleDisciplineChange(e.target.value)}
-                className="w-full sm:w-auto min-w-0 max-w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-[#0B1F3A]"
+                className="flex-1 sm:w-auto min-w-0 max-w-full overflow-hidden text-ellipsis px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-[#0B1F3A]"
               >
                 <option value="todas">Todas as Disciplinas ({catalogTotal})</option>
                 {OAB_DISCIPLINES.map(d => (
@@ -560,7 +560,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
               <select
                 value={selectedSubject}
                 onChange={e => handleSubjectChange(e.target.value)}
-                className="w-full sm:w-auto min-w-0 max-w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-slate-50 text-slate-800 font-medium focus:outline-none focus:ring-1 focus:ring-[#0B1F3A]"
+                className="flex-1 sm:w-auto min-w-0 max-w-full overflow-hidden text-ellipsis px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-slate-50 text-slate-800 font-medium focus:outline-none focus:ring-1 focus:ring-[#0B1F3A]"
               >
                 <option value="todos">
                   Todos os Temas ({availableSubjects.reduce((acc, s) => acc + s.count, 0)})
@@ -793,14 +793,14 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
               )}
             </div>
 
-            <div className="text-slate-500 font-medium whitespace-nowrap">
+            <div className="text-slate-500 font-medium break-words max-w-full">
               Fila: {safeIndex + 1} de {activeQueue.length} {isCycleComplete ? '(Revisão)' : '(Inéditas)'}
             </div>
           </div>
 
           <div className="p-4 sm:p-8 space-y-5 sm:space-y-6 min-w-0">
             <div className="text-slate-900 text-sm sm:text-base leading-relaxed min-w-0">
-              <p className="font-normal whitespace-pre-line break-words">
+              <p className="font-normal whitespace-pre-line break-words [overflow-wrap:anywhere]">
                 {currentQuestion.statement}
               </p>
             </div>
@@ -937,7 +937,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                     <BookOpen className="w-4 h-4 text-[#D4AF37] shrink-0" />
                     <span>Comentário Didático da Questão</span>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-800 leading-relaxed break-words">
+                  <p className="text-xs sm:text-sm text-slate-800 leading-relaxed break-words [overflow-wrap:anywhere]">
                     {activeSolution.explanation}
                   </p>
 
@@ -946,7 +946,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                       <Scale className="w-3.5 h-3.5 text-[#0B1F3A] shrink-0" />
                       Fundamento Jurídico:
                     </span>
-                    <p className="text-xs text-slate-600 mt-0.5 font-medium break-words">
+                    <p className="text-xs text-slate-600 mt-0.5 font-medium break-words [overflow-wrap:anywhere]">
                       {activeSolution.legalFoundation}
                     </p>
                   </div>

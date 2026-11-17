@@ -227,7 +227,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* Mode Switch Tabs (Only show when not in 'forgot') */}
           {mode !== 'forgot' && (
-            <div className="flex mt-4 bg-white/10 p-1 rounded-lg">
+            <div className="flex mt-4 bg-white/10 p-1 rounded-lg min-w-0">
               <button
                 type="button"
                 onClick={() => { setMode('login'); setErrorMsg(''); setSuccessMsg(''); setShowConsoleHelper(false); }}
@@ -251,7 +251,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
 
         {/* Scrollable Form Body */}
-        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 min-w-0">
           
           {errorMsg && (
             <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium space-y-2">

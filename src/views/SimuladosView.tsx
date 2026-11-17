@@ -573,7 +573,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
                         <span className="text-[11px] bg-[#0B1F3A]/5 text-[#0B1F3A] px-2.5 py-0.5 rounded-full font-bold truncate max-w-full">
                           {preset.level}
                         </span>
-                        <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="flex flex-wrap items-center gap-1.5 min-w-0 max-w-full">
                           {isExpressFree && !serverIsPremium && (
                             <span className="bg-emerald-100 border border-emerald-200 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-md flex items-center gap-1">
                               <Sparkles className="w-2.5 h-2.5" />
@@ -662,7 +662,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 min-w-0">
             <div className="min-w-0">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
                 Disciplina
@@ -670,7 +670,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
               <select
                 value={selectedDiscipline}
                 onChange={e => setSelectedDiscipline(e.target.value)}
-                className="w-full min-w-0 max-w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+                className="w-full min-w-0 max-w-full overflow-hidden text-ellipsis px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
               >
                 <option value="todas">Todas as Disciplinas (Geral OAB)</option>
                 {OAB_DISCIPLINES.map(d => (
@@ -688,7 +688,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
               <select
                 value={customDifficulty}
                 onChange={e => setCustomDifficulty(e.target.value as any)}
-                className="w-full min-w-0 max-w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+                className="w-full min-w-0 max-w-full overflow-hidden text-ellipsis px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
               >
                 <option value="todas">Todas as Dificuldades (Mesclado)</option>
                 <option value="Fácil">Fácil (Fundamentos & Conceitos)</option>
@@ -704,7 +704,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
               <select
                 value={customQuestionCount}
                 onChange={e => setCustomQuestionCount(Number(e.target.value))}
-                className="w-full min-w-0 max-w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+                className="w-full min-w-0 max-w-full overflow-hidden text-ellipsis px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
               >
                 <option value={10}>10 questões (Treino Rápido)</option>
                 <option value={20}>20 questões (Sprint Diário)</option>
@@ -720,7 +720,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
               <select
                 value={customTimeMinutes}
                 onChange={e => setCustomTimeMinutes(Number(e.target.value))}
-                className="w-full min-w-0 max-w-full px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+                className="w-full min-w-0 max-w-full overflow-hidden text-ellipsis px-3.5 py-2.5 text-xs border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
               >
                 <option value={15}>15 minutos</option>
                 <option value={30}>30 minutos</option>
@@ -909,18 +909,18 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
 
               <button
                 onClick={() => handleToggleFlag(currentIndex)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all max-w-full ${
                   flaggedQuestions[currentIndex]
                     ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-xs'
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                 }`}
               >
-                <Flag className={`w-3.5 h-3.5 ${flaggedQuestions[currentIndex] ? 'fill-amber-600 text-amber-600' : ''}`} />
+                <Flag className={`w-3.5 h-3.5 shrink-0 ${flaggedQuestions[currentIndex] ? 'fill-amber-600 text-amber-600' : ''}`} />
                 <span>{flaggedQuestions[currentIndex] ? 'Marcada para Revisar' : 'Marcar para Revisar'}</span>
               </button>
             </div>
 
-            <p className="text-sm sm:text-base text-slate-900 leading-relaxed whitespace-pre-line font-normal break-words">
+            <p className="text-sm sm:text-base text-slate-900 leading-relaxed whitespace-pre-line font-normal break-words [overflow-wrap:anywhere]">
               {currentQuestion.statement}
             </p>
 
@@ -1288,7 +1288,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
                       </span>
                     </div>
 
-                    <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium whitespace-pre-line break-words">
+                    <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium whitespace-pre-line break-words [overflow-wrap:anywhere]">
                       {questionObj.statement}
                     </p>
 
@@ -1303,7 +1303,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
                         <span className="font-bold block mb-1">
                           Sua Resposta: Letra {answerItem?.selectedOptionId || '(Em branco)'}
                         </span>
-                        <p className="text-[11px] leading-snug break-words">
+                        <p className="text-[11px] leading-snug break-words [overflow-wrap:anywhere]">
                           {markedOption ? markedOption.text : 'Não respondida no tempo de prova'}
                         </p>
                       </div>
@@ -1312,7 +1312,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
                         <span className="font-bold block mb-1">
                           Gabarito Oficial: Letra {questionObj.correctOptionId}
                         </span>
-                        <p className="text-[11px] leading-snug text-emerald-800 break-words">
+                        <p className="text-[11px] leading-snug text-emerald-800 break-words [overflow-wrap:anywhere]">
                           {correctOption ? correctOption.text : ''}
                         </p>
                       </div>
@@ -1323,8 +1323,8 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
                         <BookOpen className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                         <span>Comentário & Explicação:</span>
                       </div>
-                      <p className="leading-relaxed break-words">{questionObj.explanation}</p>
-                      <p className="text-[11px] text-[#0B1F3A] font-semibold pt-1 border-t border-slate-200 break-words">
+                      <p className="leading-relaxed break-words [overflow-wrap:anywhere]">{questionObj.explanation}</p>
+                      <p className="text-[11px] text-[#0B1F3A] font-semibold pt-1 border-t border-slate-200 break-words [overflow-wrap:anywhere]">
                         Fundamento Legal: {questionObj.legalFoundation}
                       </p>
                     </div>

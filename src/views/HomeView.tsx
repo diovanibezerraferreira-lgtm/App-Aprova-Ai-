@@ -21,6 +21,7 @@ import {
   Smartphone
 } from 'lucide-react';
 import { PWAInstallButton } from '../components/PWAInstallBanner';
+import heroStudyImg from '../assets/images/legal_study_hero_1793818915779.jpg';
 
 interface HomeViewProps {
   onSelectTab: (tab: ActiveTab) => void;
@@ -76,14 +77,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
   ];
 
   return (
-    <div className="w-full overflow-x-clip space-y-12 sm:space-y-16">
+    <div className="w-full space-y-12 sm:space-y-16">
       
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-[#0B1F3A] text-white">
         {/* Background Image with Measured Scrim */}
         <div className="absolute inset-0 z-0 opacity-25 mix-blend-luminosity">
           <img
-            src="/src/assets/images/legal_study_hero_1793818915779.jpg"
+            src={heroStudyImg}
             alt="Ambiente de estudos jurídicos e advocacia"
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover object-center"
@@ -91,7 +92,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
         <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#071527] via-[#0B1F3A]/90 to-[#0B1F3A]/70" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-12 sm:py-24">
+        <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-10 sm:py-24">
           <div className="max-w-3xl space-y-6 min-w-0">
             
             {/* Tagline kicker */}
@@ -101,7 +102,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </div>
 
             {/* Main Headline requested */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold font-serif tracking-tight text-white leading-tight break-words">
+            <h1 className="text-[26px] min-[360px]:text-3xl sm:text-5xl lg:text-6xl font-bold font-serif tracking-tight text-white leading-tight break-words">
               Sua aprovação começa com a <span className="text-[#D4AF37]">preparação de hoje</span>
             </h1>
 
@@ -111,7 +112,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-2">
+            <div className="w-full min-w-0 flex flex-wrap items-center gap-2.5 sm:gap-3 pt-2">
               <button
                 onClick={() => onSelectTab('questoes')}
                 className="w-full sm:w-auto px-5 sm:px-6 py-3 bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] font-bold text-sm rounded-xl shadow-lg shadow-[#D4AF37]/20 transition-all flex items-center justify-center gap-2 group"

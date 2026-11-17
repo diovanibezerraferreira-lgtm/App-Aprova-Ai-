@@ -64,7 +64,7 @@ function AppContent() {
       };
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-clip bg-slate-50 text-slate-900 flex flex-col selection:bg-[#D4AF37]/25 selection:text-[#0B1F3A]">
+    <div className="min-h-screen w-full max-w-full bg-slate-50 text-slate-900 flex flex-col selection:bg-[#D4AF37]/25 selection:text-[#0B1F3A]">
       {/* Top Executive Navbar */}
       <Navbar
         activeTab={activeTab}
