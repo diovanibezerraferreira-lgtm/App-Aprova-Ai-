@@ -88,19 +88,19 @@ export const OABHubView: React.FC<OABHubViewProps> = ({
               Concentrar esforços no grupo das <strong>6 matérias essenciais</strong> representa mais de 45% da prova toda!
             </p>
 
-            <div className="pt-2 flex flex-wrap gap-3">
+            <div className="pt-2 flex flex-col sm:flex-row sm:flex-wrap gap-2.5 sm:gap-3">
               <button
                 onClick={() => onSelectTab('questoes')}
-                className="px-5 py-2.5 bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] font-bold text-xs rounded-lg shadow transition-colors flex items-center gap-1.5"
+                className="w-full sm:w-auto px-5 py-2.5 bg-[#0B1F3A] hover:bg-[#16365C] text-[#D4AF37] font-bold text-xs rounded-lg shadow transition-colors flex items-center justify-center gap-1.5"
               >
                 <span>Treinar Questões FGV</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </button>
               <button
                 onClick={() => onSelectTab('simulados')}
-                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center gap-1.5"
+                className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5"
               >
-                <Clock className="w-4 h-4 text-[#0B1F3A]" />
+                <Clock className="w-4 h-4 text-[#0B1F3A] shrink-0" />
                 <span>Simulado com Cronômetro</span>
               </button>
             </div>

@@ -75,7 +75,7 @@ function AppContent() {
       />
 
       {/* Main View Area */}
-      <main className="flex-1 w-full min-w-0 pb-20 lg:pb-0">
+      <main className="flex-1 w-full min-w-0 pb-mobile-nav lg:pb-0">
         {activeTab === 'inicio' && (
           <HomeView
             onSelectTab={setActiveTab}

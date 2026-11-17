@@ -76,7 +76,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   ];
 
   return (
-    <div className="w-full overflow-x-clip space-y-12 sm:space-y-16 pb-12">
+    <div className="w-full overflow-x-clip space-y-12 sm:space-y-16">
       
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-[#0B1F3A] text-white">
@@ -432,7 +432,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </div>
 
       {/* Institutional Footer */}
-      <footer className="bg-[#071527] text-slate-400 text-xs border-t border-slate-800 pt-10 sm:pt-12 pb-20 lg:pb-12 mt-12 sm:mt-16">
+      <footer className="bg-[#071527] text-slate-400 text-xs border-t border-slate-800 pt-10 sm:pt-12 pb-8 lg:pb-12 mt-12 sm:mt-16">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             

@@ -21,7 +21,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 w-full max-w-full z-40 bg-[#0B1F3A]/95 backdrop-blur-md border-t border-[#D4AF37]/30 text-slate-300 pb-safe shadow-2xl overflow-hidden"
+      className="lg:hidden fixed bottom-0 left-0 right-0 w-full max-w-full z-40 bg-[#0B1F3A]/95 backdrop-blur-md border-t border-[#D4AF37]/30 text-slate-300 pb-safe shadow-2xl"
       aria-label="Navegação móvel inferior"
     >
       <div className="grid grid-cols-5 items-center h-16 w-full max-w-lg mx-auto px-0.5 sm:px-1">
@@ -40,7 +40,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 <span className="absolute top-1 w-6 h-0.5 bg-[#D4AF37] rounded-full" />
               )}
               <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'stroke-[2.4]' : 'stroke-[1.8]'}`} />
-              <span className={`text-[9.5px] min-[360px]:text-[10px] sm:text-[11px] font-medium tracking-tighter min-[360px]:tracking-tight mt-1 truncate max-w-full ${
+              <span className={`text-[10px] sm:text-[11px] font-medium tracking-tight mt-1 truncate max-w-full ${
                 isActive ? 'font-semibold text-[#D4AF37]' : ''
               }`}>
                 {tab.label}

@@ -63,9 +63,14 @@
 }
 
 /* Safe area insets for iOS / Android mobile browser and installed PWA */
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 1rem);
+@utility pb-safe {
+  padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
 }
-.pt-safe {
+
+@utility pt-safe {
   padding-top: env(safe-area-inset-top, 0.5rem);
+}
+
+@utility pb-mobile-nav {
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
 }

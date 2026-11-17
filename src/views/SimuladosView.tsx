@@ -768,7 +768,7 @@ export const SimuladosView: React.FC<SimuladosViewProps> = ({
     return (
       <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6 animate-fade-in">
         {/* Sticky Control Bar */}
-        <div className="sticky top-[66px] sm:top-16 z-30 bg-[#0B1F3A] text-white p-2.5 sm:p-4 rounded-2xl shadow-xl border border-[#D4AF37]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+        <div className="sticky top-[98px] sm:top-16 z-30 bg-[#0B1F3A] text-white p-2.5 sm:p-4 rounded-2xl shadow-xl border border-[#D4AF37]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center justify-between gap-2 w-full sm:w-auto">
             <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
               <div

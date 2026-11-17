@@ -76,11 +76,10 @@ export const PWAInstallButton: React.FC<{ variant?: 'header' | 'hero' | 'menu' }
       <button
         onClick={handleInstallClick}
         aria-label="Instalar Aprova Direito como aplicativo no celular ou computador"
-        className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/35 hover:border-[#D4AF37]/60 text-[11px] sm:text-xs font-semibold tracking-wide transition-all shadow-sm group whitespace-nowrap shrink-0"
+        className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/35 hover:border-[#D4AF37]/60 text-xs font-semibold tracking-wide transition-all shadow-sm group whitespace-nowrap shrink-0"
       >
         <Download className="w-3.5 h-3.5 group-hover:scale-110 transition-transform shrink-0" />
-        <span className="hidden sm:inline">Instalar App</span>
-        <span className="sm:hidden">App</span>
+        <span>Instalar App</span>
       </button>
 
       {showIOSModal && <PWAInstallModal onClose={() => setShowIOSModal(false)} isIOS={isIOS} />}
@@ -212,7 +211,7 @@ export const OfflineStatusIndicator: React.FC = () => {
   return (
     <aside
       aria-live="polite"
-      className="fixed bottom-20 lg:bottom-4 left-3 right-3 sm:left-auto sm:right-4 max-w-[calc(100vw-1.5rem)] z-50 flex items-center gap-2.5 rounded-xl bg-[#0B1F3A]/95 border border-amber-500/40 px-3.5 py-2.5 text-xs font-medium text-amber-200 shadow-2xl backdrop-blur-md animate-fade-in"
+      className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] lg:bottom-4 left-3 right-3 sm:left-auto sm:right-4 max-w-[calc(100vw-1.5rem)] z-50 flex items-center gap-2.5 rounded-xl bg-[#0B1F3A]/95 border border-amber-500/40 px-3.5 py-2.5 text-xs font-medium text-amber-200 shadow-2xl backdrop-blur-md animate-fade-in"
     >
       <span className="relative flex h-2.5 w-2.5 shrink-0">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
