@@ -1,5 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { verifyFirebaseUser, getAdminFirestore } from './_firebaseAdmin.js';
+import {
+  verifyFirebaseUser,
+  getAdminFirestore,
+  isPreviewSharingProductionFirestore,
+} from './_firebaseAdmin.js';
 import {
   getAsaasConfig,
   getOrCreateCustomer,
@@ -10,6 +14,26 @@ import {
 } from './_asaas.js';
 
 type RequestWithBody = IncomingMessage & { body?: any };
+
+export interface CreateSubscriptionDeps {
+  verifyFirebaseUser: typeof verifyFirebaseUser;
+  getAdminFirestore: typeof getAdminFirestore;
+  isPreviewSharingProductionFirestore: typeof isPreviewSharingProductionFirestore;
+  getAsaasConfig: typeof getAsaasConfig;
+  getOrCreateCustomer: typeof getOrCreateCustomer;
+  createMonthlySubscription: typeof createMonthlySubscription;
+  getSubscriptionPendingCheckoutUrl: typeof getSubscriptionPendingCheckoutUrl;
+}
+
+const defaultDeps: CreateSubscriptionDeps = {
+  verifyFirebaseUser,
+  getAdminFirestore,
+  isPreviewSharingProductionFirestore,
+  getAsaasConfig,
+  getOrCreateCustomer,
+  createMonthlySubscription,
+  getSubscriptionPendingCheckoutUrl,
+};
 
 async function readBody(req: RequestWithBody): Promise<any> {
   if (req.body !== undefined) {
@@ -93,14 +117,27 @@ function resolveValidCustomerName(candidates: Array<unknown>): string | null {
   return null;
 }
 
-export default async function handler(req: RequestWithBody, res: ServerResponse) {
+export async function handleCreateSubscription(
+  req: RequestWithBody,
+  res: ServerResponse,
+  deps: CreateSubscriptionDeps = defaultDeps
+) {
   if (req.method !== 'POST') {
     return sendJson(res, 405, { error: 'Método não permitido. Utilize POST.' });
   }
 
   try {
+    // 0. Block Preview deployments connected to the production Firestore BEFORE any Asaas or DB call
+    if (deps.isPreviewSharingProductionFirestore()) {
+      return sendJson(res, 403, {
+        blocked: true,
+        error:
+          'Criação de assinatura bloqueada no ambiente Preview enquanto compartilhar o Firestore de produção.',
+      });
+    }
+
     // 1. Verify user authentication via Firebase Auth ID Token
-    const user = await verifyFirebaseUser(req);
+    const user = await deps.verifyFirebaseUser(req);
     if (!user || !user.uid) {
       return sendJson(res, 401, {
         error: 'Não autorizado. Faça login com sua conta Aprova Direito para continuar.',
@@ -110,7 +147,7 @@ export default async function handler(req: RequestWithBody, res: ServerResponse)
     const body = await readBody(req);
     const { cpf } = body;
 
-    const config = getAsaasConfig();
+    const config = deps.getAsaasConfig();
     if (!config.isConfigured) {
       return sendJson(res, 500, {
         error:
@@ -121,7 +158,7 @@ export default async function handler(req: RequestWithBody, res: ServerResponse)
     }
 
     // 2. Check existing subscription state in Firestore to avoid duplicates
-    const db = getAdminFirestore();
+    const db = deps.getAdminFirestore();
     let existingUserData: any = null;
     if (db) {
       try {
@@ -157,7 +194,7 @@ export default async function handler(req: RequestWithBody, res: ServerResponse)
     }
 
     // 4. Create or retrieve customer in Asaas (and sync corrected full name / CPF if already registered)
-    const customer = await getOrCreateCustomer({
+    const customer = await deps.getOrCreateCustomer({
       name,
       email,
       cpfCnpj: cpf,
@@ -165,7 +202,7 @@ export default async function handler(req: RequestWithBody, res: ServerResponse)
     });
 
     if (existingUserData?.subscriptionId && existingUserData?.subscriptionStatus === 'PENDING') {
-      const existingCheckoutUrl = await getSubscriptionPendingCheckoutUrl(
+      const existingCheckoutUrl = await deps.getSubscriptionPendingCheckoutUrl(
         existingUserData.subscriptionId
       );
       if (existingCheckoutUrl) {
@@ -182,7 +219,7 @@ export default async function handler(req: RequestWithBody, res: ServerResponse)
     }
 
     // 5. Create monthly subscription (R$ 29,90) with hosted checkout (Credit Card + Pix)
-    const { subscription, invoiceUrl } = await createMonthlySubscription({
+    const { subscription, invoiceUrl } = await deps.createMonthlySubscription({
       customerId: customer.id,
       externalReference: user.uid,
       value: 29.9,
@@ -228,4 +265,8 @@ export default async function handler(req: RequestWithBody, res: ServerResponse)
       ...(error?.setupNeeded ? { setupNeeded: true } : {}),
     });
   }
+}
+
+export default async function handler(req: RequestWithBody, res: ServerResponse) {
+  return handleCreateSubscription(req, res);
 }

@@ -7,17 +7,45 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { getAsaasConfig, asaasFetch } from '../api/_asaas.ts';
 import webhookAsaasHandler from '../api/webhook-asaas.ts';
 import webhookBasicsHandler, { handleWebhook, type WebhookDeps } from '../api/webhook-basics.ts';
+import {
+  getFirebaseAdminDiagnostics,
+  getProductionFirebaseIdentifiers,
+  isUsingProductionFirestore,
+  isPreviewSharingProductionFirestore,
+} from '../api/_firebaseAdmin.ts';
+import {
+  handleCreateSubscription,
+  type CreateSubscriptionDeps,
+} from '../api/create-subscription.ts';
+import {
+  handleSubscriptionStatus,
+  type SubscriptionStatusDeps,
+} from '../api/subscription-status.ts';
+import {
+  resolveAccessContext,
+  getDailyQuotaStatus,
+  consumeQuestionQuota,
+  consumeSimuladoQuota,
+  saveSimuladoSession,
+  getSimuladoSession,
+} from '../api/_accessControl.ts';
+import questionsHandler from '../api/questions.ts';
+import simuladosHandler from '../api/simulados.ts';
+import materialsHandler from '../api/materials.ts';
+import briefsHandler from '../api/briefs.ts';
 
 const PROD_PROJECT_ID = 'gen-lang-client-0793753103';
 const PROD_DATABASE_ID = 'ai-studio-aprovadireito-858e292a-4f1d-4483-a130-1a8041386c5a';
 
 function createMockReq(options: {
   method?: string;
+  url?: string;
   headers?: Record<string, string>;
   body?: any;
 }): IncomingMessage & { body?: any } {
   const req = new EventEmitter() as IncomingMessage & { body?: any; readableEnded?: boolean };
   req.method = options.method || 'POST';
+  if (options.url) req.url = options.url;
   req.headers = options.headers || {};
   req.body = options.body;
   req.readableEnded = true;
@@ -752,4 +780,336 @@ test('Em Produção, preserva estornos, chargebacks, inadimplência e cancelamen
       assert.equal(store.getUser('uid_sub_active').subscriptionStatus, 'CANCELLED');
     }
   );
+});
+
+test('api/_firebaseAdmin.ts identifica Preview compartilhando Firestore de produção sem afetar Production, Development ou Preview isolado', async () => {
+  const prodIds = getProductionFirebaseIdentifiers();
+  assert.equal(prodIds.projectId, PROD_PROJECT_ID);
+  assert.equal(prodIds.databaseId, PROD_DATABASE_ID);
+
+  await withEnv(
+    {
+      VERCEL_ENV: 'preview',
+      FIREBASE_PROJECT_ID: undefined,
+      FIRESTORE_DATABASE_ID: undefined,
+    },
+    () => {
+      assert.equal(isUsingProductionFirestore(), true);
+      assert.equal(isPreviewSharingProductionFirestore(), true);
+    }
+  );
+
+  await withEnv(
+    {
+      VERCEL_ENV: 'preview',
+      FIREBASE_PROJECT_ID: PROD_PROJECT_ID,
+      FIRESTORE_DATABASE_ID: 'preview-homologacao-db',
+    },
+    () => {
+      assert.equal(isUsingProductionFirestore(), false);
+      assert.equal(isPreviewSharingProductionFirestore(), false);
+    }
+  );
+
+  await withEnv(
+    {
+      VERCEL_ENV: 'production',
+      FIREBASE_PROJECT_ID: undefined,
+      FIRESTORE_DATABASE_ID: undefined,
+    },
+    () => {
+      assert.equal(isUsingProductionFirestore(), true);
+      assert.equal(isPreviewSharingProductionFirestore(), false);
+    }
+  );
+
+  await withEnv(
+    {
+      VERCEL_ENV: undefined,
+      FIREBASE_PROJECT_ID: undefined,
+      FIRESTORE_DATABASE_ID: undefined,
+    },
+    () => {
+      assert.equal(isUsingProductionFirestore(getFirebaseAdminDiagnostics()), true);
+      assert.equal(isPreviewSharingProductionFirestore(), false);
+    }
+  );
+});
+
+test('Preview + Firestore de produção bloqueia create-subscription e subscription-status com HTTP 403 sem chamar Asaas nem gravar no Firestore', async () => {
+  let asaasCalls = 0;
+  let dbCalls = 0;
+  let authCalls = 0;
+
+  const blockedCreateDeps: CreateSubscriptionDeps = {
+    isPreviewSharingProductionFirestore,
+    verifyFirebaseUser: async () => {
+      authCalls++;
+      return { uid: 'uid_real', email: 'real@teste.com', name: 'Aluno Real' };
+    },
+    getAdminFirestore: () => {
+      dbCalls++;
+      throw new Error('Firestore não deve ser acessado quando Preview está bloqueado');
+    },
+    getAsaasConfig: () => {
+      asaasCalls++;
+      return getAsaasConfig();
+    },
+    getOrCreateCustomer: async () => {
+      asaasCalls++;
+      throw new Error('Asaas não deve ser chamado quando Preview está bloqueado');
+    },
+    createMonthlySubscription: async () => {
+      asaasCalls++;
+      throw new Error('Asaas não deve ser chamado quando Preview está bloqueado');
+    },
+    getSubscriptionPendingCheckoutUrl: async () => {
+      asaasCalls++;
+      return null;
+    },
+  };
+
+  const blockedStatusDeps: SubscriptionStatusDeps = {
+    isPreviewSharingProductionFirestore,
+    verifyFirebaseUser: async () => {
+      authCalls++;
+      return { uid: 'uid_real', email: 'real@teste.com', name: 'Aluno Real' };
+    },
+    getAdminFirestore: () => {
+      dbCalls++;
+      throw new Error('Firestore não deve ser acessado quando Preview está bloqueado');
+    },
+    getAsaasConfig: () => {
+      asaasCalls++;
+      return getAsaasConfig();
+    },
+    asaasFetch: (async () => {
+      asaasCalls++;
+      throw new Error('Asaas não deve ser chamado quando Preview está bloqueado');
+    }) as typeof asaasFetch,
+  };
+
+  await withEnv(
+    {
+      VERCEL_ENV: 'preview',
+      FIREBASE_PROJECT_ID: undefined,
+      FIRESTORE_DATABASE_ID: undefined,
+      ASAAS_ENVIRONMENT: 'sandbox',
+      ASAAS_API_KEY: '$aact_hmlg_sandboxkey123456',
+    },
+    async () => {
+      const resCreate = createMockRes();
+      await handleCreateSubscription(
+        createMockReq({
+          method: 'POST',
+          headers: { authorization: 'Bearer fake_token' },
+          body: { name: 'Aluno Real Teste', cpf: '12345678909' },
+        }),
+        resCreate.res,
+        blockedCreateDeps
+      );
+      assert.equal(resCreate.getStatus(), 403);
+      assert.equal(resCreate.getJson().blocked, true);
+
+      const resStatus = createMockRes();
+      await handleSubscriptionStatus(
+        createMockReq({
+          method: 'GET',
+          headers: { authorization: 'Bearer fake_token' },
+        }),
+        resStatus.res,
+        blockedStatusDeps
+      );
+      assert.equal(resStatus.getStatus(), 403);
+      assert.equal(resStatus.getJson().blocked, true);
+
+      assert.equal(asaasCalls, 0);
+      assert.equal(dbCalls, 0);
+      assert.equal(authCalls, 0);
+    }
+  );
+});
+
+test('Production e Development continuam operando normalmente em create-subscription e subscription-status', async () => {
+  for (const vercelEnv of ['production', undefined]) {
+    const store = createMemoryFirestore({
+      uid_prod_user: {
+        email: 'aluno@teste.com',
+        name: 'Aluno Teste Silva',
+        isPremium: false,
+        subscriptionStatus: 'NONE',
+      },
+    });
+
+    let createdSubCalls = 0;
+    const createDeps: CreateSubscriptionDeps = {
+      isPreviewSharingProductionFirestore,
+      verifyFirebaseUser: async () => ({
+        uid: 'uid_prod_user',
+        email: 'aluno@teste.com',
+        name: 'Aluno Teste Silva',
+      }),
+      getAdminFirestore: () => store.db,
+      getAsaasConfig,
+      getOrCreateCustomer: async ({ externalReference }) => ({
+        id: 'cus_ok_1',
+        name: 'Aluno Teste Silva',
+        email: 'aluno@teste.com',
+        externalReference,
+      }),
+      createMonthlySubscription: async ({ value }) => {
+        createdSubCalls++;
+        assert.equal(value, 29.9);
+        return {
+          subscription: { id: 'sub_ok_1', status: 'ACTIVE', value } as any,
+          invoiceUrl: 'https://www.asaas.com/i/fatura_ok',
+        };
+      },
+      getSubscriptionPendingCheckoutUrl: async () => null,
+    };
+
+    const statusDeps: SubscriptionStatusDeps = {
+      isPreviewSharingProductionFirestore,
+      verifyFirebaseUser: async () => ({
+        uid: 'uid_prod_user',
+        email: 'aluno@teste.com',
+        name: 'Aluno Teste Silva',
+      }),
+      getAdminFirestore: () => store.db,
+      getAsaasConfig,
+      asaasFetch: (async (endpoint: string) => {
+        if (endpoint.endsWith('/payments')) {
+          return { data: [{ status: 'PENDING', invoiceUrl: 'https://www.asaas.com/i/fatura_ok' }] };
+        }
+        return { status: 'ACTIVE', nextDueDate: '2026-12-18', value: 29.9, billingType: 'PIX' };
+      }) as typeof asaasFetch,
+    };
+
+    await withEnv(
+      {
+        VERCEL_ENV: vercelEnv,
+        ASAAS_ENVIRONMENT: vercelEnv === 'production' ? 'production' : 'sandbox',
+        ASAAS_API_KEY:
+          vercelEnv === 'production'
+            ? '$aact_prod_00000000000000000000'
+            : '$aact_hmlg_sandboxkey123456',
+      },
+      async () => {
+        const resCreate = createMockRes();
+        await handleCreateSubscription(
+          createMockReq({
+            method: 'POST',
+            headers: { authorization: 'Bearer valid_token' },
+            body: { name: 'Aluno Teste Silva' },
+          }),
+          resCreate.res,
+          createDeps
+        );
+        assert.equal(resCreate.getStatus(), 200);
+        assert.equal(resCreate.getJson().checkoutUrl, 'https://www.asaas.com/i/fatura_ok');
+        assert.equal(createdSubCalls, 1);
+        assert.equal(store.getUser('uid_prod_user').subscriptionId, 'sub_ok_1');
+        assert.equal(store.getUser('uid_prod_user').subscriptionStatus, 'PENDING');
+
+        const resStatus = createMockRes();
+        await handleSubscriptionStatus(
+          createMockReq({
+            method: 'GET',
+            headers: { authorization: 'Bearer valid_token' },
+          }),
+          resStatus.res,
+          statusDeps
+        );
+        assert.equal(resStatus.getStatus(), 200);
+        assert.equal(resStatus.getJson().subscriptionId, 'sub_ok_1');
+        assert.equal(resStatus.getJson().latestCheckoutUrl, 'https://www.asaas.com/i/fatura_ok');
+      }
+    );
+  }
+});
+
+test('api/_accessControl.ts e endpoints Freemium retornam HTTP 403 no Preview + Firestore de produção sem usar fallback em memória e continuam funcionando em Production/Development', async () => {
+  const sampleCtx = {
+    isAuthenticated: false,
+    uid: null,
+    email: null,
+    isPremium: false,
+    subscriptionStatus: 'NONE' as const,
+    dateKey: '2026-11-18',
+    quotaKeys: ['2026-11-18_ip_test'],
+    primaryQuotaKey: '2026-11-18_ip_test',
+  };
+
+  await withEnv(
+    {
+      VERCEL_ENV: 'preview',
+      FIREBASE_PROJECT_ID: undefined,
+      FIRESTORE_DATABASE_ID: undefined,
+    },
+    async () => {
+      await assert.rejects(
+        () => resolveAccessContext(createMockReq({ method: 'GET' }), createMockRes().res),
+        (err: any) => err?.status === 403 && err?.blocked === true
+      );
+      await assert.rejects(
+        () => getDailyQuotaStatus(sampleCtx),
+        (err: any) => err?.status === 403 && err?.blocked === true
+      );
+      await assert.rejects(
+        () => consumeQuestionQuota(sampleCtx, 'q_1'),
+        (err: any) => err?.status === 403 && err?.blocked === true
+      );
+      await assert.rejects(
+        () => consumeSimuladoQuota(sampleCtx),
+        (err: any) => err?.status === 403 && err?.blocked === true
+      );
+      await assert.rejects(
+        () =>
+          saveSimuladoSession({
+            id: 'sim_blocked',
+            title: 'Blocked',
+            ownerKey: '2026-11-18_ip_test',
+            isPremium: false,
+            questionIds: [],
+            timeLimitMinutes: 15,
+            createdAt: Date.now(),
+          }),
+        (err: any) => err?.status === 403 && err?.blocked === true
+      );
+      await assert.rejects(
+        () => getSimuladoSession('sim_blocked'),
+        (err: any) => err?.status === 403 && err?.blocked === true
+      );
+
+      for (const [handlerFn, url] of [
+        [questionsHandler, '/api/questions'],
+        [simuladosHandler, '/api/simulados'],
+        [materialsHandler, '/api/materials'],
+        [briefsHandler, '/api/briefs'],
+      ] as const) {
+        const res = createMockRes();
+        await handlerFn(createMockReq({ method: 'GET', url }), res.res);
+        assert.equal(res.getStatus(), 403, `${url} deve retornar 403 no Preview + Firestore de produção`);
+      }
+    }
+  );
+
+  for (const vercelEnv of ['production', undefined]) {
+    await withEnv(
+      {
+        VERCEL_ENV: vercelEnv,
+        FIREBASE_PROJECT_ID: undefined,
+        FIRESTORE_DATABASE_ID: undefined,
+      },
+      async () => {
+        const resQ = createMockRes();
+        await questionsHandler(createMockReq({ method: 'GET', url: '/api/questions' }), resQ.res);
+        assert.equal(resQ.getStatus(), 200);
+
+        const resS = createMockRes();
+        await simuladosHandler(createMockReq({ method: 'GET', url: '/api/simulados' }), resS.res);
+        assert.equal(resS.getStatus(), 200);
+      }
+    );
+  }
 });

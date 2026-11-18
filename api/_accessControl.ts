@@ -1,6 +1,11 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 import crypto from 'crypto';
-import { verifyFirebaseUser, getAdminFirestore, hasAdminCredentials } from './_firebaseAdmin.js';
+import {
+  verifyFirebaseUser,
+  getAdminFirestore,
+  hasAdminCredentials,
+  isPreviewSharingProductionFirestore,
+} from './_firebaseAdmin.js';
 import type { Firestore } from 'firebase-admin/firestore';
 
 export const FREE_DAILY_QUESTIONS_LIMIT = 10;
@@ -61,7 +66,20 @@ export interface SimuladoSessionRecord {
 const memoryQuotaStore = new Map<string, DailyUsageRecord>();
 const memorySimuladoSessions = new Map<string, SimuladoSessionRecord>();
 
+export function assertPreviewNotSharingProductionFirestore(): void {
+  if (isPreviewSharingProductionFirestore()) {
+    const err: any = new Error(
+      'Acesso a dados, cotas e sessões bloqueado no ambiente Preview enquanto compartilhar o Firestore de produção.'
+    );
+    err.status = 403;
+    err.code = 'PREVIEW_PRODUCTION_FIRESTORE_BLOCKED';
+    err.blocked = true;
+    throw err;
+  }
+}
+
 function getUsableFirestore(): Firestore | null {
+  assertPreviewNotSharingProductionFirestore();
   if (!hasAdminCredentials()) {
     return null;
   }
@@ -261,6 +279,7 @@ export async function resolveAccessContext(
   req: IncomingMessage,
   res: ServerResponse
 ): Promise<AccessContext> {
+  assertPreviewNotSharingProductionFirestore();
   const dateKey = getTodayDateKey();
   const authHeader = req.headers?.authorization || (req.headers as any)?.Authorization;
 
@@ -377,6 +396,7 @@ function mergeUsageRecords(dateKey: string, records: DailyUsageRecord[]): DailyU
 }
 
 export async function getDailyQuotaStatus(ctx: AccessContext): Promise<QuotaStatus> {
+  assertPreviewNotSharingProductionFirestore();
   if (ctx.isPremium) {
     return {
       dateKey: ctx.dateKey,
@@ -414,6 +434,7 @@ export async function consumeQuestionQuota(
   questionsRemaining: number;
   alreadyAnsweredToday: boolean;
 }> {
+  assertPreviewNotSharingProductionFirestore();
   if (ctx.isPremium) {
     return {
       allowed: true,
@@ -543,6 +564,7 @@ export async function consumeSimuladoQuota(ctx: AccessContext): Promise<{
   simuladosUsed: number;
   simuladosRemaining: number;
 }> {
+  assertPreviewNotSharingProductionFirestore();
   if (ctx.isPremium) {
     return {
       allowed: true,
@@ -639,6 +661,7 @@ export async function consumeSimuladoQuota(ctx: AccessContext): Promise<{
 }
 
 export async function saveSimuladoSession(session: SimuladoSessionRecord): Promise<void> {
+  assertPreviewNotSharingProductionFirestore();
   memorySimuladoSessions.set(session.id, session);
   const db = getUsableFirestore();
   if (db) {
@@ -651,6 +674,7 @@ export async function saveSimuladoSession(session: SimuladoSessionRecord): Promi
 }
 
 export async function getSimuladoSession(sessionId: string): Promise<SimuladoSessionRecord | null> {
+  assertPreviewNotSharingProductionFirestore();
   const cleanId = sanitizeKey(sessionId);
   const db = getUsableFirestore();
   if (db) {

@@ -170,6 +170,14 @@ export function hasAdminCredentials(): boolean {
   return Boolean(saJson || (clientEmail && privateKey) || gac);
 }
 
+export function getProductionFirebaseIdentifiers(): { projectId: string; databaseId: string } {
+  const fileConfig = getConfigFromFile();
+  return {
+    projectId: String(fileConfig.projectId || DEFAULT_PROJECT_ID),
+    databaseId: String(fileConfig.firestoreDatabaseId || DEFAULT_DATABASE_ID),
+  };
+}
+
 export function getFirebaseAdminDiagnostics() {
   const saJson = cleanEnvValue(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
   const clientEmail = cleanEnvValue(process.env.FIREBASE_CLIENT_EMAIL);
@@ -184,6 +192,24 @@ export function getFirebaseAdminDiagnostics() {
     isVercel: process.env.VERCEL === '1' || Boolean(process.env.VERCEL_ENV),
     lastAdminInitError,
   };
+}
+
+export function isUsingProductionFirestore(
+  diagnostics: Pick<ReturnType<typeof getFirebaseAdminDiagnostics>, 'projectId' | 'databaseId'> = getFirebaseAdminDiagnostics()
+): boolean {
+  const prodIds = getProductionFirebaseIdentifiers();
+  return (
+    diagnostics.projectId === prodIds.projectId &&
+    diagnostics.databaseId === prodIds.databaseId
+  );
+}
+
+export function isPreviewSharingProductionFirestore(
+  diagnostics: Pick<ReturnType<typeof getFirebaseAdminDiagnostics>, 'projectId' | 'databaseId'> = getFirebaseAdminDiagnostics(),
+  vercelEnvOverride?: string
+): boolean {
+  const VERCEL_ENV = cleanEnvValue(vercelEnvOverride ?? process.env.VERCEL_ENV);
+  return VERCEL_ENV === 'preview' && isUsingProductionFirestore(diagnostics);
 }
 
 export function getFirebaseAdminApp(): App | null {

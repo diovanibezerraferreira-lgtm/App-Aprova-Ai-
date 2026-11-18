@@ -1,6 +1,26 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { verifyFirebaseUser, getAdminFirestore } from './_firebaseAdmin.js';
+import {
+  verifyFirebaseUser,
+  getAdminFirestore,
+  isPreviewSharingProductionFirestore,
+} from './_firebaseAdmin.js';
 import { getAsaasConfig, asaasFetch } from './_asaas.js';
+
+export interface SubscriptionStatusDeps {
+  verifyFirebaseUser: typeof verifyFirebaseUser;
+  getAdminFirestore: typeof getAdminFirestore;
+  isPreviewSharingProductionFirestore: typeof isPreviewSharingProductionFirestore;
+  getAsaasConfig: typeof getAsaasConfig;
+  asaasFetch: typeof asaasFetch;
+}
+
+const defaultDeps: SubscriptionStatusDeps = {
+  verifyFirebaseUser,
+  getAdminFirestore,
+  isPreviewSharingProductionFirestore,
+  getAsaasConfig,
+  asaasFetch,
+};
 
 function sendJson(res: ServerResponse, status: number, payload: any) {
   res.statusCode = status;
@@ -8,19 +28,31 @@ function sendJson(res: ServerResponse, status: number, payload: any) {
   res.end(JSON.stringify(payload));
 }
 
-export default async function handler(req: IncomingMessage, res: ServerResponse) {
+export async function handleSubscriptionStatus(
+  req: IncomingMessage,
+  res: ServerResponse,
+  deps: SubscriptionStatusDeps = defaultDeps
+) {
   if (req.method !== 'GET') {
     return sendJson(res, 405, { error: 'Método não permitido' });
   }
 
   try {
-    const user = await verifyFirebaseUser(req);
+    if (deps.isPreviewSharingProductionFirestore()) {
+      return sendJson(res, 403, {
+        blocked: true,
+        error:
+          'Consulta de assinatura bloqueada no ambiente Preview enquanto compartilhar o Firestore de produção.',
+      });
+    }
+
+    const user = await deps.verifyFirebaseUser(req);
     if (!user || !user.uid) {
       return sendJson(res, 401, { error: 'Não autorizado.' });
     }
 
-    const config = getAsaasConfig();
-    const db = getAdminFirestore();
+    const config = deps.getAsaasConfig();
+    const db = deps.getAdminFirestore();
 
     let userDocData: any = null;
     if (db) {
@@ -40,8 +72,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     if (config.isConfigured && userDocData?.subscriptionId) {
       try {
         const [sub, payments] = await Promise.all([
-          asaasFetch<any>(`/subscriptions/${userDocData.subscriptionId}`, {}, 5000),
-          asaasFetch<any>(`/subscriptions/${userDocData.subscriptionId}/payments`, {}, 5000),
+          deps.asaasFetch<any>(`/subscriptions/${userDocData.subscriptionId}`, {}, 5000),
+          deps.asaasFetch<any>(`/subscriptions/${userDocData.subscriptionId}/payments`, {}, 5000),
         ]);
         const paymentList = payments.data || [];
         const pendingPayment = paymentList.find(
@@ -79,4 +111,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       error: error.message || 'Erro ao consultar assinatura.',
     });
   }
+}
+
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
+  return handleSubscriptionStatus(req, res);
 }
