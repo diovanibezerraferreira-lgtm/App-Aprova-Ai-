@@ -176,4 +176,5 @@ export type ActiveTab =
   | 'apostilas'
   | 'desempenho'
   | 'premium'
-  | 'perfil';
+  | 'perfil'
+  | 'suporte';

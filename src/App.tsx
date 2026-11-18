@@ -18,6 +18,7 @@ import { StudyGuidesView } from './views/StudyGuidesView';
 import { PerformanceView } from './views/PerformanceView';
 import { PremiumView } from './views/PremiumView';
 import { ProfileView } from './views/ProfileView';
+import { HelpSupportView } from './views/HelpSupportView';
 
 function AppContent() {
   const {
@@ -147,6 +148,10 @@ function AppContent() {
             onOpenPremium={() => setPremiumModalOpen(true)}
             onSelectTab={setActiveTab}
           />
+        )}
+
+        {activeTab === 'suporte' && (
+          <HelpSupportView onSelectTab={setActiveTab} />
         )}
       </main>
 

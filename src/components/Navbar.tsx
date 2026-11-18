@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ActiveTab, UserProfile } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { Scale, Crown, User, Menu, X, LogOut, CheckCircle2 } from 'lucide-react';
+import { Scale, Crown, User, Menu, X, LogOut, CheckCircle2, HelpCircle } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallBanner';
 
 interface NavbarProps {
@@ -32,6 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'pecas', label: 'Peças' },
     { id: 'apostilas', label: 'Apostilas' },
     { id: 'desempenho', label: 'Desempenho' },
+    { id: 'suporte', label: 'Ajuda e Suporte' },
   ];
 
   const handleNavClick = (tab: ActiveTab) => {
@@ -55,8 +56,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full max-w-full bg-[#0B1F3A] text-white border-b border-[#D4AF37]/30 shadow-md">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 sm:h-16 gap-1.5 sm:gap-4 min-w-0">
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-5 xl:px-6">
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-4 min-w-0">
           
           {/* Zone 1: Brand Wordmark with discreet legal symbol */}
           <button
@@ -79,15 +80,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </button>
 
-          {/* Zone 2: Navigation Links (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-sm font-medium min-w-0">
+          {/* Zone 2: Navigation Links (Desktop >= 1280px) */}
+          <nav className="hidden xl:flex items-center gap-0.5 2xl:gap-1.5 text-sm font-medium shrink-0">
             {navLinks.map(link => {
               const isActive = activeTab === link.id;
               return (
                 <button
                   key={link.id}
                   onClick={() => handleNavClick(link.id)}
-                  className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap text-xs xl:text-sm ${
+                  className={`px-2 2xl:px-2.5 py-1.5 rounded-md transition-colors whitespace-nowrap shrink-0 text-xs ${
                     isActive
                       ? 'text-[#D4AF37] bg-white/10 font-semibold shadow-sm'
                       : 'text-slate-200 hover:text-white hover:bg-white/5'
@@ -158,6 +159,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                       <span>Meu Desempenho</span>
                     </button>
+                    <button
+                      onClick={() => handleNavClick('suporte')}
+                      className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                    >
+                      <HelpCircle className="w-3.5 h-3.5 text-[#0B1F3A]" />
+                      <span>Ajuda e Suporte</span>
+                    </button>
                     <div className="border-t border-slate-100 my-1" />
                     <button
                       onClick={handleLogout}
@@ -180,10 +188,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Mobile Menu Hamburger */}
+            {/* Mobile / Tablet Menu Hamburger (< 1280px) */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-1.5 sm:p-2 rounded-md text-slate-200 hover:text-white hover:bg-white/10 shrink-0"
+              className="xl:hidden p-1.5 sm:p-2 rounded-md text-slate-200 hover:text-white hover:bg-white/10 shrink-0"
               aria-label="Abrir menu de navegação"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -210,9 +218,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Mobile Dropdown Menu for all items */}
+      {/* Mobile / Tablet Dropdown Menu for all items */}
       {mobileMenuOpen && (
-        <div className="lg:hidden w-full max-w-full bg-[#071527] border-b border-[#D4AF37]/20 px-3 sm:px-4 pt-2 pb-4 space-y-1">
+        <div className="xl:hidden w-full max-w-full bg-[#071527] border-b border-[#D4AF37]/20 px-3 sm:px-4 pt-2 pb-4 space-y-1">
           <div className="grid grid-cols-2 gap-1.5 py-2">
             {navLinks.map(link => (
               <button
