@@ -1654,3 +1654,417 @@ test('Eventos antigos, fora de ordem, reembolso, chargeback e usuário gratuito 
   );
 });
 
+test('Reconciliação de pagamento Pix legado: recupera conta paga cancelada em Produção, bloqueia Sandbox/Preview/fraude/estorno/chargeback e respeita expiração', async () => {
+  const recentPaidYmd = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const expiredPaidYmd = new Date(Date.now() - 70 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  // 1. Cenário real legado: pagamento Pix confirmado em Produção, assinatura cancelada antes do commit 619773f (sem premiumUntil)
+  const legacyStore = createMemoryFirestore({
+    uid_legacy_pix: {
+      email: 'legado.pix@teste.com',
+      isPremium: false,
+      plan: 'gratuito',
+      subscriptionStatus: 'CANCELLED',
+      subscriptionId: 'sub_legacy_pix_1',
+      asaasCustomerId: 'cus_legacy_pix_1',
+      cancelledAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    uid_owner_mismatch: {
+      email: 'mismatch@teste.com',
+      isPremium: false,
+      plan: 'gratuito',
+      subscriptionStatus: 'CANCELLED',
+      subscriptionId: 'sub_mismatch_1',
+      asaasCustomerId: 'cus_shared_only',
+    },
+    uid_refund_legacy: {
+      email: 'refund.legado@teste.com',
+      isPremium: false,
+      plan: 'gratuito',
+      subscriptionStatus: 'CANCELLED',
+      subscriptionId: 'sub_refund_legado_1',
+      asaasCustomerId: 'cus_refund_legado_1',
+    },
+    uid_cb_legacy: {
+      email: 'cb.legado@teste.com',
+      isPremium: false,
+      plan: 'gratuito',
+      subscriptionStatus: 'CANCELLED',
+      subscriptionId: 'sub_cb_legado_1',
+      asaasCustomerId: 'cus_cb_legado_1',
+    },
+    uid_expired_legacy: {
+      email: 'expirado.legado@teste.com',
+      isPremium: false,
+      plan: 'gratuito',
+      subscriptionStatus: 'CANCELLED',
+      subscriptionId: 'sub_expired_legado_1',
+      asaasCustomerId: 'cus_expired_legado_1',
+    },
+  });
+
+  // Simula evento prévio de estorno/chargeback registrado no Firestore para pay_cb_fs
+  await legacyStore.db
+    .collection('processed_webhook_events')
+    .doc('pay_cb_fs_1_PAYMENT_CHARGEBACK_REQUESTED')
+    .set({ event: 'PAYMENT_CHARGEBACK_REQUESTED', paymentId: 'pay_cb_fs_1' });
+
+  const calledEndpoints: string[] = [];
+  const makeStatusDeps = (uid: string, email: string): SubscriptionStatusDeps => ({
+    isPreviewSharingProductionFirestore,
+    verifyFirebaseUser: async () => ({ uid, email, name: 'Aluno Teste' }),
+    getAdminFirestore: () => legacyStore.db,
+    getAsaasConfig,
+    asaasFetch: (async (endpoint: string) => {
+      calledEndpoints.push(endpoint);
+
+      // Legado Pix confirmado + assinatura cancelada (externalReference === uid_legacy_pix)
+      if (endpoint === '/subscriptions/sub_legacy_pix_1') {
+        return {
+          id: 'sub_legacy_pix_1',
+          customer: 'cus_legacy_pix_1',
+          status: 'INACTIVE',
+          deleted: true,
+          cycle: 'MONTHLY',
+          value: 29.9,
+          billingType: 'UNDEFINED',
+          externalReference: 'uid_legacy_pix',
+        };
+      }
+      if (endpoint === '/subscriptions/sub_legacy_pix_1/payments') {
+        return {
+          data: [
+            {
+              id: 'pay_legacy_future_pending',
+              customer: 'cus_legacy_pix_1',
+              subscription: 'sub_legacy_pix_1',
+              status: 'PENDING',
+              deleted: true,
+              value: 29.9,
+              billingType: 'PIX',
+              dueDate: recentPaidYmd,
+            },
+            {
+              id: 'pay_legacy_pix_ok',
+              customer: 'cus_legacy_pix_1',
+              subscription: 'sub_legacy_pix_1',
+              status: 'RECEIVED',
+              value: 29.9,
+              billingType: 'PIX',
+              dueDate: recentPaidYmd,
+              confirmedDate: recentPaidYmd,
+              externalReference: 'uid_legacy_pix',
+            },
+          ],
+        };
+      }
+      if (endpoint === '/payments/pay_legacy_pix_ok') {
+        return {
+          id: 'pay_legacy_pix_ok',
+          customer: 'cus_legacy_pix_1',
+          subscription: 'sub_legacy_pix_1',
+          status: 'RECEIVED',
+          value: 29.9,
+          billingType: 'PIX',
+          dueDate: recentPaidYmd,
+          confirmedDate: recentPaidYmd,
+          externalReference: 'uid_legacy_pix',
+        };
+      }
+
+      // Titularidade insuficiente (mesmo cus_shared_only, mas sem externalReference do UID)
+      if (endpoint === '/subscriptions/sub_mismatch_1') {
+        return {
+          id: 'sub_mismatch_1',
+          customer: 'cus_shared_only',
+          status: 'INACTIVE',
+          deleted: true,
+          cycle: 'MONTHLY',
+          value: 29.9,
+        };
+      }
+      if (endpoint === '/subscriptions/sub_mismatch_1/payments') {
+        return {
+          data: [
+            {
+              id: 'pay_mismatch_1',
+              customer: 'cus_shared_only',
+              subscription: 'sub_mismatch_1',
+              status: 'RECEIVED',
+              value: 29.9,
+              billingType: 'PIX',
+              dueDate: recentPaidYmd,
+              confirmedDate: recentPaidYmd,
+              externalReference: 'uid_other_person',
+            },
+          ],
+        };
+      }
+
+      // Reembolso no Asaas
+      if (endpoint === '/subscriptions/sub_refund_legado_1') {
+        return {
+          id: 'sub_refund_legado_1',
+          customer: 'cus_refund_legado_1',
+          status: 'INACTIVE',
+          deleted: true,
+          cycle: 'MONTHLY',
+          value: 29.9,
+          externalReference: 'uid_refund_legacy',
+        };
+      }
+      if (endpoint === '/subscriptions/sub_refund_legado_1/payments') {
+        return {
+          data: [
+            {
+              id: 'pay_refund_legado_1',
+              customer: 'cus_refund_legado_1',
+              subscription: 'sub_refund_legado_1',
+              status: 'REFUNDED',
+              value: 29.9,
+              billingType: 'PIX',
+              dueDate: recentPaidYmd,
+              confirmedDate: recentPaidYmd,
+              externalReference: 'uid_refund_legacy',
+            },
+          ],
+        };
+      }
+
+      // Chargeback registrado no Firestore mesmo se listagem ainda trouxer CONFIRMED
+      if (endpoint === '/subscriptions/sub_cb_legado_1') {
+        return {
+          id: 'sub_cb_legado_1',
+          customer: 'cus_cb_legado_1',
+          status: 'INACTIVE',
+          deleted: true,
+          cycle: 'MONTHLY',
+          value: 29.9,
+          externalReference: 'uid_cb_legacy',
+        };
+      }
+      if (endpoint === '/subscriptions/sub_cb_legado_1/payments') {
+        return {
+          data: [
+            {
+              id: 'pay_cb_fs_1',
+              customer: 'cus_cb_legado_1',
+              subscription: 'sub_cb_legado_1',
+              status: 'CONFIRMED',
+              value: 29.9,
+              billingType: 'CREDIT_CARD',
+              dueDate: recentPaidYmd,
+              confirmedDate: recentPaidYmd,
+              externalReference: 'uid_cb_legacy',
+            },
+          ],
+        };
+      }
+      if (endpoint === '/payments/pay_cb_fs_1') {
+        return {
+          id: 'pay_cb_fs_1',
+          customer: 'cus_cb_legado_1',
+          subscription: 'sub_cb_legado_1',
+          status: 'CONFIRMED',
+          value: 29.9,
+          billingType: 'CREDIT_CARD',
+          dueDate: recentPaidYmd,
+          confirmedDate: recentPaidYmd,
+          externalReference: 'uid_cb_legacy',
+        };
+      }
+
+      // Período pago já expirado
+      if (endpoint === '/subscriptions/sub_expired_legado_1') {
+        return {
+          id: 'sub_expired_legado_1',
+          customer: 'cus_expired_legado_1',
+          status: 'INACTIVE',
+          deleted: true,
+          cycle: 'MONTHLY',
+          value: 29.9,
+          externalReference: 'uid_expired_legacy',
+        };
+      }
+      if (endpoint === '/subscriptions/sub_expired_legado_1/payments') {
+        return {
+          data: [
+            {
+              id: 'pay_expired_legado_1',
+              customer: 'cus_expired_legado_1',
+              subscription: 'sub_expired_legado_1',
+              status: 'RECEIVED',
+              value: 29.9,
+              billingType: 'PIX',
+              dueDate: expiredPaidYmd,
+              confirmedDate: expiredPaidYmd,
+              externalReference: 'uid_expired_legacy',
+            },
+          ],
+        };
+      }
+      if (endpoint === '/payments/pay_expired_legado_1') {
+        return {
+          id: 'pay_expired_legado_1',
+          customer: 'cus_expired_legado_1',
+          subscription: 'sub_expired_legado_1',
+          status: 'RECEIVED',
+          value: 29.9,
+          billingType: 'PIX',
+          dueDate: expiredPaidYmd,
+          confirmedDate: expiredPaidYmd,
+          externalReference: 'uid_expired_legacy',
+        };
+      }
+
+      throw new Error(`Endpoint inesperado no mock: ${endpoint}`);
+    }) as typeof asaasFetch,
+  });
+
+  // A) Sandbox NÃO pode reconciliar (mesmo com sub e pagamento válidos no mock)
+  await withEnv(
+    {
+      VERCEL_ENV: undefined,
+      ASAAS_ENVIRONMENT: 'sandbox',
+      ASAAS_API_KEY: '$aact_hmlg_sandboxkey123456',
+    },
+    async () => {
+      calledEndpoints.length = 0;
+      const resSandbox = createMockRes();
+      await handleSubscriptionStatus(
+        createMockReq({ method: 'GET', headers: { authorization: 'Bearer tok_sandbox' } }),
+        resSandbox.res,
+        makeStatusDeps('uid_legacy_pix', 'legado.pix@teste.com')
+      );
+      assert.equal(resSandbox.getStatus(), 200);
+      assert.equal(resSandbox.getJson().isPremium, false);
+      assert.equal(resSandbox.getJson().reconciled, false);
+      assert.equal(calledEndpoints.includes('/payments/pay_legacy_pix_ok'), false);
+      assert.equal(legacyStore.getUser('uid_legacy_pix').isPremium, false);
+    }
+  );
+
+  // B) Preview + Firestore de produção continua retornando HTTP 403 sem chamar Asaas ou Firestore
+  await withEnv(
+    {
+      VERCEL_ENV: 'preview',
+      FIREBASE_PROJECT_ID: undefined,
+      FIRESTORE_DATABASE_ID: undefined,
+      ASAAS_ENVIRONMENT: 'sandbox',
+      ASAAS_API_KEY: '$aact_hmlg_sandboxkey123456',
+    },
+    async () => {
+      calledEndpoints.length = 0;
+      const resPreview = createMockRes();
+      await handleSubscriptionStatus(
+        createMockReq({ method: 'GET', headers: { authorization: 'Bearer tok_preview' } }),
+        resPreview.res,
+        makeStatusDeps('uid_legacy_pix', 'legado.pix@teste.com')
+      );
+      assert.equal(resPreview.getStatus(), 403);
+      assert.equal(resPreview.getJson().blocked, true);
+      assert.equal(calledEndpoints.length, 0);
+    }
+  );
+
+  // C) Produção: executa todos os cenários de reconciliação e bloqueios
+  await withEnv(
+    {
+      VERCEL_ENV: 'production',
+      ASAAS_ENVIRONMENT: 'production',
+      ASAAS_API_KEY: '$aact_prod_realkey123456',
+    },
+    async () => {
+      // C1. Pagamento Pix confirmado + assinatura cancelada -> recupera até fim do período pago
+      const expectedUntil = computePaidPeriodEndIso({
+        paymentDueDate: recentPaidYmd,
+        confirmedDate: recentPaidYmd,
+        subscriptionCycle: 'MONTHLY',
+      });
+      const resOk = createMockRes();
+      await handleSubscriptionStatus(
+        createMockReq({ method: 'GET', headers: { authorization: 'Bearer tok_legacy' } }),
+        resOk.res,
+        makeStatusDeps('uid_legacy_pix', 'legado.pix@teste.com')
+      );
+      assert.equal(resOk.getStatus(), 200);
+      assert.equal(resOk.getJson().reconciled, true);
+      assert.equal(resOk.getJson().isPremium, true);
+      assert.equal(resOk.getJson().subscriptionStatus, 'CANCELLED');
+      assert.equal(resOk.getJson().isCancelledWithActiveAccess, true);
+      assert.equal(resOk.getJson().premiumUntil, expectedUntil);
+
+      const persisted = legacyStore.getUser('uid_legacy_pix');
+      assert.equal(persisted.isPremium, true);
+      assert.equal(persisted.plan, 'premium');
+      assert.equal(persisted.subscriptionStatus, 'CANCELLED');
+      assert.equal(persisted.premiumUntil, expectedUntil);
+      assert.equal(persisted.lastConfirmedPaymentId, 'pay_legacy_pix_ok');
+
+      const accessCtx = await resolveAccessContext(
+        createMockReq({ headers: { authorization: 'Bearer tok_legacy' } }),
+        createMockRes().res,
+        {
+          verifyFirebaseUser: async () => ({
+            uid: 'uid_legacy_pix',
+            email: 'legado.pix@teste.com',
+            name: 'Aluno Legado',
+          }),
+          getFirestore: () => legacyStore.db,
+        }
+      );
+      assert.equal(accessCtx.isPremium, true);
+      assert.equal((await getDailyQuotaStatus(accessCtx)).questionsLimit, null);
+
+      // C2. Titularidade inválida (customer igual, mas externalReference divergente) -> NÃO libera
+      const resMismatch = createMockRes();
+      await handleSubscriptionStatus(
+        createMockReq({ method: 'GET', headers: { authorization: 'Bearer tok_mismatch' } }),
+        resMismatch.res,
+        makeStatusDeps('uid_owner_mismatch', 'mismatch@teste.com')
+      );
+      assert.equal(resMismatch.getStatus(), 200);
+      assert.equal(resMismatch.getJson().reconciled, false);
+      assert.equal(resMismatch.getJson().isPremium, false);
+      assert.equal(legacyStore.getUser('uid_owner_mismatch').isPremium, false);
+
+      // C3. Reembolso -> NÃO libera
+      const resRefund = createMockRes();
+      await handleSubscriptionStatus(
+        createMockReq({ method: 'GET', headers: { authorization: 'Bearer tok_refund' } }),
+        resRefund.res,
+        makeStatusDeps('uid_refund_legacy', 'refund.legado@teste.com')
+      );
+      assert.equal(resRefund.getStatus(), 200);
+      assert.equal(resRefund.getJson().reconciled, false);
+      assert.equal(resRefund.getJson().isPremium, false);
+      assert.equal(legacyStore.getUser('uid_refund_legacy').isPremium, false);
+
+      // C4. Chargeback registrado -> NÃO libera
+      const resCb = createMockRes();
+      await handleSubscriptionStatus(
+        createMockReq({ method: 'GET', headers: { authorization: 'Bearer tok_cb' } }),
+        resCb.res,
+        makeStatusDeps('uid_cb_legacy', 'cb.legado@teste.com')
+      );
+      assert.equal(resCb.getStatus(), 200);
+      assert.equal(resCb.getJson().reconciled, false);
+      assert.equal(resCb.getJson().isPremium, false);
+      assert.equal(legacyStore.getUser('uid_cb_legacy').isPremium, false);
+
+      // C5. Período pago já expirado -> NÃO libera
+      const resExpired = createMockRes();
+      await handleSubscriptionStatus(
+        createMockReq({ method: 'GET', headers: { authorization: 'Bearer tok_expired' } }),
+        resExpired.res,
+        makeStatusDeps('uid_expired_legacy', 'expirado.legado@teste.com')
+      );
+      assert.equal(resExpired.getStatus(), 200);
+      assert.equal(resExpired.getJson().reconciled, false);
+      assert.equal(resExpired.getJson().isPremium, false);
+      assert.equal(legacyStore.getUser('uid_expired_legacy').isPremium, false);
+    }
+  );
+});
+
+

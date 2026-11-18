@@ -19,6 +19,7 @@ import {
   loadUserSimuladosFromFirestore
 } from '../services/firestoreSync';
 import { UserProfile } from '../types';
+import { fetchSubscriptionStatus } from '../services/asaasService';
 import {
   getStoredProfile,
   saveStoredProfile,
@@ -78,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const hydratedUidRef = useRef<string | null>(null);
   const listenerUidRef = useRef<string | null>(null);
+  const reconciledUidRef = useRef<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -139,6 +141,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.warn('Could not attach profile listener:', listenerErr);
           }
         }
+
+        // Silent one-time server reconciliation per UID for legacy subscriptions without premiumUntil
+        if (
+          reconciledUidRef.current !== user.uid &&
+          profile.subscriptionId &&
+          profile.subscriptionStatus !== 'NONE' &&
+          !profile.premiumUntil &&
+          !isProfilePremiumActive(user, profile)
+        ) {
+          reconciledUidRef.current = user.uid;
+          fetchSubscriptionStatus()
+            .then((statusRes) => {
+              if (!isMounted) return;
+              if (statusRes.isPremium || statusRes.premiumUntil) {
+                setUserProfile((prev) => {
+                  if (!prev || prev.id !== user.uid) return prev;
+                  const nextProfile: ExtendedUserProfile = {
+                    ...prev,
+                    isPremium: statusRes.isPremium,
+                    plan: statusRes.isPremium ? 'premium' : 'gratuito',
+                    subscriptionStatus: statusRes.subscriptionStatus,
+                    premiumUntil: statusRes.premiumUntil ?? prev.premiumUntil,
+                  };
+                  saveStoredProfile(nextProfile);
+                  return nextProfile;
+                });
+              }
+            })
+            .catch(() => {});
+        }
       } catch (e) {
         console.error('Error hydrating user profile:', e);
         if (!isMounted) return;
@@ -198,6 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         hydratedUidRef.current = null;
         listenerUidRef.current = null;
+        reconciledUidRef.current = null;
         if (unsubscribeDoc) {
           unsubscribeDoc();
           unsubscribeDoc = null;
@@ -298,6 +331,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     hydratedUidRef.current = null;
     listenerUidRef.current = null;
+    reconciledUidRef.current = null;
     setCurrentUser(null);
     setUserProfile(null);
     setAuthRedirectError(null);
