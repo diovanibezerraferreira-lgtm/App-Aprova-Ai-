@@ -159,6 +159,8 @@ export interface UserProfile {
   subscriptionId?: string;
   asaasCustomerId?: string;
   subscriptionDueDate?: string;
+  premiumUntil?: string | null;
+  cancelledAt?: string | null;
   lastPaymentDate?: string;
   paymentMethod?: string;
   cpf?: string;

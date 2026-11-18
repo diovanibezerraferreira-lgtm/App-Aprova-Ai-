@@ -36,7 +36,14 @@ export const PremiumView: React.FC<PremiumViewProps> = ({
     setStatusFeedback(null);
     try {
       const res = await fetchSubscriptionStatus();
-      if (res.isPremium) {
+      if (res.isPremium && res.subscriptionStatus === 'CANCELLED' && res.premiumUntil) {
+        const untilStr = new Date(res.premiumUntil).toLocaleDateString('pt-BR', {
+          timeZone: 'America/Sao_Paulo',
+        });
+        setStatusFeedback(
+          `Assinatura cancelada (sem novas cobranças), com acesso Premium ativo até ${untilStr}.`
+        );
+      } else if (res.isPremium) {
         setStatusFeedback('Assinatura confirmada pelo Asaas! Todos os recursos Premium estão ativos.');
       } else if (res.subscriptionStatus === 'PENDING') {
         setStatusFeedback('Pagamento pendente de confirmação bancária no Asaas.');
@@ -131,18 +138,30 @@ export const PremiumView: React.FC<PremiumViewProps> = ({
             <div className="space-y-0.5 min-w-0">
               <p className="font-bold text-sm">
                 {isPremiumActive
-                  ? 'Seu Plano Premium está Ativo!'
+                  ? subStatus === 'CANCELLED'
+                    ? 'Plano Premium Ativo (Cancelamento Programado)'
+                    : 'Seu Plano Premium está Ativo!'
                   : subStatus === 'OVERDUE'
                   ? 'Assinatura com Pagamento em Atraso'
                   : 'Assinatura Aguardando Confirmação de Pagamento'}
               </p>
               <p className="text-xs opacity-90 break-words [overflow-wrap:anywhere]">
                 {isPremiumActive
-                  ? `Conta vinculada: ${currentUser.email}${
-                      userProfile?.subscriptionDueDate
-                        ? ` · Próximo vencimento: ${new Date(userProfile.subscriptionDueDate).toLocaleDateString('pt-BR')}`
-                        : ''
-                    }`
+                  ? subStatus === 'CANCELLED' && userProfile?.premiumUntil
+                    ? `Conta vinculada: ${currentUser.email} · Acesso Premium pago válido até: ${new Date(
+                        userProfile.premiumUntil
+                      ).toLocaleDateString('pt-BR', {
+                        timeZone: 'America/Sao_Paulo',
+                      })} (sem novas cobranças)`
+                    : `Conta vinculada: ${currentUser.email}${
+                        userProfile?.premiumUntil
+                          ? ` · Válido até: ${new Date(userProfile.premiumUntil).toLocaleDateString('pt-BR', {
+                              timeZone: 'America/Sao_Paulo',
+                            })}`
+                          : userProfile?.subscriptionDueDate
+                          ? ` · Próximo vencimento: ${new Date(userProfile.subscriptionDueDate).toLocaleDateString('pt-BR')}`
+                          : ''
+                      }`
                   : 'A liberação ocorre automaticamente assim que o Asaas confirmar a compensação via webhook.'}
               </p>
               {statusFeedback && <p className="text-xs font-semibold pt-1 break-words">{statusFeedback}</p>}

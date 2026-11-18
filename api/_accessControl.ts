@@ -7,6 +7,7 @@ import {
   isPreviewSharingProductionFirestore,
 } from './_firebaseAdmin.js';
 import type { Firestore } from 'firebase-admin/firestore';
+import { evaluatePremiumAccess } from './_premiumValidity.js';
 
 export const FREE_DAILY_QUESTIONS_LIMIT = 10;
 export const FREE_DAILY_SIMULADOS_LIMIT = 1;
@@ -28,6 +29,7 @@ export interface AccessContext {
   email: string | null;
   isPremium: boolean;
   subscriptionStatus: 'NONE' | 'PENDING' | 'ACTIVE' | 'OVERDUE' | 'CANCELLED';
+  premiumUntil: string | null;
   dateKey: string;
   quotaKeys: string[];
   primaryQuotaKey: string;
@@ -271,13 +273,19 @@ export async function readJsonBody(req: IncomingMessage & { body?: any }): Promi
   });
 }
 
+export interface AccessControlDeps {
+  verifyFirebaseUser?: typeof verifyFirebaseUser;
+  getFirestore?: () => Firestore | null;
+}
+
 /**
  * Resolve authenticated user + authoritative Premium status from Firestore Admin SDK.
  * Never trusts localStorage or client-supplied plan flags.
  */
 export async function resolveAccessContext(
   req: IncomingMessage,
-  res: ServerResponse
+  res: ServerResponse,
+  deps: AccessControlDeps = {}
 ): Promise<AccessContext> {
   assertPreviewNotSharingProductionFirestore();
   const dateKey = getTodayDateKey();
@@ -285,29 +293,39 @@ export async function resolveAccessContext(
 
   if (authHeader && typeof authHeader === 'string' && authHeader.trim().length > 0) {
     // Validate Firebase ID Token strictly via Admin SDK
-    const user = await verifyFirebaseUser(req);
-    const db = getUsableFirestore();
+    const verifyUserFn = deps.verifyFirebaseUser || verifyFirebaseUser;
+    const getFirestoreFn = deps.getFirestore || getUsableFirestore;
+    const user = await verifyUserFn(req);
+    const db = getFirestoreFn();
 
     let isPremium = false;
     let subscriptionStatus: AccessContext['subscriptionStatus'] = 'NONE';
+    let premiumUntil: string | null = null;
 
     if (db) {
       try {
         const userSnap = await db.collection('users').doc(user.uid).get();
         if (userSnap.exists) {
           const data = userSnap.data() || {};
-          const rawStatus = String(data.subscriptionStatus || 'NONE').toUpperCase();
-          if (
-            rawStatus === 'NONE' ||
-            rawStatus === 'PENDING' ||
-            rawStatus === 'ACTIVE' ||
-            rawStatus === 'OVERDUE' ||
-            rawStatus === 'CANCELLED'
-          ) {
-            subscriptionStatus = rawStatus;
+          const validity = evaluatePremiumAccess(data);
+          subscriptionStatus = validity.subscriptionStatus;
+          isPremium = validity.isPremium;
+          premiumUntil = validity.premiumUntil;
+
+          if (validity.isExpired && data.isPremium === true) {
+            try {
+              await db.collection('users').doc(user.uid).set(
+                {
+                  isPremium: false,
+                  plan: 'gratuito',
+                  updatedAt: new Date().toISOString(),
+                },
+                { merge: true }
+              );
+            } catch (expErr) {
+              console.warn('Aviso ao registrar expiração de Premium no Firestore:', expErr);
+            }
           }
-          // Active Premium strictly requires both isPremium === true and subscriptionStatus === 'ACTIVE'
-          isPremium = data.isPremium === true && subscriptionStatus === 'ACTIVE';
         }
       } catch (err) {
         console.warn('Aviso ao validar assinatura do usuário no Firestore Admin:', err);
@@ -322,6 +340,7 @@ export async function resolveAccessContext(
       email: user.email || null,
       isPremium,
       subscriptionStatus,
+      premiumUntil,
       dateKey,
       quotaKeys: [uidKey],
       primaryQuotaKey: uidKey,
@@ -340,6 +359,7 @@ export async function resolveAccessContext(
     email: null,
     isPremium: false,
     subscriptionStatus: 'NONE',
+    premiumUntil: null,
     dateKey,
     quotaKeys: ipKey === cidKey ? [ipKey] : [ipKey, cidKey],
     primaryQuotaKey: ipKey,

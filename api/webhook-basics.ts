@@ -11,6 +11,11 @@ import {
   type AsaasPayment,
   type AsaasSubscription,
 } from './_asaas.js';
+import {
+  computePaidPeriodEndIso,
+  parseDateTimestamp,
+  resolveFallbackPremiumUntilIso,
+} from './_premiumValidity.js';
 
 type RequestWithBody = IncomingMessage & { body?: any };
 
@@ -479,7 +484,32 @@ export async function handleWebhook(
 
       const existingUser = existingUserSnap?.exists ? existingUserSnap.data() : null;
       const incomingSubId = effectivePayment?.subscription || effectiveSubscription?.id || null;
-      const nowIso = new Date().toISOString();
+      const nowMs = Date.now();
+      const nowIso = new Date(nowMs).toISOString();
+
+      const getRetainedPaidUntil = (): string | null => {
+        if (!existingUser) return null;
+        const explicitMs = parseDateTimestamp(existingUser.premiumUntil);
+        if (explicitMs !== null) {
+          return explicitMs > nowMs ? new Date(explicitMs).toISOString() : null;
+        }
+        const fallbackIso = resolveFallbackPremiumUntilIso(existingUser);
+        const fallbackMs = parseDateTimestamp(fallbackIso);
+        return fallbackMs !== null && fallbackMs > nowMs ? fallbackIso : null;
+      };
+
+      const isStaleSubscriptionMismatch = Boolean(
+        existingUser?.subscriptionId &&
+          incomingSubId &&
+          existingUser.subscriptionId !== incomingSubId
+      );
+
+      const isCustomerMismatch = Boolean(
+        existingUser?.isPremium === true &&
+          existingUser?.asaasCustomerId &&
+          customerId &&
+          existingUser.asaasCustomerId !== customerId
+      );
 
       if (userDocRef) {
         switch (event) {
@@ -500,20 +530,64 @@ export async function handleWebhook(
               break;
             }
 
+            const thisPaymentPeriodEndIso = computePaidPeriodEndIso({
+              paymentDueDate: effectivePayment?.dueDate,
+              paymentDate: (effectivePayment as any)?.paymentDate,
+              confirmedDate: (effectivePayment as any)?.confirmedDate,
+              clientPaymentDate: (effectivePayment as any)?.clientPaymentDate,
+              subscriptionNextDueDate: effectiveSubscription?.nextDueDate,
+              subscriptionCycle: effectiveSubscription?.cycle,
+              existingPremiumUntil: null,
+              nowMs,
+            });
+            const existingPremiumUntilMs = parseDateTimestamp(existingUser?.premiumUntil);
+            const isOutdatedPayment =
+              existingPremiumUntilMs !== null &&
+              Date.parse(thisPaymentPeriodEndIso) < existingPremiumUntilMs;
+
+            const nextPremiumUntil = isOutdatedPayment
+              ? new Date(existingPremiumUntilMs!).toISOString()
+              : thisPaymentPeriodEndIso;
+
+            const keepCancelledOnSameSub =
+              existingUser?.subscriptionStatus === 'CANCELLED' &&
+              Boolean(existingUser?.cancelledAt) &&
+              Boolean(incomingSubId) &&
+              existingUser?.subscriptionId === incomingSubId;
+
+            const confirmedDateRaw =
+              (effectivePayment as any)?.confirmedDate ||
+              (effectivePayment as any)?.paymentDate ||
+              nowIso;
+
             tx.set(
               userDocRef,
               {
                 isPremium: true,
                 plan: 'premium',
-                subscriptionStatus: 'ACTIVE',
-                subscriptionId: incomingSubId || existingUser?.subscriptionId || null,
+                subscriptionStatus: keepCancelledOnSameSub ? 'CANCELLED' : 'ACTIVE',
+                ...(keepCancelledOnSameSub ? {} : { cancelledAt: null }),
+                subscriptionId: isOutdatedPayment
+                  ? existingUser?.subscriptionId || incomingSubId || null
+                  : incomingSubId || existingUser?.subscriptionId || null,
                 asaasCustomerId: customerId || existingUser?.asaasCustomerId || null,
-                subscriptionDueDate:
-                  effectivePayment?.dueDate ||
-                  effectiveSubscription?.nextDueDate ||
-                  existingUser?.subscriptionDueDate ||
-                  null,
+                subscriptionDueDate: isOutdatedPayment
+                  ? existingUser?.subscriptionDueDate ||
+                    effectivePayment?.dueDate ||
+                    effectiveSubscription?.nextDueDate ||
+                    null
+                  : effectivePayment?.dueDate ||
+                    effectiveSubscription?.nextDueDate ||
+                    existingUser?.subscriptionDueDate ||
+                    null,
+                premiumUntil: nextPremiumUntil,
                 lastPaymentDate: nowIso,
+                lastConfirmedPaymentId: isOutdatedPayment
+                  ? existingUser?.lastConfirmedPaymentId || effectivePayment?.id || null
+                  : effectivePayment?.id || existingUser?.lastConfirmedPaymentId || null,
+                lastConfirmedPaymentDate: isOutdatedPayment
+                  ? existingUser?.lastConfirmedPaymentDate || confirmedDateRaw
+                  : confirmedDateRaw,
                 paymentMethod:
                   effectivePayment?.billingType || existingUser?.paymentMethod || 'UNDEFINED',
                 updatedAt: nowIso,
@@ -534,26 +608,36 @@ export async function handleWebhook(
               break;
             }
 
-            // Do not revoke an active newer subscription due to an abandoned older subscription
-            if (
-              existingUser?.isPremium === true &&
-              existingUser?.subscriptionStatus === 'ACTIVE' &&
-              existingUser?.subscriptionId &&
-              incomingSubId &&
-              existingUser.subscriptionId !== incomingSubId
-            ) {
+            // Do not revoke an active/current subscription due to an abandoned older subscription
+            if (isStaleSubscriptionMismatch) {
               actionTaken = 'ignored_stale_subscription_overdue';
               break;
             }
 
-            if (
-              existingUser?.isPremium === true &&
-              existingUser?.subscriptionStatus === 'ACTIVE' &&
-              existingUser?.asaasCustomerId &&
-              customerId &&
-              existingUser.asaasCustomerId !== customerId
-            ) {
+            if (isCustomerMismatch && existingUser?.subscriptionStatus === 'ACTIVE') {
               actionTaken = 'ignored_customer_mismatch_overdue';
+              break;
+            }
+
+            const retainedUntil = getRetainedPaidUntil();
+            const isDifferentFromConfirmed =
+              !existingUser?.lastConfirmedPaymentId ||
+              !effectivePayment?.id ||
+              effectivePayment.id !== existingUser.lastConfirmedPaymentId;
+
+            if (retainedUntil && isDifferentFromConfirmed) {
+              tx.set(
+                userDocRef,
+                {
+                  isPremium: true,
+                  plan: 'premium',
+                  subscriptionStatus: 'OVERDUE',
+                  premiumUntil: retainedUntil,
+                  updatedAt: nowIso,
+                },
+                { merge: true }
+              );
+              actionTaken = 'subscription_overdue_access_retained';
               break;
             }
 
@@ -589,25 +673,60 @@ export async function handleWebhook(
               break;
             }
 
-            if (
-              existingUser?.isPremium === true &&
-              existingUser?.subscriptionStatus === 'ACTIVE' &&
-              existingUser?.subscriptionId &&
-              incomingSubId &&
-              existingUser.subscriptionId !== incomingSubId
-            ) {
+            if (isStaleSubscriptionMismatch) {
               actionTaken = 'ignored_stale_subscription_cancelled';
               break;
             }
 
-            if (
-              existingUser?.isPremium === true &&
-              existingUser?.subscriptionStatus === 'ACTIVE' &&
-              existingUser?.asaasCustomerId &&
-              customerId &&
-              existingUser.asaasCustomerId !== customerId
-            ) {
+            if (isCustomerMismatch && existingUser?.subscriptionStatus === 'ACTIVE') {
               actionTaken = 'ignored_customer_mismatch_cancelled';
+              break;
+            }
+
+            const isReversalEvent =
+              event === 'PAYMENT_REFUNDED' || event === 'PAYMENT_CHARGEBACK_REQUESTED';
+            const retainedUntil = getRetainedPaidUntil();
+            const isDifferentFromConfirmedPayment = Boolean(
+              existingUser?.lastConfirmedPaymentId &&
+                effectivePayment?.id &&
+                existingUser.lastConfirmedPaymentId !== effectivePayment.id
+            );
+
+            if (isReversalEvent) {
+              if (retainedUntil && isDifferentFromConfirmedPayment) {
+                actionTaken = 'ignored_non_current_payment_reversal';
+                break;
+              }
+
+              tx.set(
+                userDocRef,
+                {
+                  isPremium: false,
+                  plan: 'gratuito',
+                  subscriptionStatus: 'CANCELLED',
+                  premiumUntil: null,
+                  cancelledAt: nowIso,
+                  updatedAt: nowIso,
+                },
+                { merge: true }
+              );
+              actionTaken = 'subscription_cancelled';
+              break;
+            }
+
+            // Pending invoice deletions or failed future renewal attempts must not erase an already paid period
+            if (retainedUntil && (isDifferentFromConfirmedPayment || event === 'PAYMENT_DELETED')) {
+              tx.set(
+                userDocRef,
+                {
+                  isPremium: true,
+                  plan: 'premium',
+                  premiumUntil: retainedUntil,
+                  updatedAt: nowIso,
+                },
+                { merge: true }
+              );
+              actionTaken = 'ignored_unpaid_invoice_with_active_period';
               break;
             }
 
@@ -640,39 +759,60 @@ export async function handleWebhook(
               break;
             }
 
-            if (
-              existingUser?.isPremium === true &&
-              existingUser?.subscriptionStatus === 'ACTIVE' &&
-              existingUser?.subscriptionId &&
-              incomingSubId &&
-              existingUser.subscriptionId !== incomingSubId
-            ) {
+            if (isStaleSubscriptionMismatch) {
               actionTaken = 'ignored_stale_subscription_cancelled';
               break;
             }
 
-            if (
-              existingUser?.isPremium === true &&
-              existingUser?.subscriptionStatus === 'ACTIVE' &&
-              existingUser?.asaasCustomerId &&
-              customerId &&
-              existingUser.asaasCustomerId !== customerId
-            ) {
+            if (isCustomerMismatch && existingUser?.subscriptionStatus === 'ACTIVE') {
               actionTaken = 'ignored_customer_mismatch_cancelled';
               break;
             }
 
-            tx.set(
-              userDocRef,
-              {
-                isPremium: false,
-                plan: 'gratuito',
-                subscriptionStatus: 'CANCELLED',
-                updatedAt: nowIso,
-              },
-              { merge: true }
-            );
-            actionTaken = 'subscription_cancelled';
+            const payloadEventTimestamp = payload?.dateCreated || payload?.eventDate || null;
+            const payloadEventMs = parseDateTimestamp(payloadEventTimestamp);
+            const lastPaymentMs = parseDateTimestamp(existingUser?.lastPaymentDate);
+
+            if (
+              payloadEventMs !== null &&
+              lastPaymentMs !== null &&
+              payloadEventMs < lastPaymentMs &&
+              existingUser?.subscriptionStatus === 'ACTIVE'
+            ) {
+              actionTaken = 'ignored_outdated_cancellation_event';
+              break;
+            }
+
+            const retainedUntil = getRetainedPaidUntil();
+            if (retainedUntil) {
+              tx.set(
+                userDocRef,
+                {
+                  isPremium: true,
+                  plan: 'premium',
+                  subscriptionStatus: 'CANCELLED',
+                  premiumUntil: retainedUntil,
+                  cancelledAt: existingUser?.cancelledAt || nowIso,
+                  updatedAt: nowIso,
+                },
+                { merge: true }
+              );
+              actionTaken = 'subscription_cancelled_access_retained';
+            } else {
+              tx.set(
+                userDocRef,
+                {
+                  isPremium: false,
+                  plan: 'gratuito',
+                  subscriptionStatus: 'CANCELLED',
+                  premiumUntil: null,
+                  cancelledAt: existingUser?.cancelledAt || nowIso,
+                  updatedAt: nowIso,
+                },
+                { merge: true }
+              );
+              actionTaken = 'subscription_cancelled';
+            }
             break;
           }
 
@@ -722,7 +862,9 @@ export async function handleWebhook(
       userUpdated:
         actionTaken === 'premium_activated' ||
         actionTaken === 'subscription_overdue' ||
-        actionTaken === 'subscription_cancelled',
+        actionTaken === 'subscription_overdue_access_retained' ||
+        actionTaken === 'subscription_cancelled' ||
+        actionTaken === 'subscription_cancelled_access_retained',
     });
   } catch (error: any) {
     console.error('Erro ao processar webhook do Asaas:', error);

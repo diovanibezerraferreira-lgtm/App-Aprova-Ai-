@@ -199,8 +199,22 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                       : userProfile.subscriptionStatus === 'PENDING'
                       ? 'Aguardando pagamento'
                       : userProfile.subscriptionStatus === 'OVERDUE'
-                      ? 'Pagamento em atraso'
+                      ? isPremiumActive
+                        ? 'Em atraso (período pago ativo)'
+                        : 'Pagamento em atraso'
+                      : isPremiumActive
+                      ? 'Cancelada (acesso mantido)'
                       : 'Cancelada'}
+                  </span>
+                </div>
+              )}
+              {isPremiumActive && userProfile?.premiumUntil && (
+                <div className="flex flex-wrap items-center justify-between gap-1.5">
+                  <span className="text-slate-400">Premium válido até:</span>
+                  <span className="font-semibold text-slate-800">
+                    {new Date(userProfile.premiumUntil).toLocaleDateString('pt-BR', {
+                      timeZone: 'America/Sao_Paulo',
+                    })}
                   </span>
                 </div>
               )}
@@ -225,7 +239,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
               {isPremiumActive
-                ? 'Sua assinatura Premium Aprova Direito (R$ 29,90/mês) está ativa com acesso total liberado.'
+                ? userProfile?.subscriptionStatus === 'CANCELLED' && userProfile?.premiumUntil
+                  ? `Sua renovação automática foi cancelada, mas seu acesso Premium segue ativo até ${new Date(
+                      userProfile.premiumUntil
+                    ).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}.`
+                  : 'Sua assinatura Premium Aprova Direito (R$ 29,90/mês) está ativa com acesso total liberado.'
                 : 'Você está utilizando o plano gratuito. Desbloqueie simulados ilimitados e banco ampliado com o Premium.'}
             </p>
             <button

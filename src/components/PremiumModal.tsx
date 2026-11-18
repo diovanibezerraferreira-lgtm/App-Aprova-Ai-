@@ -141,7 +141,14 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
       if (status.latestCheckoutUrl && !checkoutUrl) {
         setCheckoutUrl(status.latestCheckoutUrl);
       }
-      if (status.isPremium) {
+      if (status.isPremium && status.subscriptionStatus === 'CANCELLED' && status.premiumUntil) {
+        const untilStr = new Date(status.premiumUntil).toLocaleDateString('pt-BR', {
+          timeZone: 'America/Sao_Paulo',
+        });
+        setStatusNotice(
+          `Assinatura cancelada (sem novas cobranças). Seu acesso Premium continua liberado até ${untilStr}.`
+        );
+      } else if (status.isPremium) {
         setStatusNotice('Pagamento confirmado pelo Asaas! Seu Plano Premium já está ativo.');
       } else if (status.subscriptionStatus === 'PENDING') {
         setStatusNotice(
@@ -220,14 +227,29 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
               <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                 <div className="space-y-1 min-w-0">
-                  <p className="font-bold text-sm text-emerald-900">Assinatura Confirmada</p>
-                  <p className="leading-relaxed text-emerald-800 break-words [overflow-wrap:anywhere]">
-                    Todos os recursos Premium do Aprova Direito estão liberados para sua conta ({currentUser?.email || userEmail}).
+                  <p className="font-bold text-sm text-emerald-900">
+                    {subStatus === 'CANCELLED'
+                      ? 'Acesso Premium Ativo (Assinatura Cancelada)'
+                      : 'Assinatura Confirmada'}
                   </p>
-                  {userProfile?.subscriptionDueDate && (
+                  <p className="leading-relaxed text-emerald-800 break-words [overflow-wrap:anywhere]">
+                    {subStatus === 'CANCELLED'
+                      ? `Não haverá novas cobranças, mas todos os recursos Premium continuam liberados para sua conta (${currentUser?.email || userEmail}) até o término do período pago.`
+                      : `Todos os recursos Premium do Aprova Direito estão liberados para sua conta (${currentUser?.email || userEmail}).`}
+                  </p>
+                  {userProfile?.premiumUntil ? (
                     <p className="text-[11px] font-medium pt-1">
-                      Próximo vencimento: {new Date(userProfile.subscriptionDueDate).toLocaleDateString('pt-BR')}
+                      Válido até:{' '}
+                      {new Date(userProfile.premiumUntil).toLocaleDateString('pt-BR', {
+                        timeZone: 'America/Sao_Paulo',
+                      })}
                     </p>
+                  ) : (
+                    userProfile?.subscriptionDueDate && (
+                      <p className="text-[11px] font-medium pt-1">
+                        Próximo vencimento: {new Date(userProfile.subscriptionDueDate).toLocaleDateString('pt-BR')}
+                      </p>
+                    )
                   )}
                 </div>
               </div>

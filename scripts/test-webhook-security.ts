@@ -28,7 +28,13 @@ import {
   consumeSimuladoQuota,
   saveSimuladoSession,
   getSimuladoSession,
+  FREE_DAILY_QUESTIONS_LIMIT,
+  FREE_DAILY_SIMULADOS_LIMIT,
 } from '../api/_accessControl.ts';
+import {
+  computePaidPeriodEndIso,
+  evaluatePremiumAccess,
+} from '../api/_premiumValidity.ts';
 import questionsHandler from '../api/questions.ts';
 import simuladosHandler from '../api/simulados.ts';
 import materialsHandler from '../api/materials.ts';
@@ -1035,6 +1041,7 @@ test('api/_accessControl.ts e endpoints Freemium retornam HTTP 403 no Preview + 
     email: null,
     isPremium: false,
     subscriptionStatus: 'NONE' as const,
+    premiumUntil: null,
     dateKey: '2026-11-18',
     quotaKeys: ['2026-11-18_ip_test'],
     primaryQuotaKey: '2026-11-18_ip_test',
@@ -1113,3 +1120,537 @@ test('api/_accessControl.ts e endpoints Freemium retornam HTTP 403 no Preview + 
     );
   }
 });
+
+test('Validade do Premium: Pix confirmado mantém acesso até premiumUntil mesmo após cancelamento, expira ao vencer e renova em novo pagamento', async () => {
+  const store = createMemoryFirestore({
+    uid_pix_user: {
+      email: 'pix@teste.com',
+      isPremium: false,
+      plan: 'gratuito',
+      subscriptionStatus: 'NONE',
+    },
+  });
+
+  let currentPayment: any = null;
+  let currentSub: any = null;
+
+  const webhookDeps: WebhookDeps = {
+    getAdminFirestore: () => store.db,
+    getFirebaseAdminDiagnostics: () => ({
+      projectId: PROD_PROJECT_ID,
+      databaseId: PROD_DATABASE_ID,
+      hasServiceAccountJson: true,
+      hasClientEmail: true,
+      hasPrivateKey: true,
+      isVercel: true,
+      lastAdminInitError: null,
+    }),
+    getAsaasConfig,
+    asaasFetch,
+    fetchAsaasPaymentById: async () => currentPayment,
+    fetchAsaasSubscriptionById: async () => currentSub,
+  };
+
+  const statusDeps: SubscriptionStatusDeps = {
+    isPreviewSharingProductionFirestore,
+    verifyFirebaseUser: async () => ({
+      uid: 'uid_pix_user',
+      email: 'pix@teste.com',
+      name: 'Aluno Pix Teste',
+    }),
+    getAdminFirestore: () => store.db,
+    getAsaasConfig,
+    asaasFetch: (async () => ({})) as typeof asaasFetch,
+  };
+
+  const accessDeps = {
+    verifyFirebaseUser: async () => ({
+      uid: 'uid_pix_user',
+      email: 'pix@teste.com',
+      name: 'Aluno Pix Teste',
+    }),
+    getFirestore: () => store.db,
+  };
+
+  await withEnv(
+    {
+      VERCEL_ENV: 'production',
+      ASAAS_ENVIRONMENT: 'production',
+      ASAAS_API_KEY: '$aact_prod_realkey123456',
+      ASAAS_WEBHOOK_TOKEN: 'whsec_prod_secret',
+    },
+    async () => {
+      // 1. Pagamento Pix confirmado: ativa Premium até o fim do ciclo mensal pago (dueDate + 1 mês)
+      const expectedFirstUntil = computePaidPeriodEndIso({
+        paymentDueDate: '2026-11-18',
+        confirmedDate: '2026-11-18',
+      });
+      currentPayment = {
+        id: 'pay_pix_1',
+        customer: 'cus_pix_1',
+        subscription: 'sub_pix_1',
+        value: 29.9,
+        status: 'RECEIVED',
+        billingType: 'PIX',
+        dueDate: '2026-11-18',
+        confirmedDate: '2026-11-18',
+        externalReference: 'uid_pix_user',
+      };
+
+      const resPay1 = createMockRes();
+      await handleWebhook(
+        createMockReq({
+          headers: { 'asaas-access-token': 'whsec_prod_secret' },
+          body: {
+            id: 'evt_pix_1',
+            event: 'PAYMENT_RECEIVED',
+            payment: { id: 'pay_pix_1' },
+          },
+        }),
+        resPay1.res,
+        webhookDeps
+      );
+      assert.equal(resPay1.getStatus(), 200);
+      assert.equal(resPay1.getJson().actionTaken, 'premium_activated');
+
+      let userDoc = store.getUser('uid_pix_user');
+      assert.equal(userDoc.isPremium, true);
+      assert.equal(userDoc.subscriptionStatus, 'ACTIVE');
+      assert.equal(userDoc.premiumUntil, expectedFirstUntil);
+
+      let ctx = await resolveAccessContext(
+        createMockReq({ headers: { authorization: 'Bearer tok_pix' } }),
+        createMockRes().res,
+        accessDeps
+      );
+      assert.equal(ctx.isPremium, true);
+      assert.equal(ctx.premiumUntil, expectedFirstUntil);
+
+      // 2. Assinatura cancelada no Asaas antes do vencimento + exclusão da fatura futura pendente
+      currentSub = {
+        id: 'sub_pix_1',
+        customer: 'cus_pix_1',
+        value: 29.9,
+        nextDueDate: '2026-12-18',
+        cycle: 'MONTHLY',
+        billingType: 'UNDEFINED',
+        status: 'INACTIVE',
+        deleted: true,
+        externalReference: 'uid_pix_user',
+      };
+
+      const resCancel = createMockRes();
+      await handleWebhook(
+        createMockReq({
+          headers: { 'asaas-access-token': 'whsec_prod_secret' },
+          body: {
+            id: 'evt_sub_del_pix',
+            event: 'SUBSCRIPTION_DELETED',
+            subscription: { id: 'sub_pix_1' },
+          },
+        }),
+        resCancel.res,
+        webhookDeps
+      );
+      assert.equal(resCancel.getStatus(), 200);
+      assert.equal(resCancel.getJson().actionTaken, 'subscription_cancelled_access_retained');
+
+      // Asaas também costuma enviar PAYMENT_DELETED para a próxima cobrança futura ao excluir assinatura
+      currentPayment = {
+        id: 'pay_pix_future_2',
+        customer: 'cus_pix_1',
+        subscription: 'sub_pix_1',
+        value: 29.9,
+        status: 'PENDING',
+        deleted: true,
+        billingType: 'PIX',
+        dueDate: '2026-12-18',
+        externalReference: 'uid_pix_user',
+      };
+      const resFutureDeleted = createMockRes();
+      await handleWebhook(
+        createMockReq({
+          headers: { 'asaas-access-token': 'whsec_prod_secret' },
+          body: {
+            id: 'evt_future_pay_del',
+            event: 'PAYMENT_DELETED',
+            payment: { id: 'pay_pix_future_2' },
+          },
+        }),
+        resFutureDeleted.res,
+        webhookDeps
+      );
+      assert.equal(resFutureDeleted.getStatus(), 200);
+      assert.equal(
+        resFutureDeleted.getJson().actionTaken,
+        'ignored_unpaid_invoice_with_active_period'
+      );
+
+      // Usuário segue com Premium ativo no servidor (accessControl + subscription-status), com status CANCELLED
+      userDoc = store.getUser('uid_pix_user');
+      assert.equal(userDoc.isPremium, true);
+      assert.equal(userDoc.plan, 'premium');
+      assert.equal(userDoc.subscriptionStatus, 'CANCELLED');
+      assert.equal(userDoc.premiumUntil, expectedFirstUntil);
+
+      ctx = await resolveAccessContext(
+        createMockReq({ headers: { authorization: 'Bearer tok_pix' } }),
+        createMockRes().res,
+        accessDeps
+      );
+      assert.equal(ctx.isPremium, true);
+      assert.equal(ctx.subscriptionStatus, 'CANCELLED');
+      assert.equal((await getDailyQuotaStatus(ctx)).questionsLimit, null);
+
+      const resStatus = createMockRes();
+      await handleSubscriptionStatus(
+        createMockReq({ method: 'GET', headers: { authorization: 'Bearer tok_pix' } }),
+        resStatus.res,
+        statusDeps
+      );
+      assert.equal(resStatus.getStatus(), 200);
+      assert.equal(resStatus.getJson().isPremium, true);
+      assert.equal(resStatus.getJson().subscriptionStatus, 'CANCELLED');
+      assert.equal(resStatus.getJson().isCancelledWithActiveAccess, true);
+      assert.equal(resStatus.getJson().premiumUntil, expectedFirstUntil);
+
+      // 3. Data de validade atingida sem novo pagamento -> Premium é removido no servidor
+      const pastUntil = '2026-11-10T23:59:59.999Z';
+      await store.db
+        .collection('users')
+        .doc('uid_pix_user')
+        .set({ premiumUntil: pastUntil }, { merge: true });
+
+      const evaluatedExpired = evaluatePremiumAccess(store.getUser('uid_pix_user'));
+      assert.equal(evaluatedExpired.isPremium, false);
+      assert.equal(evaluatedExpired.isExpired, true);
+
+      ctx = await resolveAccessContext(
+        createMockReq({ headers: { authorization: 'Bearer tok_pix' } }),
+        createMockRes().res,
+        accessDeps
+      );
+      assert.equal(ctx.isPremium, false);
+      assert.equal(store.getUser('uid_pix_user').isPremium, false);
+      assert.equal(store.getUser('uid_pix_user').plan, 'gratuito');
+
+      const expiredQuota = await getDailyQuotaStatus(ctx);
+      assert.equal(expiredQuota.questionsLimit, FREE_DAILY_QUESTIONS_LIMIT);
+      assert.equal(expiredQuota.simuladosLimit, FREE_DAILY_SIMULADOS_LIMIT);
+
+      const resExpiredStatus = createMockRes();
+      await handleSubscriptionStatus(
+        createMockReq({ method: 'GET', headers: { authorization: 'Bearer tok_pix' } }),
+        resExpiredStatus.res,
+        statusDeps
+      );
+      assert.equal(resExpiredStatus.getStatus(), 200);
+      assert.equal(resExpiredStatus.getJson().isPremium, false);
+
+      // 4. Novo pagamento confirmado -> validade é renovada
+      const expectedRenewedUntil = computePaidPeriodEndIso({
+        paymentDueDate: '2026-12-18',
+        confirmedDate: '2026-12-18',
+      });
+      currentPayment = {
+        id: 'pay_pix_renew_2',
+        customer: 'cus_pix_1',
+        subscription: 'sub_pix_2',
+        value: 29.9,
+        status: 'CONFIRMED',
+        billingType: 'PIX',
+        dueDate: '2026-12-18',
+        confirmedDate: '2026-12-18',
+        externalReference: 'uid_pix_user',
+      };
+
+      const resRenew = createMockRes();
+      await handleWebhook(
+        createMockReq({
+          headers: { 'asaas-access-token': 'whsec_prod_secret' },
+          body: {
+            id: 'evt_pix_renew_2',
+            event: 'PAYMENT_CONFIRMED',
+            payment: { id: 'pay_pix_renew_2' },
+          },
+        }),
+        resRenew.res,
+        webhookDeps
+      );
+      assert.equal(resRenew.getStatus(), 200);
+      assert.equal(resRenew.getJson().actionTaken, 'premium_activated');
+
+      userDoc = store.getUser('uid_pix_user');
+      assert.equal(userDoc.isPremium, true);
+      assert.equal(userDoc.subscriptionStatus, 'ACTIVE');
+      assert.equal(userDoc.subscriptionId, 'sub_pix_2');
+      assert.equal(userDoc.premiumUntil, expectedRenewedUntil);
+
+      ctx = await resolveAccessContext(
+        createMockReq({ headers: { authorization: 'Bearer tok_pix' } }),
+        createMockRes().res,
+        accessDeps
+      );
+      assert.equal(ctx.isPremium, true);
+      assert.equal(ctx.premiumUntil, expectedRenewedUntil);
+    }
+  );
+});
+
+test('Eventos antigos, fora de ordem, reembolso, chargeback e usuário gratuito respeitam regras de validade e limites', async () => {
+  const futureRenewedUntil = '2027-01-20T02:59:59.999Z';
+  const store = createMemoryFirestore({
+    uid_order_test: {
+      email: 'ordem@teste.com',
+      isPremium: true,
+      plan: 'premium',
+      subscriptionStatus: 'ACTIVE',
+      subscriptionId: 'sub_current',
+      asaasCustomerId: 'cus_order_1',
+      premiumUntil: futureRenewedUntil,
+      lastPaymentDate: '2026-11-18T12:00:00.000Z',
+      lastConfirmedPaymentId: 'pay_current_2',
+    },
+    uid_refund_test: {
+      email: 'reembolso@teste.com',
+      isPremium: true,
+      plan: 'premium',
+      subscriptionStatus: 'ACTIVE',
+      subscriptionId: 'sub_refund_1',
+      asaasCustomerId: 'cus_refund_1',
+      premiumUntil: futureRenewedUntil,
+      lastPaymentDate: '2026-11-18T12:00:00.000Z',
+      lastConfirmedPaymentId: 'pay_refund_target',
+    },
+    uid_chargeback_test: {
+      email: 'chargeback@teste.com',
+      isPremium: true,
+      plan: 'premium',
+      subscriptionStatus: 'ACTIVE',
+      subscriptionId: 'sub_cb_1',
+      asaasCustomerId: 'cus_cb_1',
+      premiumUntil: futureRenewedUntil,
+      lastPaymentDate: '2026-11-18T12:00:00.000Z',
+      lastConfirmedPaymentId: 'pay_cb_target',
+    },
+    uid_free_user: {
+      email: 'free@teste.com',
+      isPremium: false,
+      plan: 'gratuito',
+      subscriptionStatus: 'NONE',
+    },
+  });
+
+  let currentPayment: any = null;
+  let currentSub: any = null;
+
+  const webhookDeps: WebhookDeps = {
+    getAdminFirestore: () => store.db,
+    getFirebaseAdminDiagnostics: () => ({
+      projectId: PROD_PROJECT_ID,
+      databaseId: PROD_DATABASE_ID,
+      hasServiceAccountJson: true,
+      hasClientEmail: true,
+      hasPrivateKey: true,
+      isVercel: true,
+      lastAdminInitError: null,
+    }),
+    getAsaasConfig,
+    asaasFetch,
+    fetchAsaasPaymentById: async () => currentPayment,
+    fetchAsaasSubscriptionById: async () => currentSub,
+  };
+
+  await withEnv(
+    {
+      VERCEL_ENV: 'production',
+      ASAAS_ENVIRONMENT: 'production',
+      ASAAS_API_KEY: '$aact_prod_realkey123456',
+      ASAAS_WEBHOOK_TOKEN: 'whsec_prod_secret',
+    },
+    async () => {
+      // 1. Evento antigo de cancelamento (dateCreated anterior ao último pagamento) não cancela nem apaga período pago
+      currentSub = {
+        id: 'sub_current',
+        customer: 'cus_order_1',
+        value: 29.9,
+        nextDueDate: '2027-01-20',
+        cycle: 'MONTHLY',
+        billingType: 'PIX',
+        status: 'INACTIVE',
+        deleted: true,
+        externalReference: 'uid_order_test',
+      };
+      const resOldCancel = createMockRes();
+      await handleWebhook(
+        createMockReq({
+          headers: { 'asaas-access-token': 'whsec_prod_secret' },
+          body: {
+            id: 'evt_old_cancel',
+            event: 'SUBSCRIPTION_INACTIVATED',
+            dateCreated: '2026-11-17T10:00:00.000Z',
+            subscription: { id: 'sub_current' },
+          },
+        }),
+        resOldCancel.res,
+        webhookDeps
+      );
+      assert.equal(resOldCancel.getStatus(), 200);
+      assert.equal(resOldCancel.getJson().actionTaken, 'ignored_outdated_cancellation_event');
+      assert.equal(store.getUser('uid_order_test').isPremium, true);
+      assert.equal(store.getUser('uid_order_test').subscriptionStatus, 'ACTIVE');
+      assert.equal(store.getUser('uid_order_test').premiumUntil, futureRenewedUntil);
+
+      // 2. Confirmação atrasada de um pagamento anterior nunca reduz premiumUntil já concedido
+      currentPayment = {
+        id: 'pay_older_1',
+        customer: 'cus_order_1',
+        subscription: 'sub_current',
+        value: 29.9,
+        status: 'RECEIVED',
+        billingType: 'PIX',
+        dueDate: '2026-10-20',
+        confirmedDate: '2026-10-20',
+        externalReference: 'uid_order_test',
+      };
+      const resDelayedPay = createMockRes();
+      await handleWebhook(
+        createMockReq({
+          headers: { 'asaas-access-token': 'whsec_prod_secret' },
+          body: {
+            id: 'evt_delayed_pay_1',
+            event: 'PAYMENT_RECEIVED',
+            payment: { id: 'pay_older_1' },
+          },
+        }),
+        resDelayedPay.res,
+        webhookDeps
+      );
+      assert.equal(resDelayedPay.getStatus(), 200);
+      assert.equal(store.getUser('uid_order_test').premiumUntil, futureRenewedUntil);
+      assert.equal(store.getUser('uid_order_test').lastConfirmedPaymentId, 'pay_current_2');
+
+      // 3. Reembolso de pagamento anterior diferente não remove o período pago pela cobrança atual
+      currentPayment = {
+        id: 'pay_older_1',
+        customer: 'cus_order_1',
+        subscription: 'sub_current',
+        value: 29.9,
+        status: 'REFUNDED',
+        billingType: 'PIX',
+        dueDate: '2026-10-20',
+        externalReference: 'uid_order_test',
+      };
+      const resOldRefund = createMockRes();
+      await handleWebhook(
+        createMockReq({
+          headers: { 'asaas-access-token': 'whsec_prod_secret' },
+          body: {
+            id: 'evt_old_refund',
+            event: 'PAYMENT_REFUNDED',
+            payment: { id: 'pay_older_1' },
+          },
+        }),
+        resOldRefund.res,
+        webhookDeps
+      );
+      assert.equal(resOldRefund.getStatus(), 200);
+      assert.equal(resOldRefund.getJson().actionTaken, 'ignored_non_current_payment_reversal');
+      assert.equal(store.getUser('uid_order_test').isPremium, true);
+      assert.equal(store.getUser('uid_order_test').premiumUntil, futureRenewedUntil);
+
+      // 4. Reembolso confirmado da cobrança atual revoga imediatamente
+      currentPayment = {
+        id: 'pay_refund_target',
+        customer: 'cus_refund_1',
+        subscription: 'sub_refund_1',
+        value: 29.9,
+        status: 'REFUNDED',
+        billingType: 'PIX',
+        dueDate: '2026-11-18',
+        externalReference: 'uid_refund_test',
+      };
+      const resRealRefund = createMockRes();
+      await handleWebhook(
+        createMockReq({
+          headers: { 'asaas-access-token': 'whsec_prod_secret' },
+          body: {
+            id: 'evt_real_refund',
+            event: 'PAYMENT_REFUNDED',
+            payment: { id: 'pay_refund_target' },
+          },
+        }),
+        resRealRefund.res,
+        webhookDeps
+      );
+      assert.equal(resRealRefund.getStatus(), 200);
+      assert.equal(resRealRefund.getJson().actionTaken, 'subscription_cancelled');
+      assert.equal(store.getUser('uid_refund_test').isPremium, false);
+      assert.equal(store.getUser('uid_refund_test').plan, 'gratuito');
+      assert.equal(store.getUser('uid_refund_test').subscriptionStatus, 'CANCELLED');
+      assert.equal(store.getUser('uid_refund_test').premiumUntil, null);
+
+      // 4b. Chargeback confirmado da cobrança atual também revoga imediatamente
+      currentPayment = {
+        id: 'pay_cb_target',
+        customer: 'cus_cb_1',
+        subscription: 'sub_cb_1',
+        value: 29.9,
+        status: 'CHARGEBACK_REQUESTED',
+        billingType: 'CREDIT_CARD',
+        dueDate: '2026-11-18',
+        externalReference: 'uid_chargeback_test',
+      };
+      const resChargeback = createMockRes();
+      await handleWebhook(
+        createMockReq({
+          headers: { 'asaas-access-token': 'whsec_prod_secret' },
+          body: {
+            id: 'evt_real_chargeback',
+            event: 'PAYMENT_CHARGEBACK_REQUESTED',
+            payment: { id: 'pay_cb_target' },
+          },
+        }),
+        resChargeback.res,
+        webhookDeps
+      );
+      assert.equal(resChargeback.getStatus(), 200);
+      assert.equal(resChargeback.getJson().actionTaken, 'subscription_cancelled');
+      assert.equal(store.getUser('uid_chargeback_test').isPremium, false);
+      assert.equal(store.getUser('uid_chargeback_test').plan, 'gratuito');
+      assert.equal(store.getUser('uid_chargeback_test').subscriptionStatus, 'CANCELLED');
+      assert.equal(store.getUser('uid_chargeback_test').premiumUntil, null);
+
+      // 5. Usuário gratuito segue respeitando exatamente os limites atuais (10 questões e 1 simulado por dia)
+      const freeCtx = await resolveAccessContext(
+        createMockReq({ headers: { authorization: 'Bearer tok_free' } }),
+        createMockRes().res,
+        {
+          verifyFirebaseUser: async () => ({
+            uid: 'uid_free_user',
+            email: 'free@teste.com',
+            name: 'Aluno Gratuito',
+          }),
+          getFirestore: () => store.db,
+        }
+      );
+      assert.equal(freeCtx.isPremium, false);
+      const freeQuota = await getDailyQuotaStatus(freeCtx);
+      assert.equal(freeQuota.questionsLimit, FREE_DAILY_QUESTIONS_LIMIT);
+      assert.equal(freeQuota.simuladosLimit, FREE_DAILY_SIMULADOS_LIMIT);
+
+      for (let i = 1; i <= FREE_DAILY_QUESTIONS_LIMIT; i++) {
+        const qRes = await consumeQuestionQuota(freeCtx, `q_free_${i}`);
+        assert.equal(qRes.allowed, true);
+      }
+      const blockedQ = await consumeQuestionQuota(freeCtx, 'q_free_11');
+      assert.equal(blockedQ.allowed, false);
+
+      const sim1 = await consumeSimuladoQuota(freeCtx);
+      assert.equal(sim1.allowed, true);
+      const sim2 = await consumeSimuladoQuota(freeCtx);
+      assert.equal(sim2.allowed, false);
+    }
+  );
+});
+

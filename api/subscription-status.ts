@@ -5,6 +5,7 @@ import {
   isPreviewSharingProductionFirestore,
 } from './_firebaseAdmin.js';
 import { getAsaasConfig, asaasFetch } from './_asaas.js';
+import { evaluatePremiumAccess } from './_premiumValidity.js';
 
 export interface SubscriptionStatusDeps {
   verifyFirebaseUser: typeof verifyFirebaseUser;
@@ -94,9 +95,28 @@ export async function handleSubscriptionStatus(
       }
     }
 
+    const validity = evaluatePremiumAccess(userDocData);
+
+    if (db && validity.isExpired && userDocData?.isPremium === true) {
+      try {
+        await db.collection('users').doc(user.uid).set(
+          {
+            isPremium: false,
+            plan: 'gratuito',
+            updatedAt: new Date().toISOString(),
+          },
+          { merge: true }
+        );
+      } catch (expErr) {
+        console.warn('Aviso ao persistir expiração de Premium em subscription-status:', expErr);
+      }
+    }
+
     return sendJson(res, 200, {
-      isPremium: !!userDocData?.isPremium,
-      subscriptionStatus: userDocData?.subscriptionStatus || 'NONE',
+      isPremium: validity.isPremium,
+      subscriptionStatus: validity.subscriptionStatus,
+      premiumUntil: validity.premiumUntil,
+      isCancelledWithActiveAccess: validity.isCancelledWithActiveAccess,
       subscriptionId: userDocData?.subscriptionId || null,
       asaasCustomerId: userDocData?.asaasCustomerId || null,
       subscriptionDueDate: userDocData?.subscriptionDueDate || null,

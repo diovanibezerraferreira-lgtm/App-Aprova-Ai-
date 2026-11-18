@@ -53,7 +53,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function isProfilePremiumActive(user: User | null, profile: ExtendedUserProfile | null): boolean {
   if (!user || !profile) return false;
-  return profile.isPremium === true && profile.subscriptionStatus === 'ACTIVE';
+  const status = String(profile.subscriptionStatus || 'NONE').toUpperCase();
+  if (status === 'NONE') return false;
+
+  if (profile.premiumUntil) {
+    const untilMs = /^\d{4}-\d{2}-\d{2}$/.test(profile.premiumUntil.trim())
+      ? Date.parse(`${profile.premiumUntil.trim()}T23:59:59.999-03:00`)
+      : Date.parse(profile.premiumUntil);
+    if (!Number.isNaN(untilMs)) {
+      return profile.isPremium === true && untilMs > Date.now();
+    }
+  }
+
+  return profile.isPremium === true && status === 'ACTIVE';
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

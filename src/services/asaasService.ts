@@ -14,6 +14,8 @@ export interface CreateSubscriptionResponse {
 export interface SubscriptionStatusResponse {
   isPremium: boolean;
   subscriptionStatus: 'NONE' | 'PENDING' | 'ACTIVE' | 'OVERDUE' | 'CANCELLED';
+  premiumUntil?: string | null;
+  isCancelledWithActiveAccess?: boolean;
   subscriptionId?: string | null;
   asaasCustomerId?: string | null;
   subscriptionDueDate?: string | null;

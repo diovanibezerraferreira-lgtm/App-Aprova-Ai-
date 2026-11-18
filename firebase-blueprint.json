@@ -56,11 +56,27 @@
         },
         "subscriptionDueDate": {
           "type": "string",
-          "description": "Data de vencimento da próxima fatura"
+          "description": "Data de vencimento da fatura ou assinatura"
+        },
+        "premiumUntil": {
+          "type": "string",
+          "description": "Timestamp ISO de validade do acesso Premium efetivamente pago"
+        },
+        "cancelledAt": {
+          "type": "string",
+          "description": "Timestamp ISO do cancelamento da assinatura recorrente"
         },
         "lastPaymentDate": {
           "type": "string",
           "description": "Data do último pagamento confirmado"
+        },
+        "lastConfirmedPaymentId": {
+          "type": "string",
+          "description": "Identificador da última cobrança confirmada no Asaas"
+        },
+        "lastConfirmedPaymentDate": {
+          "type": "string",
+          "description": "Data de confirmação da última cobrança paga"
         },
         "paymentMethod": {
           "type": "string",
