@@ -1,6 +1,6 @@
 /**
  * Helper client for Asaas v3 API
- * Supports both Sandbox (https://sandbox.asaas.com/api/v3) and Production (https://api.asaas.com/api/v3)
+ * Supports both Sandbox (https://api-sandbox.asaas.com/v3) and Production (https://api.asaas.com/v3)
  */
 
 export interface AsaasCustomer {
@@ -100,8 +100,8 @@ export function getAsaasConfig() {
   const env = isExactProduction ? 'production' : 'sandbox';
   const isProduction = isExactProduction && !envError;
   const baseUrl = isProduction
-    ? 'https://api.asaas.com/api/v3'
-    : 'https://sandbox.asaas.com/api/v3';
+    ? 'https://api.asaas.com/v3'
+    : 'https://api-sandbox.asaas.com/v3';
   const webhookToken = cleanSecret(process.env.ASAAS_WEBHOOK_TOKEN);
   const isPlaceholder = /^(my_|your_|sua_|seu_|placeholder|test|xxx)/i.test(apiKey);
   const envMismatch = Boolean(

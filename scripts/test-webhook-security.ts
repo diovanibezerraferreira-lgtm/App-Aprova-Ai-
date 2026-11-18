@@ -185,7 +185,7 @@ test('api/_asaas.ts compara VERCEL_ENV e ASAAS_ENVIRONMENT com valores literais 
       assert.equal(cfg.isProduction, true);
       assert.equal(cfg.envError, null);
       assert.equal(cfg.envMismatch, false);
-      assert.equal(cfg.baseUrl, 'https://api.asaas.com/api/v3');
+      assert.equal(cfg.baseUrl, 'https://api.asaas.com/v3');
     }
   );
 
@@ -203,7 +203,7 @@ test('api/_asaas.ts compara VERCEL_ENV e ASAAS_ENVIRONMENT com valores literais 
       assert.equal(cfg.isProduction, false);
       assert.equal(cfg.envError, null);
       assert.equal(cfg.envMismatch, false);
-      assert.equal(cfg.baseUrl, 'https://sandbox.asaas.com/api/v3');
+      assert.equal(cfg.baseUrl, 'https://api-sandbox.asaas.com/v3');
     }
   );
 
@@ -387,7 +387,7 @@ test('VERCEL_ENV === "preview" compartilhando Firestore de produção bloqueia w
   );
 });
 
-test('Em Produção, consulta GET https://api.asaas.com/api/v3/payments/{id} com fetch real e rejeita pagamento Sandbox (404 -> 403)', async () => {
+test('Em Produção, consulta GET https://api.asaas.com/v3/payments/{id} com fetch real e rejeita pagamento Sandbox (404 -> 403)', async () => {
   const store = createMemoryFirestore({
     uid_real: { email: 'real@teste.com', isPremium: false, plan: 'gratuito' },
   });
@@ -478,7 +478,7 @@ test('Em Produção, consulta GET https://api.asaas.com/api/v3/payments/{id} com
         assert.equal(store.getUser('uid_real').isPremium, false);
         assert.equal(
           capturedRequests[0].url,
-          'https://api.asaas.com/api/v3/payments/pay_sandbox_fake_in_prod'
+          'https://api.asaas.com/v3/payments/pay_sandbox_fake_in_prod'
         );
         assert.equal(capturedRequests[0].method, 'GET');
         assert.equal(capturedRequests[0].accessToken, '$aact_prod_realkey123456');
@@ -507,7 +507,7 @@ test('Em Produção, consulta GET https://api.asaas.com/api/v3/payments/{id} com
         assert.equal(store.getUser('uid_real').subscriptionStatus, 'ACTIVE');
         assert.equal(
           capturedRequests[1].url,
-          'https://api.asaas.com/api/v3/payments/pay_prod_real_confirmed'
+          'https://api.asaas.com/v3/payments/pay_prod_real_confirmed'
         );
         assert.equal(capturedRequests[1].method, 'GET');
       }
