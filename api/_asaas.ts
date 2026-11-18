@@ -20,6 +20,7 @@ export interface AsaasSubscription {
   description?: string;
   billingType: 'UNDEFINED' | 'CREDIT_CARD' | 'BOLETO' | 'PIX';
   status: string;
+  deleted?: boolean;
   externalReference?: string;
 }
 
@@ -30,6 +31,7 @@ export interface AsaasPayment {
   value: number;
   netValue?: number;
   status: string;
+  deleted?: boolean;
   billingType: string;
   invoiceUrl?: string;
   bankSlipUrl?: string;
@@ -79,21 +81,42 @@ function detectAsaasKeyEnvironment(apiKey: string): 'sandbox' | 'production' | n
 
 export function getAsaasConfig() {
   const apiKey = normalizeAsaasApiKey(process.env.ASAAS_API_KEY);
-  const rawEnv = cleanSecret(process.env.ASAAS_ENVIRONMENT).toLowerCase();
+  const ASAAS_ENVIRONMENT = cleanSecret(process.env.ASAAS_ENVIRONMENT);
+  const VERCEL_ENV = cleanSecret(process.env.VERCEL_ENV);
   const keyEnv = detectAsaasKeyEnvironment(apiKey);
-  const env = rawEnv || keyEnv || 'sandbox';
-  const isProduction = env === 'production';
+
+  const isExactProduction = ASAAS_ENVIRONMENT === 'production';
+  const isExactSandbox = ASAAS_ENVIRONMENT === 'sandbox';
+  const isDefaultLocalSandbox = ASAAS_ENVIRONMENT === '' && VERCEL_ENV !== 'production';
+
+  let envError: string | null = null;
+  if (VERCEL_ENV === 'production' && ASAAS_ENVIRONMENT !== 'production') {
+    envError =
+      'Em produção (VERCEL_ENV === "production"), ASAAS_ENVIRONMENT deve ser exatamente igual a "production".';
+  } else if (!isExactProduction && !isExactSandbox && !isDefaultLocalSandbox) {
+    envError = `Valor inválido para ASAAS_ENVIRONMENT ("${ASAAS_ENVIRONMENT}"). Utilize exatamente "production" ou "sandbox".`;
+  }
+
+  const env = isExactProduction ? 'production' : 'sandbox';
+  const isProduction = isExactProduction && !envError;
   const baseUrl = isProduction
     ? 'https://api.asaas.com/api/v3'
     : 'https://sandbox.asaas.com/api/v3';
   const webhookToken = cleanSecret(process.env.ASAAS_WEBHOOK_TOKEN);
   const isPlaceholder = /^(my_|your_|sua_|seu_|placeholder|test|xxx)/i.test(apiKey);
+  const envMismatch = Boolean(
+    (isExactProduction && keyEnv === 'sandbox') ||
+      (!isExactProduction && keyEnv === 'production')
+  );
 
   return {
     apiKey,
+    rawEnvExact: ASAAS_ENVIRONMENT,
+    vercelEnv: VERCEL_ENV,
     env,
     keyEnv,
-    envMismatch: Boolean(rawEnv && keyEnv && rawEnv !== keyEnv),
+    envError,
+    envMismatch,
     isProduction,
     baseUrl,
     webhookToken,
@@ -110,7 +133,14 @@ export async function asaasFetch<T>(
   options: RequestInit = {},
   timeoutMs: number = 8000
 ): Promise<T> {
-  const { apiKey, env, keyEnv, envMismatch, baseUrl, isConfigured } = getAsaasConfig();
+  const { apiKey, env, keyEnv, envError, envMismatch, baseUrl, isConfigured } = getAsaasConfig();
+
+  if (envError) {
+    const envCfgErr = new Error(envError);
+    (envCfgErr as any).status = 500;
+    (envCfgErr as any).setupNeeded = true;
+    throw envCfgErr;
+  }
 
   if (!isConfigured) {
     const cfgErr = new Error('ASAAS_API_KEY não configurada ou com valor de exemplo no servidor.');
@@ -363,4 +393,23 @@ export async function createMonthlySubscription(params: {
     subscription,
     invoiceUrl,
   };
+}
+
+/**
+ * Fetch a payment directly from the active server-configured Asaas API environment
+ * to confirm existence, ownership and real settlement status.
+ */
+export async function fetchAsaasPaymentById(paymentId: string): Promise<AsaasPayment> {
+  const cleanId = encodeURIComponent(String(paymentId || '').trim());
+  return asaasFetch<AsaasPayment>(`/payments/${cleanId}`, { method: 'GET' }, 5000);
+}
+
+/**
+ * Fetch a subscription directly from the active server-configured Asaas API environment.
+ */
+export async function fetchAsaasSubscriptionById(
+  subscriptionId: string
+): Promise<AsaasSubscription> {
+  const cleanId = encodeURIComponent(String(subscriptionId || '').trim());
+  return asaasFetch<AsaasSubscription>(`/subscriptions/${cleanId}`, { method: 'GET' }, 5000);
 }
