@@ -240,6 +240,153 @@ export function buildGeminiContents(params: {
   return contents;
 }
 
+export interface SanitizedSdkErrorDiagnostic {
+  origin: 'local_abort_timeout' | 'sdk_api_error' | 'network_or_abort' | 'unknown';
+  localTimedOut: boolean;
+  abortSignalAborted: boolean;
+  errorName: string | null;
+  httpStatus: number | null;
+  errorCode: string | null;
+  causeCode: string | null;
+  googleCode: number | null;
+  googleStatus: string | null;
+  googleMessage: string | null;
+}
+
+export function sanitizeDiagnosticText(raw: unknown, maxLen = 240): string | null {
+  if (typeof raw !== 'string') return null;
+  const cleaned = raw
+    // Redact Google API keys (e.g. AIza...)
+    .replace(/AIza[0-9A-Za-z_-]{10,}/g, '[REDACTED_KEY]')
+    // Redact query parameters carrying secrets
+    .replace(/([?&](?:key|api_key|apikey|token|access_token)=)[^&\s"'}\]]+/gi, '$1[REDACTED]')
+    // Redact key/header assignments
+    .replace(
+      /((?:api[_-]?key|x-goog-api-key|authorization)\s*[:=]\s*)(?:Bearer\s+)?[^\s"',}\]]+/gi,
+      '$1[REDACTED]'
+    )
+    // Redact Bearer tokens
+    .replace(/Bearer\s+[A-Za-z0-9._~+/=-]{8,}/gi, 'Bearer [REDACTED_TOKEN]')
+    // Redact JWT tokens
+    .replace(/\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g, '[REDACTED_JWT]')
+    // Redact e-mail addresses
+    .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[REDACTED_EMAIL]')
+    // Redact CPF patterns
+    .replace(/\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g, '[REDACTED_CPF]')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!cleaned) return null;
+  return cleaned.length > maxLen ? `${cleaned.slice(0, maxLen)}...` : cleaned;
+}
+
+function parseGoogleApiErrorPayload(rawMessage: string): {
+  googleCode: number | null;
+  googleStatus: string | null;
+  googleMessage: string | null;
+} {
+  const trimmed = rawMessage.trim();
+  let candidateJson: string | null = null;
+
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    candidateJson = trimmed;
+  } else {
+    const startIdx = trimmed.indexOf('{');
+    const endIdx = trimmed.lastIndexOf('}');
+    if (startIdx !== -1 && endIdx > startIdx) {
+      candidateJson = trimmed.slice(startIdx, endIdx + 1);
+    }
+  }
+
+  if (candidateJson) {
+    try {
+      const parsed = JSON.parse(candidateJson);
+      const errObj = parsed && typeof parsed.error === 'object' ? parsed.error : parsed;
+      if (errObj && typeof errObj === 'object') {
+        const googleCode =
+          typeof errObj.code === 'number' && Number.isFinite(errObj.code) ? errObj.code : null;
+        const googleStatus =
+          typeof errObj.status === 'string' ? sanitizeDiagnosticText(errObj.status, 64) : null;
+        const googleMessage =
+          typeof errObj.message === 'string'
+            ? sanitizeDiagnosticText(errObj.message, 240)
+            : sanitizeDiagnosticText(trimmed, 240);
+        if (googleCode !== null || googleStatus !== null || googleMessage !== null) {
+          return { googleCode, googleStatus, googleMessage };
+        }
+      }
+    } catch {
+      // Fallback to sanitized raw message below
+    }
+  }
+
+  return {
+    googleCode: null,
+    googleStatus: null,
+    googleMessage: sanitizeDiagnosticText(trimmed, 240),
+  };
+}
+
+/**
+ * Extracts strictly technical, sanitized diagnostic fields from a GoogleGenAI SDK error.
+ * Never includes API keys, tokens, question content, answers, or personal data.
+ */
+export function extractSanitizedSdkError(
+  err: any,
+  context: { localTimedOut?: boolean; abortSignalAborted?: boolean } = {}
+): SanitizedSdkErrorDiagnostic {
+  const localTimedOut = Boolean(context.localTimedOut);
+  const abortSignalAborted = Boolean(context.abortSignalAborted);
+
+  const errorName =
+    typeof err?.name === 'string' ? sanitizeDiagnosticText(err.name, 64) : null;
+
+  const rawStatus = Number(err?.status ?? err?.statusCode ?? 0);
+  const httpStatus = Number.isFinite(rawStatus) && rawStatus > 0 ? rawStatus : null;
+
+  const errorCode =
+    typeof err?.code === 'string' || typeof err?.code === 'number'
+      ? sanitizeDiagnosticText(String(err.code), 64)
+      : null;
+
+  const rawCauseCode = err?.cause?.code ?? err?.cause?.name ?? null;
+  const causeCode =
+    typeof rawCauseCode === 'string' || typeof rawCauseCode === 'number'
+      ? sanitizeDiagnosticText(String(rawCauseCode), 64)
+      : null;
+
+  const rawMessage = typeof err?.message === 'string' ? err.message : '';
+  const { googleCode, googleStatus, googleMessage } = parseGoogleApiErrorPayload(rawMessage);
+
+  let origin: SanitizedSdkErrorDiagnostic['origin'] = 'unknown';
+  if (localTimedOut) {
+    origin = 'local_abort_timeout';
+  } else if (errorName === 'ApiError' || httpStatus !== null || googleStatus !== null) {
+    origin = 'sdk_api_error';
+  } else if (
+    errorName === 'AbortError' ||
+    errorName === 'TimeoutError' ||
+    errorName === 'TypeError' ||
+    errorCode !== null ||
+    causeCode !== null
+  ) {
+    origin = 'network_or_abort';
+  }
+
+  return {
+    origin,
+    localTimedOut,
+    abortSignalAborted,
+    errorName,
+    httpStatus,
+    errorCode,
+    causeCode,
+    googleCode,
+    googleStatus,
+    googleMessage,
+  };
+}
+
 export function isTimeoutGeminiError(err: any): boolean {
   const code = String(err?.code || '').toUpperCase();
   const name = String(err?.name || '').toUpperCase();
@@ -361,11 +508,25 @@ export function createDefaultGeminiGenerator(
         },
       };
     } catch (err: any) {
+      const sdkDiagnostic = extractSanitizedSdkError(err, {
+        localTimedOut: timedOut,
+        abortSignalAborted: controller.signal.aborted,
+      });
+
       if (timedOut || isTimeoutGeminiError(err)) {
         const timeoutErr: any = new Error('Tempo limite excedido ao aguardar o provedor de IA.');
         timeoutErr.code = 'AI_TIMEOUT';
         timeoutErr.status = 504;
+        timeoutErr.sdkDiagnostic = sdkDiagnostic;
         throw timeoutErr;
+      }
+
+      if (err && typeof err === 'object') {
+        try {
+          err.sdkDiagnostic = sdkDiagnostic;
+        } catch {
+          // ignore non-extensible error objects
+        }
       }
       throw err;
     } finally {

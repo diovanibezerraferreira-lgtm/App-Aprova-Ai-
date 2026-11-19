@@ -13,6 +13,7 @@ import {
   buildAiTutorSystemInstruction,
   buildGeminiContents,
   createDefaultGeminiGenerator,
+  extractSanitizedSdkError,
   getAiTutorLimits,
   isTimeoutGeminiError,
   resolveGeminiModel,
@@ -422,9 +423,22 @@ export async function handleAiTutor(
   } catch (err: any) {
     const elapsedMs = Date.now() - aiStartMs;
     const mapped = mapAiProviderError(err);
+    const sdkDiagnostic =
+      err?.sdkDiagnostic && typeof err.sdkDiagnostic === 'object'
+        ? err.sdkDiagnostic
+        : extractSanitizedSdkError(err);
+
     console.error(
-      `Erro no Professor Virtual IA (model=${model}, code=${mapped.code}, status=${err?.status ?? err?.statusCode ?? 'n/a'}, elapsedMs=${elapsedMs})`
+      JSON.stringify({
+        event: 'ai_tutor_provider_error',
+        model,
+        mappedCode: mapped.code,
+        mappedHttpStatus: mapped.status,
+        elapsedMs,
+        sdk: sdkDiagnostic,
+      })
     );
+
     return sendJson(res, mapped.status, {
       error: mapped.code,
       message: mapped.message,

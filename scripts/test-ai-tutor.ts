@@ -14,8 +14,10 @@ import {
   GEMINI_REQUEST_TIMEOUT_MS,
   buildThinkingConfigForModel,
   createDefaultGeminiGenerator,
+  extractSanitizedSdkError,
   getAiTutorLimits,
   resolveGeminiModel,
+  sanitizeDiagnosticText,
   type AiTutorGenerateFn,
 } from '../api/_aiTutorEngine.js';
 import { MOCK_QUESTIONS } from '../api/_data/questions.js';
@@ -918,4 +920,227 @@ test('13. QuestionAiTutorPanel garante cancelamento, AbortController no unmount 
     source.includes('REQUEST_ABORTED'),
     'Painel deve tratar cancelamento sem manter estado preso'
   );
+});
+
+test('14. Diagnóstico preserva erro original do SDK (DEADLINE_EXCEEDED, 404, 429, 403 e causa de rede) mesmo quando convertido em AI_TIMEOUT', async () => {
+  // 14A: Server-side 504 DEADLINE_EXCEEDED ApiError before local abort timer
+  const serverDeadlineGen = createDefaultGeminiGenerator('test-secret-key', {
+    timeoutMs: 5_000,
+    clientFactory: () => ({
+      models: {
+        async generateContent() {
+          const apiErr: any = new Error(
+            JSON.stringify({
+              error: {
+                code: 504,
+                message: 'Deadline expired before operation could complete.',
+                status: 'DEADLINE_EXCEEDED',
+              },
+            })
+          );
+          apiErr.name = 'ApiError';
+          apiErr.status = 504;
+          throw apiErr;
+        },
+      },
+    }),
+  });
+
+  await assert.rejects(
+    () =>
+      serverDeadlineGen({
+        model: DEFAULT_GEMINI_MODEL,
+        systemInstruction: 'sys',
+        contents: [{ role: 'user', parts: [{ text: 'hi' }] }],
+      }),
+    (err: any) => {
+      assert.equal(err.code, 'AI_TIMEOUT');
+      assert.equal(err.status, 504);
+      assert.equal(err.sdkDiagnostic.origin, 'sdk_api_error');
+      assert.equal(err.sdkDiagnostic.localTimedOut, false);
+      assert.equal(err.sdkDiagnostic.abortSignalAborted, false);
+      assert.equal(err.sdkDiagnostic.errorName, 'ApiError');
+      assert.equal(err.sdkDiagnostic.httpStatus, 504);
+      assert.equal(err.sdkDiagnostic.googleCode, 504);
+      assert.equal(err.sdkDiagnostic.googleStatus, 'DEADLINE_EXCEEDED');
+      assert.equal(
+        err.sdkDiagnostic.googleMessage,
+        'Deadline expired before operation could complete.'
+      );
+      return true;
+    }
+  );
+
+  // 14B: Local AbortController timeout distinguishes localTimedOut=true
+  const localTimeoutGen = createDefaultGeminiGenerator('test-secret-key', {
+    timeoutMs: 60,
+    clientFactory: () => ({
+      models: {
+        generateContent(params: any) {
+          return new Promise((_resolve, reject) => {
+            params?.config?.abortSignal?.addEventListener(
+              'abort',
+              () => {
+                const abortErr: any = new Error('The operation was aborted');
+                abortErr.name = 'AbortError';
+                reject(abortErr);
+              },
+              { once: true }
+            );
+          });
+        },
+      },
+    }),
+  });
+
+  await assert.rejects(
+    () =>
+      localTimeoutGen({
+        model: DEFAULT_GEMINI_MODEL,
+        systemInstruction: 'sys',
+        contents: [{ role: 'user', parts: [{ text: 'hi' }] }],
+      }),
+    (err: any) => {
+      assert.equal(err.code, 'AI_TIMEOUT');
+      assert.equal(err.sdkDiagnostic.origin, 'local_abort_timeout');
+      assert.equal(err.sdkDiagnostic.localTimedOut, true);
+      assert.equal(err.sdkDiagnostic.abortSignalAborted, true);
+      assert.equal(err.sdkDiagnostic.errorName, 'AbortError');
+      return true;
+    }
+  );
+
+  // 14C: Network error with Undici causeCode & 404/429 ApiError metadata
+  const netErr: any = new TypeError('fetch failed');
+  netErr.cause = { code: 'UND_ERR_CONNECT_TIMEOUT' };
+  const netDiag = extractSanitizedSdkError(netErr);
+  assert.equal(netDiag.origin, 'network_or_abort');
+  assert.equal(netDiag.causeCode, 'UND_ERR_CONNECT_TIMEOUT');
+
+  const notFoundErr: any = new Error(
+    JSON.stringify({
+      error: {
+        code: 404,
+        message: 'models/gemini-3.1-flash-lite is not found for API version v1beta',
+        status: 'NOT_FOUND',
+      },
+    })
+  );
+  notFoundErr.name = 'ApiError';
+  notFoundErr.status = 404;
+  const nfDiag = extractSanitizedSdkError(notFoundErr);
+  assert.equal(nfDiag.origin, 'sdk_api_error');
+  assert.equal(nfDiag.httpStatus, 404);
+  assert.equal(nfDiag.googleCode, 404);
+  assert.equal(nfDiag.googleStatus, 'NOT_FOUND');
+});
+
+test('15. Sanitização de logs bloqueia chaves, tokens, JWT, e-mails, CPF, conteúdo da questão e dados pessoais', async () => {
+  const secretKey = 'AIzaSyTestSecretKey9876543210ABCDE';
+  const fakeBearer = 'Bearer ya29.superSecretAccessToken123456';
+  const fakeJwt = 'eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1aWQtc2VjcmV0In0.signaturePayloadXYZ123';
+  const personalEmail = 'aluno.privado@aprovadireito.com.br';
+  const personalCpf = '123.456.789-00';
+  const secretStudentPrompt = 'FRASE_CONFIDENCIAL_DO_ALUNO_998877';
+
+  // Direct unit check on sanitizeDiagnosticText
+  const sanitizedSample = sanitizeDiagnosticText(
+    `Request failed for ${personalEmail} CPF ${personalCpf} ?key=${secretKey} ${fakeBearer} jwt=${fakeJwt} x-goog-api-key: ${secretKey}`
+  )!;
+  assert.ok(!sanitizedSample.includes(secretKey));
+  assert.ok(!sanitizedSample.includes('ya29.superSecretAccessToken'));
+  assert.ok(!sanitizedSample.includes('eyJhbGciOiJSUzI1NiJ9'));
+  assert.ok(!sanitizedSample.includes(personalEmail));
+  assert.ok(!sanitizedSample.includes(personalCpf));
+  assert.ok(sanitizedSample.includes('[REDACTED_EMAIL]'));
+  assert.ok(sanitizedSample.includes('[REDACTED_CPF]'));
+
+  // End-to-end log capture through handleAiTutor
+  const { db, users } = createMockFirestore({
+    users: {
+      'uid-secret-student-42': {
+        profile: { isPremium: false, email: personalEmail },
+        ai_tutor_usage: {
+          [DATE_KEY]: { dateKey: DATE_KEY, count: 1, planType: 'free' },
+        },
+      },
+    },
+  });
+
+  const leakyErrorGen = createDefaultGeminiGenerator(secretKey, {
+    timeoutMs: 5_000,
+    clientFactory: () => ({
+      models: {
+        async generateContent() {
+          const apiErr: any = new Error(
+            JSON.stringify({
+              error: {
+                code: 403,
+                status: 'PERMISSION_DENIED',
+                message: `API key ${secretKey} rejected for ${personalEmail} (?key=${secretKey}) ${fakeBearer} CPF ${personalCpf}`,
+              },
+            })
+          );
+          apiErr.name = 'ApiError';
+          apiErr.status = 403;
+          throw apiErr;
+        },
+      },
+    }),
+  });
+
+  const capturedLogs: string[] = [];
+  const originalConsoleError = console.error;
+  console.error = (...args: any[]) => {
+    capturedLogs.push(args.map((a) => String(a)).join(' '));
+  };
+
+  try {
+    const { res, state } = createMockRes();
+    await handleAiTutor(
+      createMockReq('POST'),
+      res,
+      makeDeps({
+        uid: 'uid-secret-student-42',
+        db,
+        body: {
+          questionId: PENAL_QUESTION.id,
+          message: secretStudentPrompt,
+          history: [],
+        },
+        generateAiAnswer: leakyErrorGen,
+      })
+    );
+
+    assert.equal(state.statusCode, 503);
+    const responseBody = JSON.parse(state.body);
+    assert.equal(responseBody.sdkDiagnostic, undefined, 'Resposta HTTP não deve expor sdkDiagnostic');
+    assert.equal(responseBody.sdk, undefined, 'Resposta HTTP não deve expor sdk');
+    assert.equal(users.get('uid-secret-student-42')!.ai_tutor_usage[DATE_KEY].count, 1);
+
+    assert.equal(capturedLogs.length, 1);
+    const rawLog = capturedLogs[0];
+    const parsedLog = JSON.parse(rawLog);
+
+    assert.equal(parsedLog.event, 'ai_tutor_provider_error');
+    assert.equal(parsedLog.model, DEFAULT_GEMINI_MODEL);
+    assert.equal(parsedLog.mappedCode, 'AI_PROVIDER_AUTH_ERROR');
+    assert.equal(parsedLog.mappedHttpStatus, 503);
+    assert.equal(parsedLog.sdk.origin, 'sdk_api_error');
+    assert.equal(parsedLog.sdk.httpStatus, 403);
+    assert.equal(parsedLog.sdk.googleCode, 403);
+    assert.equal(parsedLog.sdk.googleStatus, 'PERMISSION_DENIED');
+
+    // Strict non-leakage assertions on serialized log
+    assert.ok(!rawLog.includes(secretKey), 'Log nunca pode conter GEMINI_API_KEY');
+    assert.ok(!rawLog.includes('ya29.superSecretAccessToken'), 'Log nunca pode conter Bearer token');
+    assert.ok(!rawLog.includes(personalEmail), 'Log nunca pode conter e-mail pessoal');
+    assert.ok(!rawLog.includes(personalCpf), 'Log nunca pode conter CPF');
+    assert.ok(!rawLog.includes('uid-secret-student-42'), 'Log nunca pode conter UID do aluno');
+    assert.ok(!rawLog.includes(secretStudentPrompt), 'Log nunca pode conter pergunta do aluno');
+    assert.ok(!rawLog.includes(PENAL_QUESTION.statement), 'Log nunca pode conter enunciado da questão');
+    assert.ok(!rawLog.includes(PENAL_QUESTION.explanation), 'Log nunca pode conter explicação oficial');
+  } finally {
+    console.error = originalConsoleError;
+  }
 });
