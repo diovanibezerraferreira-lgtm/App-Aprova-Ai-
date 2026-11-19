@@ -3,7 +3,9 @@ import type { Question } from '../src/types/index.js';
 
 export const DEFAULT_FREE_AI_DAILY_LIMIT = 3;
 export const DEFAULT_PREMIUM_AI_DAILY_LIMIT = 30;
-export const DEFAULT_GEMINI_MODEL = 'gemini-4-hydrogen';
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.1-flash-lite';
+
+export const GEMINI_REQUEST_TIMEOUT_MS = 18_000;
 
 export const MAX_QUESTION_PROMPT_LENGTH = 600;
 export const MAX_HISTORY_MESSAGES = 6;
@@ -73,6 +75,19 @@ export function resolveGeminiModel(env: NodeJS.ProcessEnv = process.env): string
     return DEFAULT_GEMINI_MODEL;
   }
   return configured;
+}
+
+export function buildThinkingConfigForModel(
+  model: string
+): { thinkingLevel: ThinkingLevel } | undefined {
+  const normalized = model.trim().toLowerCase();
+  if (normalized === 'gemini-3.1-flash-lite' || (normalized.startsWith('gemini-3') && normalized.includes('lite'))) {
+    return { thinkingLevel: ThinkingLevel.MINIMAL };
+  }
+  if (normalized.startsWith('gemini-4') || normalized.startsWith('gemini-3')) {
+    return { thinkingLevel: ThinkingLevel.LOW };
+  }
+  return undefined;
 }
 
 export function sanitizeUserMessage(raw: unknown): string {
@@ -225,26 +240,60 @@ export function buildGeminiContents(params: {
   return contents;
 }
 
-function isRetryableGeminiError(err: any): boolean {
+export function isTimeoutGeminiError(err: any): boolean {
+  const code = String(err?.code || '').toUpperCase();
+  const name = String(err?.name || '').toUpperCase();
   const status = Number(err?.status ?? err?.statusCode ?? 0);
-  if (status === 500 || status === 502 || status === 503 || status === 504) return true;
   const msg = String(err?.message || '').toUpperCase();
   return (
-    msg.includes('UNAVAILABLE') ||
+    code === 'AI_TIMEOUT' ||
+    code === 'ETIMEDOUT' ||
+    code === 'ECONNABORTED' ||
+    name === 'ABORTERROR' ||
+    name === 'TIMEOUTERROR' ||
+    status === 408 ||
+    status === 504 ||
     msg.includes('DEADLINE_EXCEEDED') ||
-    msg.includes('ECONNRESET') ||
-    msg.includes('ETIMEDOUT') ||
-    msg.includes('FETCH FAILED')
+    msg.includes('TIMED OUT') ||
+    msg.includes('TIMEOUT') ||
+    msg.includes('ABORTED')
   );
+}
+
+export interface GeminiGeneratorOptions {
+  timeoutMs?: number;
+  clientFactory?: (config: {
+    apiKey: string;
+    httpOptions: {
+      timeout: number;
+      retryOptions: { attempts: number };
+      headers: Record<string, string>;
+    };
+  }) => {
+    models: {
+      generateContent: (params: any) => Promise<{
+        text?: string;
+        usageMetadata?: any;
+      }>;
+    };
+  };
 }
 
 /**
  * Creates a server-side Gemini generator using @google/genai.
+ * Enforces explicit request timeout and disables both SDK and manual retries
+ * so every consultation performs at most 1 bounded call to Gemini.
  * Never exposes GEMINI_API_KEY outside server runtime.
  */
 export function createDefaultGeminiGenerator(
-  apiKey: string | undefined = process.env.GEMINI_API_KEY
+  apiKey: string | undefined = process.env.GEMINI_API_KEY,
+  options: GeminiGeneratorOptions = {}
 ): AiTutorGenerateFn {
+  const timeoutMs = Math.max(
+    50,
+    Math.min(25_000, Math.floor(options.timeoutMs ?? GEMINI_REQUEST_TIMEOUT_MS))
+  );
+
   return async ({ model, systemInstruction, contents }) => {
     const cleanKey = (apiKey || '').trim();
     if (!cleanKey || cleanKey === 'MY_GEMINI_API_KEY') {
@@ -254,60 +303,73 @@ export function createDefaultGeminiGenerator(
       throw err;
     }
 
-    const ai = new GoogleGenAI({
+    const clientConfig = {
       apiKey: cleanKey,
       httpOptions: {
+        timeout: timeoutMs,
+        retryOptions: {
+          attempts: 1,
+        },
         headers: {
           'User-Agent': 'aistudio-build',
         },
       },
-    });
+    };
 
-    let lastErr: any = null;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const response = await ai.models.generateContent({
-          model,
-          contents,
-          config: {
-            systemInstruction,
-            thinkingConfig: {
-              thinkingLevel: ThinkingLevel.LOW,
-            },
-          },
-        });
+    const ai = options.clientFactory
+      ? options.clientFactory(clientConfig)
+      : new GoogleGenAI(clientConfig);
 
-        const text = (response.text || '').trim();
-        if (!text) {
-          const emptyErr: any = new Error('O provedor de IA retornou uma resposta vazia.');
-          emptyErr.code = 'AI_EMPTY_RESPONSE';
-          emptyErr.status = 502;
-          throw emptyErr;
-        }
+    const thinkingConfig = buildThinkingConfigForModel(model);
+    const controller = new AbortController();
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, timeoutMs);
 
-        const meta: any = response.usageMetadata || {};
-        return {
-          answer: text,
-          model,
-          usage: {
-            inputTokens:
-              typeof meta.promptTokenCount === 'number' ? meta.promptTokenCount : null,
-            outputTokens:
-              typeof meta.candidatesTokenCount === 'number' ? meta.candidatesTokenCount : null,
-            totalTokens:
-              typeof meta.totalTokenCount === 'number' ? meta.totalTokenCount : null,
-          },
-        };
-      } catch (err: any) {
-        lastErr = err;
-        if (attempt === 0 && isRetryableGeminiError(err)) {
-          await new Promise((resolve) => setTimeout(resolve, 450));
-          continue;
-        }
-        throw err;
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents,
+        config: {
+          systemInstruction,
+          abortSignal: controller.signal,
+          ...(thinkingConfig ? { thinkingConfig } : {}),
+        },
+      });
+
+      const text = (response.text || '').trim();
+      if (!text) {
+        const emptyErr: any = new Error('O provedor de IA retornou uma resposta vazia.');
+        emptyErr.code = 'AI_EMPTY_RESPONSE';
+        emptyErr.status = 502;
+        throw emptyErr;
       }
-    }
 
-    throw lastErr;
+      const meta: any = response.usageMetadata || {};
+      return {
+        answer: text,
+        model,
+        usage: {
+          inputTokens:
+            typeof meta.promptTokenCount === 'number' ? meta.promptTokenCount : null,
+          outputTokens:
+            typeof meta.candidatesTokenCount === 'number' ? meta.candidatesTokenCount : null,
+          totalTokens:
+            typeof meta.totalTokenCount === 'number' ? meta.totalTokenCount : null,
+        },
+      };
+    } catch (err: any) {
+      if (timedOut || isTimeoutGeminiError(err)) {
+        const timeoutErr: any = new Error('Tempo limite excedido ao aguardar o provedor de IA.');
+        timeoutErr.code = 'AI_TIMEOUT';
+        timeoutErr.status = 504;
+        throw timeoutErr;
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
   };
 }

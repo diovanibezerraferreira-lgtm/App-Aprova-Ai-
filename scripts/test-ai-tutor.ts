@@ -1,18 +1,37 @@
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'http';
+import { ThinkingLevel } from '@google/genai';
+import { terminate } from 'firebase/firestore';
+import { deleteApp, getApps } from 'firebase/app';
 import { handleAiTutor, type AiTutorDeps } from '../api/ai-tutor.js';
 import {
   DEFAULT_FREE_AI_DAILY_LIMIT,
   DEFAULT_PREMIUM_AI_DAILY_LIMIT,
   DEFAULT_GEMINI_MODEL,
+  GEMINI_REQUEST_TIMEOUT_MS,
+  buildThinkingConfigForModel,
+  createDefaultGeminiGenerator,
   getAiTutorLimits,
   resolveGeminiModel,
   type AiTutorGenerateFn,
 } from '../api/_aiTutorEngine.js';
 import { MOCK_QUESTIONS } from '../api/_data/questions.js';
+import { db as clientDb } from '../src/services/firebase.js';
+import { askQuestionAiTutor, ApiAccessError } from '../src/services/contentService.js';
+
+after(async () => {
+  try {
+    await terminate(clientDb);
+    for (const app of getApps()) {
+      await deleteApp(app);
+    }
+  } catch {
+    // ignore teardown warnings
+  }
+});
 
 interface MockResState {
   statusCode: number;
@@ -561,4 +580,342 @@ test('7. Proteção da chave de API: nenhum arquivo do frontend importa @google/
     freeDailyLimit: 3,
     premiumDailyLimit: 30,
   });
+});
+
+test('8. Modelo padrão é gemini-3.1-flash-lite compatível com @google/genai e desativa retries internos do SDK', async () => {
+  assert.equal(DEFAULT_GEMINI_MODEL, 'gemini-3.1-flash-lite');
+  assert.equal(resolveGeminiModel({}), 'gemini-3.1-flash-lite');
+  assert.equal(GEMINI_REQUEST_TIMEOUT_MS, 18_000);
+
+  // ThinkingLevel compatibility per model family
+  assert.deepEqual(buildThinkingConfigForModel('gemini-3.1-flash-lite'), {
+    thinkingLevel: ThinkingLevel.MINIMAL,
+  });
+  assert.deepEqual(buildThinkingConfigForModel('gemini-4-hydrogen'), {
+    thinkingLevel: ThinkingLevel.LOW,
+  });
+  assert.equal(buildThinkingConfigForModel('gemini-2.5-flash'), undefined);
+
+  let capturedClientConfig: any = null;
+  let capturedCallConfig: any = null;
+  let callCount = 0;
+
+  const generator = createDefaultGeminiGenerator('test-secret-key-never-logged', {
+    timeoutMs: 5_000,
+    clientFactory: (cfg) => {
+      capturedClientConfig = cfg;
+      return {
+        models: {
+          async generateContent(params: any) {
+            callCount += 1;
+            capturedCallConfig = params;
+            return {
+              text: 'Resposta objetiva com base legal.',
+              usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 50, totalTokenCount: 150 },
+            };
+          },
+        },
+      };
+    },
+  });
+
+  const result = await generator({
+    model: DEFAULT_GEMINI_MODEL,
+    systemInstruction: 'Instruções',
+    contents: [{ role: 'user', parts: [{ text: 'Dúvida' }] }],
+  });
+
+  assert.equal(callCount, 1);
+  assert.equal(result.model, 'gemini-3.1-flash-lite');
+  assert.equal(result.answer, 'Resposta objetiva com base legal.');
+  assert.equal(capturedClientConfig.httpOptions.timeout, 5_000);
+  assert.equal(capturedClientConfig.httpOptions.retryOptions.attempts, 1);
+  assert.deepEqual(capturedCallConfig.config.thinkingConfig, {
+    thinkingLevel: ThinkingLevel.MINIMAL,
+  });
+  assert.ok(capturedCallConfig.config.abortSignal instanceof AbortSignal);
+});
+
+test('9. Timeout do Gemini aciona AbortSignal, não faz retry duplicado, retorna HTTP 504 e NÃO desconta cota', async () => {
+  let providerCalls = 0;
+  let signalAborted = false;
+
+  const slowGenerator = createDefaultGeminiGenerator('test-secret-key', {
+    timeoutMs: 80,
+    clientFactory: () => ({
+      models: {
+        generateContent(params: any) {
+          providerCalls += 1;
+          return new Promise((_resolve, reject) => {
+            const sig: AbortSignal | undefined = params?.config?.abortSignal;
+            if (sig) {
+              sig.addEventListener(
+                'abort',
+                () => {
+                  signalAborted = true;
+                  const abortErr: any = new Error('The operation was aborted');
+                  abortErr.name = 'AbortError';
+                  reject(abortErr);
+                },
+                { once: true }
+              );
+            }
+          });
+        },
+      },
+    }),
+  });
+
+  const { db, users } = createMockFirestore({
+    users: {
+      'uid-timeout': {
+        profile: { isPremium: false },
+        ai_tutor_usage: {
+          [DATE_KEY]: { dateKey: DATE_KEY, count: 1, planType: 'free' },
+        },
+      },
+    },
+  });
+
+  const { res, state } = createMockRes();
+  await handleAiTutor(
+    createMockReq('POST'),
+    res,
+    makeDeps({
+      uid: 'uid-timeout',
+      db,
+      body: {
+        questionId: PENAL_QUESTION.id,
+        message: 'Explique a fundamentação jurídica.',
+        history: [],
+      },
+      generateAiAnswer: slowGenerator,
+    })
+  );
+
+  assert.equal(providerCalls, 1, 'Não deve fazer retry duplicado em caso de timeout');
+  assert.equal(signalAborted, true, 'AbortSignal deve ser acionado ao atingir o timeout');
+  assert.equal(state.statusCode, 504);
+  const body = JSON.parse(state.body);
+  assert.equal(body.error, 'AI_TIMEOUT');
+  assert.equal(body.unavailable, true);
+  assert.equal(body.quota.usedToday, 1);
+  assert.equal(body.quota.remainingToday, 2);
+  assert.equal(users.get('uid-timeout')!.ai_tutor_usage[DATE_KEY].count, 1);
+});
+
+test('10. Resposta vazia da IA retorna HTTP 502 (nunca HTTP 200) e NÃO desconta cota do aluno', async () => {
+  const { db, users } = createMockFirestore({
+    users: {
+      'uid-empty': {
+        profile: {
+          isPremium: true,
+          subscriptionStatus: 'ACTIVE',
+          premiumUntil: '2027-01-01T00:00:00.000Z',
+        },
+        ai_tutor_usage: {
+          [DATE_KEY]: { dateKey: DATE_KEY, count: 4, planType: 'premium' },
+        },
+      },
+    },
+  });
+
+  // Scenario A: empty string returned directly by generator
+  {
+    const { res, state } = createMockRes();
+    await handleAiTutor(
+      createMockReq('POST'),
+      res,
+      makeDeps({
+        uid: 'uid-empty',
+        db,
+        body: {
+          questionId: CIVIL_QUESTION.id,
+          message: 'Por que essa alternativa está correta?',
+          history: [],
+        },
+        generateAiAnswer: async () => ({
+          answer: '   \n\t  ',
+          model: DEFAULT_GEMINI_MODEL,
+          usage: { inputTokens: 100, outputTokens: 0, totalTokens: 100 },
+        }),
+      })
+    );
+
+    assert.equal(state.statusCode, 502);
+    const body = JSON.parse(state.body);
+    assert.equal(body.error, 'AI_EMPTY_RESPONSE');
+    assert.equal(body.unavailable, true);
+    assert.equal(body.answer, undefined);
+    assert.equal(body.quota.usedToday, 4);
+    assert.equal(users.get('uid-empty')!.ai_tutor_usage[DATE_KEY].count, 4);
+  }
+
+  // Scenario B: createDefaultGeminiGenerator rejects empty response.text
+  const emptyGen = createDefaultGeminiGenerator('test-secret-key', {
+    clientFactory: () => ({
+      models: {
+        async generateContent() {
+          return { text: '   ' };
+        },
+      },
+    }),
+  });
+
+  await assert.rejects(
+    () =>
+      emptyGen({
+        model: DEFAULT_GEMINI_MODEL,
+        systemInstruction: 'sys',
+        contents: [{ role: 'user', parts: [{ text: 'hi' }] }],
+      }),
+    (err: any) => err?.code === 'AI_EMPTY_RESPONSE' && err?.status === 502
+  );
+});
+
+test('11. Erro da API (503 / 429 / chave ausente) faz no máximo 1 chamada, não expõe chave e NÃO desconta cota', async () => {
+  const secretKey = 'AIzaSyFakeSecretDoNotExpose123456';
+  let callCount = 0;
+
+  const failingGen = createDefaultGeminiGenerator(secretKey, {
+    clientFactory: () => ({
+      models: {
+        async generateContent() {
+          callCount += 1;
+          const err: any = new Error(`Upstream 503 UNAVAILABLE for key ${secretKey}`);
+          err.status = 503;
+          throw err;
+        },
+      },
+    }),
+  });
+
+  const { db, users } = createMockFirestore({
+    users: {
+      'uid-api-err': {
+        profile: { isPremium: false },
+        ai_tutor_usage: {
+          [DATE_KEY]: { dateKey: DATE_KEY, count: 2, planType: 'free' },
+        },
+      },
+    },
+  });
+
+  const { res, state } = createMockRes();
+  await handleAiTutor(
+    createMockReq('POST'),
+    res,
+    makeDeps({
+      uid: 'uid-api-err',
+      db,
+      body: {
+        questionId: PENAL_QUESTION.id,
+        message: 'Qual o fundamento legal?',
+        history: [],
+      },
+      generateAiAnswer: failingGen,
+    })
+  );
+
+  assert.equal(callCount, 1, 'Erro 503 não deve disparar retries duplicados');
+  assert.equal(state.statusCode, 503);
+  assert.ok(!state.body.includes(secretKey), 'Resposta nunca pode vazar GEMINI_API_KEY');
+  const body = JSON.parse(state.body);
+  assert.equal(body.unavailable, true);
+  assert.equal(body.quota.usedToday, 2);
+  assert.equal(users.get('uid-api-err')!.ai_tutor_usage[DATE_KEY].count, 2);
+});
+
+test('12. Frontend askQuestionAiTutor trata timeout, cancelamento (AbortSignal) e HTTP 200 vazio/inválido', async () => {
+  const originalFetch = globalThis.fetch;
+
+  try {
+    // 12A: Client timeout
+    globalThis.fetch = ((_input: any, init?: RequestInit) => {
+      return new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener(
+          'abort',
+          () => {
+            const err: any = new Error('Aborted');
+            err.name = 'AbortError';
+            reject(err);
+          },
+          { once: true }
+        );
+      });
+    }) as typeof fetch;
+
+    await assert.rejects(
+      () =>
+        askQuestionAiTutor(
+          { questionId: PENAL_QUESTION.id, message: 'Explique', history: [] },
+          { timeoutMs: 60 }
+        ),
+      (err: any) => err instanceof ApiAccessError && err.status === 504 && err.code === 'REQUEST_TIMEOUT'
+    );
+
+    // 12B: Explicit cancellation via AbortController
+    const controller = new AbortController();
+    const pending = askQuestionAiTutor(
+      { questionId: PENAL_QUESTION.id, message: 'Explique', history: [] },
+      { signal: controller.signal, timeoutMs: 5_000 }
+    );
+    setTimeout(() => controller.abort(), 25);
+
+    await assert.rejects(
+      () => pending,
+      (err: any) => err instanceof ApiAccessError && err.status === 499 && err.code === 'REQUEST_ABORTED'
+    );
+
+    // 12C: HTTP 200 with empty body -> EMPTY_RESPONSE (never silently returns {})
+    globalThis.fetch = (async () =>
+      new Response('', { status: 200, headers: { 'Content-Type': 'application/json' } })) as typeof fetch;
+
+    await assert.rejects(
+      () => askQuestionAiTutor({ questionId: PENAL_QUESTION.id, message: 'Explique', history: [] }),
+      (err: any) => err instanceof ApiAccessError && err.status === 502 && err.code === 'EMPTY_RESPONSE'
+    );
+
+    // 12D: HTTP 200 with truncated/malformed JSON -> INVALID_JSON_RESPONSE
+    globalThis.fetch = (async () =>
+      new Response('{"answer": "cortado', {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })) as typeof fetch;
+
+    await assert.rejects(
+      () => askQuestionAiTutor({ questionId: PENAL_QUESTION.id, message: 'Explique', history: [] }),
+      (err: any) =>
+        err instanceof ApiAccessError && err.status === 502 && err.code === 'INVALID_JSON_RESPONSE'
+    );
+
+    // 12E: HTTP 200 with valid JSON but empty answer -> AI_EMPTY_RESPONSE
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ questionId: PENAL_QUESTION.id, answer: '   ' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })) as typeof fetch;
+
+    await assert.rejects(
+      () => askQuestionAiTutor({ questionId: PENAL_QUESTION.id, message: 'Explique', history: [] }),
+      (err: any) => err instanceof ApiAccessError && err.status === 502 && err.code === 'AI_EMPTY_RESPONSE'
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('13. QuestionAiTutorPanel garante cancelamento, AbortController no unmount e encerramento do loading no finally', () => {
+  const panelPath = path.resolve(process.cwd(), 'src/components/QuestionAiTutorPanel.tsx');
+  const source = fs.readFileSync(panelPath, 'utf-8');
+
+  assert.ok(source.includes('AbortController'), 'Painel deve usar AbortController');
+  assert.ok(source.includes('cancelActiveRequest'), 'Painel deve expor cancelamento explícito');
+  assert.ok(source.includes('Cancelar'), 'Painel deve exibir botão Cancelar durante o carregamento');
+  assert.ok(source.includes('finally {'), 'Painel deve encerrar loading no bloco finally');
+  assert.ok(source.includes('setSending(false)'), 'Painel deve sempre resetar setSending(false)');
+  assert.ok(
+    source.includes('REQUEST_ABORTED'),
+    'Painel deve tratar cancelamento sem manter estado preso'
+  );
 });

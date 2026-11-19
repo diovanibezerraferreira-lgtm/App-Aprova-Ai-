@@ -14,6 +14,7 @@ import {
   buildGeminiContents,
   createDefaultGeminiGenerator,
   getAiTutorLimits,
+  isTimeoutGeminiError,
   resolveGeminiModel,
   sanitizeConversationHistory,
   sanitizeUserMessage,
@@ -145,6 +146,24 @@ function mapAiProviderError(err: any): { status: number; code: string; message: 
     };
   }
 
+  if (code === 'AI_TIMEOUT' || isTimeoutGeminiError(err)) {
+    return {
+      status: 504,
+      code: 'AI_TIMEOUT',
+      message:
+        'O Professor Virtual demorou mais do que o esperado para responder. Tente novamente em instantes — nenhuma consulta foi descontada da sua cota.',
+    };
+  }
+
+  if (code === 'AI_EMPTY_RESPONSE') {
+    return {
+      status: 502,
+      code: 'AI_EMPTY_RESPONSE',
+      message:
+        'O Professor Virtual retornou uma resposta vazia. Tente novamente em instantes — nenhuma consulta foi descontada da sua cota.',
+    };
+  }
+
   if (status === 429 || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('QUOTA')) {
     return {
       status: 503,
@@ -154,7 +173,13 @@ function mapAiProviderError(err: any): { status: number; code: string; message: 
     };
   }
 
-  if (status === 400 || status === 401 || status === 403 || msg.includes('API_KEY_INVALID') || msg.includes('PERMISSION_DENIED')) {
+  if (
+    status === 400 ||
+    status === 401 ||
+    status === 403 ||
+    msg.includes('API_KEY_INVALID') ||
+    msg.includes('PERMISSION_DENIED')
+  ) {
     return {
       status: 503,
       code: 'AI_PROVIDER_AUTH_ERROR',
@@ -379,6 +404,7 @@ export async function handleAiTutor(
 
   // 7. Call Gemini API strictly on backend
   const model = deps.resolveModel();
+  const aiStartMs = Date.now();
   let generation: Awaited<ReturnType<AiTutorGenerateFn>>;
   try {
     generation = await deps.generateAiAnswer({
@@ -386,9 +412,19 @@ export async function handleAiTutor(
       systemInstruction,
       contents,
     });
+
+    if (typeof generation?.answer !== 'string' || !generation.answer.trim()) {
+      const emptyErr: any = new Error('O provedor de IA retornou uma resposta vazia.');
+      emptyErr.code = 'AI_EMPTY_RESPONSE';
+      emptyErr.status = 502;
+      throw emptyErr;
+    }
   } catch (err: any) {
-    console.error('Erro ao chamar provedor de IA no Professor Virtual:', err?.code || err?.message);
+    const elapsedMs = Date.now() - aiStartMs;
     const mapped = mapAiProviderError(err);
+    console.error(
+      `Erro no Professor Virtual IA (model=${model}, code=${mapped.code}, status=${err?.status ?? err?.statusCode ?? 'n/a'}, elapsedMs=${elapsedMs})`
+    );
     return sendJson(res, mapped.status, {
       error: mapped.code,
       message: mapped.message,
@@ -397,6 +433,8 @@ export async function handleAiTutor(
       unavailable: true,
     });
   }
+
+  const cleanAnswer = generation.answer.trim();
 
   // 8. Record usage atomically ONLY AFTER a successful AI response
   let updatedUsed = ctx.quota.usedToday + 1;
@@ -450,7 +488,7 @@ export async function handleAiTutor(
     questionId: question.id,
     disciplineName,
     subject: question.subject,
-    answer: generation.answer,
+    answer: cleanAnswer,
     solutionUnlocked: ctx.canViewSolution,
     isPremium: ctx.isPremium,
     quota: updatedQuota,

@@ -140,10 +140,45 @@ async function buildAuthHeaders(forceRefresh = false): Promise<Record<string, st
   return headers;
 }
 
-async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
+export interface ApiRequestConfig {
+  timeoutMs?: number;
+  signal?: AbortSignal;
+}
+
+async function apiRequest<T>(
+  url: string,
+  options?: RequestInit,
+  config?: ApiRequestConfig
+): Promise<T> {
+  const controller = new AbortController();
+  let timedOut = false;
+  let abortedByCaller = false;
+
+  const externalSignal = config?.signal ?? options?.signal ?? undefined;
+  const onExternalAbort = () => {
+    abortedByCaller = true;
+    controller.abort();
+  };
+
+  if (externalSignal) {
+    if (externalSignal.aborted) {
+      throw new ApiAccessError(499, 'REQUEST_ABORTED', 'Consulta cancelada.');
+    }
+    externalSignal.addEventListener('abort', onExternalAbort, { once: true });
+  }
+
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  if (config?.timeoutMs && config.timeoutMs > 0) {
+    timer = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, config.timeoutMs);
+  }
+
   const sendWithHeaders = async (authHeaders: Record<string, string>) => {
     return fetch(url, {
       ...options,
+      signal: controller.signal,
       credentials: 'same-origin',
       headers: {
         ...authHeaders,
@@ -152,22 +187,73 @@ async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
     });
   };
 
-  let res = await sendWithHeaders(await buildAuthHeaders(false));
+  try {
+    let res = await sendWithHeaders(await buildAuthHeaders(false));
 
-  if (res.status === 401 && auth.currentUser) {
-    res = await sendWithHeaders(await buildAuthHeaders(true));
-  }
+    if (res.status === 401 && auth.currentUser) {
+      res = await sendWithHeaders(await buildAuthHeaders(true));
+    }
 
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
+    const rawText = await res.text();
+    let data: any = null;
+    if (rawText.trim().length > 0) {
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        if (res.ok) {
+          throw new ApiAccessError(
+            502,
+            'INVALID_JSON_RESPONSE',
+            'Recebemos uma resposta inválida ou incompleta do servidor. Tente novamente em instantes.'
+          );
+        }
+        data = {};
+      }
+    } else if (res.ok) {
+      throw new ApiAccessError(
+        502,
+        'EMPTY_RESPONSE',
+        'O servidor retornou uma resposta vazia. Tente novamente em instantes.'
+      );
+    } else {
+      data = {};
+    }
+
+    if (!res.ok) {
+      throw new ApiAccessError(
+        res.status,
+        data?.error || 'REQUEST_ERROR',
+        data?.message || data?.error || `Erro na requisição (${res.status})`,
+        data
+      );
+    }
+
+    return data as T;
+  } catch (err: any) {
+    if (err instanceof ApiAccessError) {
+      throw err;
+    }
+    if (timedOut) {
+      throw new ApiAccessError(
+        504,
+        'REQUEST_TIMEOUT',
+        'O Professor Virtual demorou mais do que o esperado para responder. Tente novamente — nenhuma consulta foi descontada.'
+      );
+    }
+    if (abortedByCaller || err?.name === 'AbortError') {
+      throw new ApiAccessError(499, 'REQUEST_ABORTED', 'Consulta cancelada.');
+    }
     throw new ApiAccessError(
-      res.status,
-      data?.error || 'REQUEST_ERROR',
-      data?.message || data?.error || `Erro na requisição (${res.status})`,
-      data
+      0,
+      'NETWORK_ERROR',
+      err?.message || 'Falha de conexão com o servidor. Verifique sua internet e tente novamente.'
     );
+  } finally {
+    if (timer) clearTimeout(timer);
+    if (externalSignal) {
+      externalSignal.removeEventListener('abort', onExternalAbort);
+    }
   }
-  return data as T;
 }
 
 export interface PerformancePeriodComparison {
@@ -718,23 +804,51 @@ export interface AiTutorAskResponse {
   disclaimer: string;
 }
 
+export const AI_TUTOR_CLIENT_TIMEOUT_MS = 30_000;
+
 export async function fetchAiTutorStatus(
-  questionId: string
+  questionId: string,
+  options?: { signal?: AbortSignal; timeoutMs?: number }
 ): Promise<AiTutorStatusResponse> {
   const qs = new URLSearchParams({ questionId }).toString();
-  return apiRequest<AiTutorStatusResponse>(`/api/ai-tutor?${qs}`, {
-    method: 'GET',
-  });
+  return apiRequest<AiTutorStatusResponse>(
+    `/api/ai-tutor?${qs}`,
+    { method: 'GET' },
+    { timeoutMs: options?.timeoutMs ?? 12_000, signal: options?.signal }
+  );
 }
 
-export async function askQuestionAiTutor(input: {
-  questionId: string;
-  message: string;
-  history: Array<{ role: 'user' | 'assistant'; content: string }>;
-}): Promise<AiTutorAskResponse> {
-  return apiRequest<AiTutorAskResponse>('/api/ai-tutor', {
-    method: 'POST',
-    body: JSON.stringify(input),
-  });
+export async function askQuestionAiTutor(
+  input: {
+    questionId: string;
+    message: string;
+    history: Array<{ role: 'user' | 'assistant'; content: string }>;
+  },
+  options?: { signal?: AbortSignal; timeoutMs?: number }
+): Promise<AiTutorAskResponse> {
+  const data = await apiRequest<AiTutorAskResponse>(
+    '/api/ai-tutor',
+    {
+      method: 'POST',
+      body: JSON.stringify(input),
+    },
+    {
+      timeoutMs: options?.timeoutMs ?? AI_TUTOR_CLIENT_TIMEOUT_MS,
+      signal: options?.signal,
+    }
+  );
+
+  if (typeof data?.answer !== 'string' || data.answer.trim().length === 0) {
+    throw new ApiAccessError(
+      502,
+      'AI_EMPTY_RESPONSE',
+      'O Professor Virtual retornou uma resposta vazia. Tente novamente em instantes — nenhuma consulta foi descontada.'
+    );
+  }
+
+  return {
+    ...data,
+    answer: data.answer.trim(),
+  };
 }
 

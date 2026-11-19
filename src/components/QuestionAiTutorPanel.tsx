@@ -77,28 +77,68 @@ export const QuestionAiTutorPanel: React.FC<QuestionAiTutorPanelProps> = ({
   const [limitReached, setLimitReached] = useState<boolean>(false);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const activeAbortRef = useRef<AbortController | null>(null);
+  const activeRequestIdRef = useRef<number>(0);
+  const pendingPromptRef = useRef<string>('');
 
-  const refreshStatus = useCallback(async () => {
+  const cancelActiveRequest = useCallback((restorePrompt = false) => {
+    activeRequestIdRef.current += 1;
+    if (activeAbortRef.current) {
+      activeAbortRef.current.abort();
+      activeAbortRef.current = null;
+    }
+    if (restorePrompt && pendingPromptRef.current) {
+      setInputText((prev) => (prev.trim() ? prev : pendingPromptRef.current));
+    }
+    pendingPromptRef.current = '';
+    setSending(false);
+  }, []);
+
+  // Abort in-flight AI call cleanly when panel closes, question changes, or component unmounts
+  useEffect(() => {
+    return () => {
+      activeRequestIdRef.current += 1;
+      if (activeAbortRef.current) {
+        activeAbortRef.current.abort();
+        activeAbortRef.current = null;
+      }
+      setSending(false);
+    };
+  }, [isOpen, question?.id]);
+
+  const refreshStatus = useCallback(async (signal?: AbortSignal) => {
     if (!isOpen || !currentUser || !question?.id) return;
     setLoadingStatus(true);
     setErrorMessage(null);
     try {
-      const status = await fetchAiTutorStatus(question.id);
-      setQuota(status.quota);
-      setSolutionUnlocked(status.solutionUnlocked);
-      setPremiumLimitHint(status.limits.premiumDailyLimit);
-      setLimitReached(status.quota.remainingToday <= 0);
+      const status = await fetchAiTutorStatus(question.id, { signal });
+      if (signal?.aborted) return;
+      if (status?.quota) {
+        setQuota(status.quota);
+        setLimitReached(status.quota.remainingToday <= 0);
+      }
+      setSolutionUnlocked(Boolean(status?.solutionUnlocked));
+      if (typeof status?.limits?.premiumDailyLimit === 'number') {
+        setPremiumLimitHint(status.limits.premiumDailyLimit);
+      }
     } catch (err: any) {
+      if (signal?.aborted || (err instanceof ApiAccessError && err.code === 'REQUEST_ABORTED')) {
+        return;
+      }
       setErrorMessage(
         err?.message || 'Não foi possível verificar sua cota do Professor IA no momento.'
       );
     } finally {
-      setLoadingStatus(false);
+      if (!signal?.aborted) {
+        setLoadingStatus(false);
+      }
     }
   }, [isOpen, currentUser, question?.id]);
 
   useEffect(() => {
-    refreshStatus();
+    const controller = new AbortController();
+    refreshStatus(controller.signal);
+    return () => controller.abort();
   }, [refreshStatus, isQuestionAnsweredInView, isPremiumActive]);
 
   useEffect(() => {
@@ -112,6 +152,16 @@ export const QuestionAiTutorPanel: React.FC<QuestionAiTutorPanelProps> = ({
   const handleSendQuestion = async (rawPrompt: string) => {
     const text = rawPrompt.trim();
     if (!text || sending || !currentUser) return;
+
+    if (activeAbortRef.current) {
+      activeAbortRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    activeAbortRef.current = controller;
+    const requestId = activeRequestIdRef.current + 1;
+    activeRequestIdRef.current = requestId;
+    const targetQuestionId = question.id;
 
     setSending(true);
     setErrorMessage(null);
@@ -128,27 +178,55 @@ export const QuestionAiTutorPanel: React.FC<QuestionAiTutorPanelProps> = ({
       content: m.content,
     }));
 
+    pendingPromptRef.current = text;
     setInputText('');
 
     try {
-      const response = await askQuestionAiTutor({
-        questionId: question.id,
-        message: text,
-        history: historyPayload,
-      });
+      const response = await askQuestionAiTutor(
+        {
+          questionId: targetQuestionId,
+          message: text,
+          history: historyPayload,
+        },
+        { signal: controller.signal }
+      );
+
+      if (requestId !== activeRequestIdRef.current) return;
+
+      const cleanAnswer =
+        typeof response?.answer === 'string' ? response.answer.trim() : '';
+      if (!cleanAnswer) {
+        setErrorMessage(
+          'O Professor Virtual retornou uma resposta vazia. Tente novamente em instantes — nenhuma consulta foi descontada.'
+        );
+        setInputText(text);
+        return;
+      }
 
       const assistantMsg: AiTutorMessageItem = {
         id: `a_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         role: 'assistant',
-        content: response.answer,
+        content: cleanAnswer,
         timestamp: new Date().toISOString(),
       };
 
-      onAppendMessages(question.id, [userMsg, assistantMsg]);
-      setQuota(response.quota);
-      setSolutionUnlocked(response.solutionUnlocked);
-      setLimitReached(response.quota.remainingToday <= 0);
+      pendingPromptRef.current = '';
+      onAppendMessages(targetQuestionId, [userMsg, assistantMsg]);
+      if (response.quota) {
+        setQuota(response.quota);
+        setLimitReached(response.quota.remainingToday <= 0);
+      }
+      if (typeof response.solutionUnlocked === 'boolean') {
+        setSolutionUnlocked(response.solutionUnlocked);
+      }
     } catch (err: any) {
+      if (requestId !== activeRequestIdRef.current) return;
+
+      if (err instanceof ApiAccessError && err.code === 'REQUEST_ABORTED') {
+        setInputText(text);
+        return;
+      }
+
       if (err instanceof ApiAccessError && err.code === 'AI_DAILY_LIMIT_REACHED') {
         setLimitReached(true);
         if (err.details?.quota) {
@@ -164,7 +242,11 @@ export const QuestionAiTutorPanel: React.FC<QuestionAiTutorPanelProps> = ({
       // Restore text so the student doesn't lose what they typed
       setInputText(text);
     } finally {
-      setSending(false);
+      if (requestId === activeRequestIdRef.current) {
+        activeAbortRef.current = null;
+        pendingPromptRef.current = '';
+        setSending(false);
+      }
     }
   };
 
@@ -339,9 +421,21 @@ export const QuestionAiTutorPanel: React.FC<QuestionAiTutorPanelProps> = ({
 
               {sending && (
                 <div className="flex justify-start">
-                  <div className="rounded-2xl px-4 py-3 bg-slate-50 border border-slate-200 text-xs text-slate-600 inline-flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 text-[#0B1F3A] animate-spin shrink-0" />
-                    <span>Analisando o enunciado e a fundamentação jurídica...</span>
+                  <div className="rounded-2xl px-4 py-3 bg-slate-50 border border-slate-200 text-xs text-slate-600 flex flex-wrap items-center gap-2.5">
+                    <div className="inline-flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 text-[#0B1F3A] animate-spin shrink-0" />
+                      <span>Analisando o enunciado e a fundamentação jurídica...</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        cancelActiveRequest(true);
+                        setErrorMessage('Consulta cancelada.');
+                      }}
+                      className="px-2.5 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-[11px] font-semibold text-slate-700 transition-colors"
+                    >
+                      Cancelar
+                    </button>
                   </div>
                 </div>
               )}
