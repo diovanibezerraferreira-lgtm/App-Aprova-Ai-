@@ -676,3 +676,65 @@ export async function reopenStudyActivity(
     }),
   });
 }
+
+// ============================================================================
+// Consultar Questão — Professor Virtual com IA
+// ============================================================================
+
+export interface AiTutorMessageItem {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
+
+export interface AiTutorQuotaStatus {
+  dateKey: string;
+  planType: 'free' | 'premium';
+  dailyLimit: number;
+  usedToday: number;
+  remainingToday: number;
+}
+
+export interface AiTutorStatusResponse {
+  isPremium: boolean;
+  solutionUnlocked: boolean;
+  quota: AiTutorQuotaStatus;
+  limits: {
+    freeDailyLimit: number;
+    premiumDailyLimit: number;
+  };
+  disclaimer: string;
+}
+
+export interface AiTutorAskResponse {
+  questionId: string;
+  disciplineName: string;
+  subject: string;
+  answer: string;
+  solutionUnlocked: boolean;
+  isPremium: boolean;
+  quota: AiTutorQuotaStatus;
+  disclaimer: string;
+}
+
+export async function fetchAiTutorStatus(
+  questionId: string
+): Promise<AiTutorStatusResponse> {
+  const qs = new URLSearchParams({ questionId }).toString();
+  return apiRequest<AiTutorStatusResponse>(`/api/ai-tutor?${qs}`, {
+    method: 'GET',
+  });
+}
+
+export async function askQuestionAiTutor(input: {
+  questionId: string;
+  message: string;
+  history: Array<{ role: 'user' | 'assistant'; content: string }>;
+}): Promise<AiTutorAskResponse> {
+  return apiRequest<AiTutorAskResponse>('/api/ai-tutor', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+

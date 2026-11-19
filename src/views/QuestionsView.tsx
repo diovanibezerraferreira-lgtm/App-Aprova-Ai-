@@ -8,8 +8,10 @@ import {
   fetchQuestionsFeed,
   submitQuestionAnswer,
   ApiAccessError,
-  DailyQuotaInfo
+  DailyQuotaInfo,
+  AiTutorMessageItem
 } from '../services/contentService';
+import { QuestionAiTutorPanel } from '../components/QuestionAiTutorPanel';
 import {
   HelpCircle,
   CheckCircle2,
@@ -31,7 +33,8 @@ import {
   Crown,
   LogIn,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  GraduationCap
 } from 'lucide-react';
 
 interface QuestionsViewProps {
@@ -89,6 +92,30 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
   const [sessionHits, setSessionHits] = useState<number>(0);
   const [sessionMisses, setSessionMisses] = useState<number>(0);
   const [resetNotice, setResetNotice] = useState<string | null>(null);
+
+  // Professor Virtual IA state (conversation preserved per questionId during session)
+  const [aiTutorOpen, setAiTutorOpen] = useState<boolean>(false);
+  const [aiTutorHistoryByQuestion, setAiTutorHistoryByQuestion] = useState<
+    Record<string, AiTutorMessageItem[]>
+  >({});
+
+  const handleAppendAiMessages = useCallback(
+    (questionId: string, added: AiTutorMessageItem[]) => {
+      setAiTutorHistoryByQuestion((prev) => ({
+        ...prev,
+        [questionId]: [...(prev[questionId] || []), ...added],
+      }));
+    },
+    []
+  );
+
+  const handleResetAiConversation = useCallback((questionId: string) => {
+    setAiTutorHistoryByQuestion((prev) => {
+      const next = { ...prev };
+      delete next[questionId];
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     if (initialDisciplineId) {
@@ -939,7 +966,21 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                 )}
               </div>
 
-              <div className="w-full sm:w-auto flex items-center gap-2">
+              <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAiTutorOpen((prev) => !prev)}
+                  aria-expanded={aiTutorOpen}
+                  className={`w-full sm:w-auto px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 border ${
+                    aiTutorOpen
+                      ? 'bg-[#0B1F3A] text-[#D4AF37] border-[#0B1F3A] shadow-sm'
+                      : 'bg-white hover:bg-[#0B1F3A]/5 text-[#0B1F3A] border-[#0B1F3A]/30'
+                  }`}
+                >
+                  <GraduationCap className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                  <span>{aiTutorOpen ? 'Ocultar Professor IA' : 'Consultar Professor IA'}</span>
+                </button>
+
                 <button
                   onClick={handleNextQuestion}
                   className="w-full sm:w-auto px-5 py-2.5 bg-[#D4AF37] hover:bg-[#C59F2A] text-[#0B1F3A] font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-2"
@@ -1004,6 +1045,20 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
                 </div>
               </div>
             )}
+
+            {/* Professor Virtual com IA (vinculado à questão atual) */}
+            <QuestionAiTutorPanel
+              isOpen={aiTutorOpen}
+              onClose={() => setAiTutorOpen(false)}
+              question={currentQuestion}
+              disciplineName={currentDisciplineInfo?.name || currentQuestion.disciplineId}
+              isQuestionAnsweredInView={isAnswered || Boolean(activeSolution)}
+              messages={aiTutorHistoryByQuestion[currentQuestion.id] || []}
+              onAppendMessages={handleAppendAiMessages}
+              onResetConversation={handleResetAiConversation}
+              onOpenAuth={onOpenAuth}
+              onOpenPremium={onOpenPremium}
+            />
           </div>
 
           <div className="px-4 sm:px-6 py-2.5 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-500 flex flex-wrap items-center justify-between gap-2">
