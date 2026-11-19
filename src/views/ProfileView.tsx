@@ -15,7 +15,8 @@ import {
   LogOut,
   Clock,
   Lock,
-  HelpCircle
+  HelpCircle,
+  Receipt
 } from 'lucide-react';
 
 interface ProfileViewProps {
@@ -262,6 +263,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <span>
                 {isPremiumActive ? 'Ver Detalhes do Premium' : 'Assinar Premium (R$ 29,90)'}
               </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectTab('assinatura')}
+              className="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-[#0B1F3A] font-bold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5"
+            >
+              <Receipt className="w-3.5 h-3.5 shrink-0" />
+              <span>Minha Assinatura</span>
             </button>
           </div>
 

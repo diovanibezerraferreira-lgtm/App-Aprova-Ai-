@@ -19,6 +19,7 @@ import { PerformanceView } from './views/PerformanceView';
 import { PremiumView } from './views/PremiumView';
 import { ProfileView } from './views/ProfileView';
 import { HelpSupportView } from './views/HelpSupportView';
+import { SubscriptionHistoryView } from './views/SubscriptionHistoryView';
 
 function AppContent() {
   const {
@@ -147,6 +148,14 @@ function AppContent() {
             onOpenAuth={() => openAuthModal('login')}
             onOpenPremium={() => setPremiumModalOpen(true)}
             onSelectTab={setActiveTab}
+          />
+        )}
+
+        {activeTab === 'assinatura' && (
+          <SubscriptionHistoryView
+            onSelectTab={setActiveTab}
+            onOpenAuth={() => openAuthModal('login')}
+            onOpenPremium={() => setPremiumModalOpen(true)}
           />
         )}
 

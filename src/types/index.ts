@@ -177,4 +177,5 @@ export type ActiveTab =
   | 'desempenho'
   | 'premium'
   | 'perfil'
+  | 'assinatura'
   | 'suporte';

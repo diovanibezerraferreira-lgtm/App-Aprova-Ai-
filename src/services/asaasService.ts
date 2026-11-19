@@ -163,3 +163,111 @@ export async function fetchSubscriptionStatus(): Promise<SubscriptionStatusRespo
 
   return response.json();
 }
+
+export interface PlanCatalogItem {
+  id: 'free' | 'monthly' | 'annual';
+  name: string;
+  price: number;
+  cycle: 'MONTHLY' | 'YEARLY' | null;
+  installmentCount: number | null;
+  installmentValue: number | null;
+  billingLabel: string;
+  checkoutEnabled: boolean;
+}
+
+export type PaymentStatusTone =
+  | 'confirmed'
+  | 'pending'
+  | 'overdue'
+  | 'cancelled'
+  | 'refunded'
+  | 'other';
+
+export interface PaymentHistoryItem {
+  id: string;
+  date: string | null;
+  dueDate: string | null;
+  confirmedDate: string | null;
+  value: number;
+  billingType: string;
+  paymentMethodLabel: string;
+  status: string;
+  statusLabel: string;
+  statusTone: PaymentStatusTone;
+  description: string | null;
+  subscriptionId: string | null;
+  planId: 'free' | 'monthly' | 'annual';
+}
+
+export interface SubscriptionHistorySummary {
+  plan: PlanCatalogItem;
+  isPremium: boolean;
+  isExpired: boolean;
+  isCancelledWithActiveAccess: boolean;
+  accessState: 'active_renewal' | 'cancelled_active' | 'expired' | 'pending' | 'overdue' | 'free';
+  subscriptionStatus: 'NONE' | 'PENDING' | 'ACTIVE' | 'OVERDUE' | 'CANCELLED';
+  asaasSubscriptionStatus: string;
+  asaasSubscriptionStatusLabel: string;
+  renewalStatus: 'active' | 'cancelled' | 'pending' | 'none';
+  renewalLabel: string;
+  startDate: string | null;
+  premiumUntil: string | null;
+  cancelledAt: string | null;
+  nextDueDate: string | null;
+  paymentMethodLabel: string | null;
+  hasSubscriptionRecord: boolean;
+}
+
+export interface SubscriptionHistoryResponse {
+  summary: SubscriptionHistorySummary;
+  payments: PaymentHistoryItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    offset: number;
+    totalCount: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
+  plansCatalog: PlanCatalogItem[];
+  asaasSynced: boolean;
+  asaasError: string | null;
+  environment?: string;
+  sandbox?: boolean;
+}
+
+/**
+ * Fetch authenticated user's read-only subscription details and paginated payment history
+ */
+export async function fetchSubscriptionHistory(
+  page: number = 1,
+  limit: number = 10
+): Promise<SubscriptionHistoryResponse> {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('Você precisa estar autenticado para consultar sua assinatura e pagamentos.');
+  }
+
+  const idToken = await user.getIdToken();
+  const safePage = Math.max(1, Math.floor(page));
+  const safeLimit = Math.min(20, Math.max(1, Math.floor(limit)));
+
+  const response = await fetch(
+    `/api/subscription-history?page=${safePage}&limit=${safeLimit}`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+      },
+    }
+  );
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(
+      data?.error || `Não foi possível carregar os dados da assinatura (${response.status}).`
+    );
+  }
+
+  return data as SubscriptionHistoryResponse;
+}

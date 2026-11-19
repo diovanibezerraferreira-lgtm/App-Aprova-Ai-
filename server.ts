@@ -75,6 +75,18 @@ async function startServer() {
     }
   });
 
+  app.all('/api/subscription-history', async (req, res) => {
+    try {
+      const { default: handler } = await import('./api/subscription-history.js');
+      await handler(req, res);
+    } catch (err: any) {
+      console.error('Error in /api/subscription-history:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: err.message || 'Internal server error' });
+      }
+    }
+  });
+
   app.all('/api/questions', async (req, res) => {
     try {
       const { default: handler } = await import('./api/questions.js');
