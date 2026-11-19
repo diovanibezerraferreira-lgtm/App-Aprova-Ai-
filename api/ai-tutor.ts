@@ -17,6 +17,7 @@ import {
   getAiTutorLimits,
   isTimeoutGeminiError,
   resolveGeminiModel,
+  resolveMaxOutputTokens,
   sanitizeConversationHistory,
   sanitizeUserMessage,
   type AiTutorGenerateFn,
@@ -405,6 +406,7 @@ export async function handleAiTutor(
 
   // 7. Call Gemini API strictly on backend
   const model = deps.resolveModel();
+  const maxOutputTokens = resolveMaxOutputTokens(userMessage);
   const aiStartMs = Date.now();
   let generation: Awaited<ReturnType<AiTutorGenerateFn>>;
   try {
@@ -412,6 +414,7 @@ export async function handleAiTutor(
       model,
       systemInstruction,
       contents,
+      maxOutputTokens,
     });
 
     if (typeof generation?.answer !== 'string' || !generation.answer.trim()) {
@@ -432,6 +435,8 @@ export async function handleAiTutor(
       JSON.stringify({
         event: 'ai_tutor_provider_error',
         model,
+        maxOutputTokens,
+        historyCount: history.length,
         mappedCode: mapped.code,
         mappedHttpStatus: mapped.status,
         elapsedMs,

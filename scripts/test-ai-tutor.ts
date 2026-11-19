@@ -8,15 +8,24 @@ import { terminate } from 'firebase/firestore';
 import { deleteApp, getApps } from 'firebase/app';
 import { handleAiTutor, type AiTutorDeps } from '../api/ai-tutor.js';
 import {
+  COMPLEX_MAX_OUTPUT_TOKENS,
   DEFAULT_FREE_AI_DAILY_LIMIT,
+  DEFAULT_MAX_OUTPUT_TOKENS,
   DEFAULT_PREMIUM_AI_DAILY_LIMIT,
   DEFAULT_GEMINI_MODEL,
   GEMINI_REQUEST_TIMEOUT_MS,
+  MAX_HISTORY_ITEM_LENGTH,
+  MAX_HISTORY_MESSAGES,
+  buildAiTutorQuestionContext,
+  buildAiTutorSystemInstruction,
+  buildGeminiContents,
   buildThinkingConfigForModel,
   createDefaultGeminiGenerator,
   extractSanitizedSdkError,
   getAiTutorLimits,
   resolveGeminiModel,
+  resolveMaxOutputTokens,
+  sanitizeConversationHistory,
   sanitizeDiagnosticText,
   type AiTutorGenerateFn,
 } from '../api/_aiTutorEngine.js';
@@ -333,8 +342,8 @@ test('2. Consulta sobre questão de Direito Civil com explicação das alternati
   assert.equal(body.quota.planType, 'free');
   assert.equal(body.quota.usedToday, 1);
   assert.equal(body.quota.remainingToday, 2);
-  // 2 priming turns + 2 history turns + 1 current message = 5 turns
-  assert.equal(capturedTurns, 5);
+  // Compact multi-turn structure without artificial priming turns: 2 history turns (context merged into turn 1) + 1 current message = 3 turns
+  assert.equal(capturedTurns, 3);
   assert.ok(capturedPrompt.includes('Direito Civil'));
   assert.ok(capturedPrompt.includes(CIVIL_QUESTION.legalFoundation));
 });
@@ -630,8 +639,10 @@ test('8. Modelo padrão é gemini-3.1-flash-lite compatível com @google/genai e
   assert.equal(callCount, 1);
   assert.equal(result.model, 'gemini-3.1-flash-lite');
   assert.equal(result.answer, 'Resposta objetiva com base legal.');
-  assert.equal(capturedClientConfig.httpOptions.timeout, 5_000);
+  // Single authoritative AbortController timeout — no conflicting httpOptions.timeout / X-Server-Timeout
+  assert.equal('timeout' in capturedClientConfig.httpOptions, false);
   assert.equal(capturedClientConfig.httpOptions.retryOptions.attempts, 1);
+  assert.equal(capturedCallConfig.config.maxOutputTokens, DEFAULT_MAX_OUTPUT_TOKENS);
   assert.deepEqual(capturedCallConfig.config.thinkingConfig, {
     thinkingLevel: ThinkingLevel.MINIMAL,
   });
@@ -1142,5 +1153,158 @@ test('15. Sanitização de logs bloqueia chaves, tokens, JWT, e-mails, CPF, cont
     assert.ok(!rawLog.includes(PENAL_QUESTION.explanation), 'Log nunca pode conter explicação oficial');
   } finally {
     console.error = originalConsoleError;
+  }
+});
+
+test('16. Contexto reduzido elimina turnos artificiais, limita histórico e evita duplicação da fundamentação', () => {
+  // Compact system instructions stay concise while keeping legal precision & anti-spoiler safeguards
+  const unlockedSystem = buildAiTutorSystemInstruction({ canViewSolution: true });
+  const lockedSystem = buildAiTutorSystemInstruction({ canViewSolution: false });
+  assert.ok(unlockedSystem.length < 1100, `System instruction unlocked muito longa: ${unlockedSystem.length}`);
+  assert.ok(lockedSystem.length < 1200, `System instruction locked muito longa: ${lockedSystem.length}`);
+  assert.ok(unlockedSystem.includes('NUNCA invente números de artigos de lei'));
+  assert.ok(lockedSystem.includes('TERMINANTEMENTE PROIBIDO'));
+
+  // First turn sends strictly 1 user turn (no 2-turn artificial priming)
+  const ctx = buildAiTutorQuestionContext({
+    question: PENAL_QUESTION,
+    disciplineName: 'Direito Penal',
+    canViewSolution: true,
+    selectedOptionId: 'A',
+  });
+  const firstTurnContents = buildGeminiContents({
+    questionContext: ctx,
+    history: [],
+    userMessage: 'Qual artigo fundamenta a resposta?',
+  });
+  assert.equal(firstTurnContents.length, 1);
+  assert.equal(firstTurnContents[0].role, 'user');
+  assert.ok(!firstTurnContents[0].parts[0].text.includes('=== CONTEXTO DA QUESTÃO SELECIONADA ==='));
+
+  // History is capped at MAX_HISTORY_MESSAGES (4) and MAX_HISTORY_ITEM_LENGTH (450)
+  const longText = 'Explicação extensa '.repeat(60); // > 1000 chars
+  const longHistory = Array.from({ length: 8 }, (_, idx) => ({
+    role: idx % 2 === 0 ? 'user' : 'assistant',
+    content: `${idx + 1}: ${longText}`,
+  }));
+  const sanitizedHistory = sanitizeConversationHistory(longHistory);
+  assert.equal(sanitizedHistory.length, MAX_HISTORY_MESSAGES);
+  assert.equal(MAX_HISTORY_MESSAGES, 4);
+  for (const item of sanitizedHistory) {
+    assert.ok(item.content.length <= MAX_HISTORY_ITEM_LENGTH);
+  }
+
+  // Question context appears only ONCE across all multi-turn contents
+  const multiTurnContents = buildGeminiContents({
+    questionContext: ctx,
+    history: sanitizedHistory,
+    userMessage: 'Pode resumir em 2 linhas?',
+  });
+  const joinedTurns = multiTurnContents.map((c) => c.parts[0].text);
+  const occurrencesOfStatement = joinedTurns.filter((t) =>
+    t.includes(PENAL_QUESTION.statement.trim())
+  ).length;
+  assert.equal(occurrencesOfStatement, 1, 'Enunciado deve ser enviado apenas uma vez no contexto');
+
+  // Avoids repeating legalFoundation when explanation already includes it verbatim
+  const dedupQuestion = {
+    ...PENAL_QUESTION,
+    explanation: `Aplica-se o ${PENAL_QUESTION.legalFoundation} no caso concreto.`,
+  };
+  const dedupCtx = buildAiTutorQuestionContext({
+    question: dedupQuestion,
+    disciplineName: 'Direito Penal',
+    canViewSolution: true,
+  });
+  assert.ok(dedupCtx.includes(PENAL_QUESTION.legalFoundation));
+  assert.ok(!dedupCtx.includes('Fundamentação:'), 'Não deve duplicar linha de fundamentação já presente no comentário');
+});
+
+test('17. Limite adaptativo de maxOutputTokens (simples vs complexo) e limite diário Premium (30/dia)', async () => {
+  assert.equal(resolveMaxOutputTokens('Qual artigo de lei fundamenta a resposta?'), DEFAULT_MAX_OUTPUT_TOKENS);
+  assert.equal(resolveMaxOutputTokens('Pode explicar de forma mais simples?'), DEFAULT_MAX_OUTPUT_TOKENS);
+  assert.equal(resolveMaxOutputTokens('Por que as demais estão erradas?'), COMPLEX_MAX_OUTPUT_TOKENS);
+  assert.equal(resolveMaxOutputTokens('Pode criar uma questão semelhante?'), COMPLEX_MAX_OUTPUT_TOKENS);
+  assert.ok(DEFAULT_MAX_OUTPUT_TOKENS < COMPLEX_MAX_OUTPUT_TOKENS);
+
+  // Verify handleAiTutor forwards adaptive maxOutputTokens to generateAiAnswer
+  const { db } = createMockFirestore({
+    users: {
+      'uid-prem-tokens': {
+        profile: {
+          isPremium: true,
+          subscriptionStatus: 'ACTIVE',
+          premiumUntil: '2027-01-01T00:00:00.000Z',
+        },
+        ai_tutor_usage: {
+          [DATE_KEY]: { dateKey: DATE_KEY, count: 29, planType: 'premium' },
+        },
+      },
+    },
+  });
+
+  let capturedSimpleLimit: number | undefined;
+  {
+    const { res, state } = createMockRes();
+    await handleAiTutor(
+      createMockReq('POST'),
+      res,
+      makeDeps({
+        uid: 'uid-prem-tokens',
+        db,
+        body: {
+          questionId: PENAL_QUESTION.id,
+          message: 'Qual artigo fundamenta?',
+          history: [],
+        },
+        generateAiAnswer: async ({ maxOutputTokens }) => {
+          capturedSimpleLimit = maxOutputTokens;
+          return {
+            answer: 'Resposta objetiva.',
+            model: DEFAULT_GEMINI_MODEL,
+            usage: { inputTokens: 300, outputTokens: 120, totalTokens: 420 },
+          };
+        },
+      })
+    );
+    assert.equal(state.statusCode, 200);
+    assert.equal(capturedSimpleLimit, DEFAULT_MAX_OUTPUT_TOKENS);
+    const body = JSON.parse(state.body);
+    assert.equal(body.quota.dailyLimit, 30);
+    assert.equal(body.quota.usedToday, 30);
+    assert.equal(body.quota.remainingToday, 0);
+  }
+
+  // 31st consultation on Premium plan is blocked with HTTP 429 without calling Gemini
+  let calledAfterLimit = false;
+  {
+    const { res, state } = createMockRes();
+    await handleAiTutor(
+      createMockReq('POST'),
+      res,
+      makeDeps({
+        uid: 'uid-prem-tokens',
+        db,
+        body: {
+          questionId: PENAL_QUESTION.id,
+          message: 'Pode criar uma questão semelhante?',
+          history: [],
+        },
+        generateAiAnswer: async () => {
+          calledAfterLimit = true;
+          return {
+            answer: 'Não deve ser chamado',
+            model: DEFAULT_GEMINI_MODEL,
+            usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
+          };
+        },
+      })
+    );
+    assert.equal(state.statusCode, 429);
+    assert.equal(calledAfterLimit, false);
+    const body = JSON.parse(state.body);
+    assert.equal(body.error, 'AI_DAILY_LIMIT_REACHED');
+    assert.equal(body.quota.dailyLimit, 30);
+    assert.equal(body.quota.remainingToday, 0);
   }
 });

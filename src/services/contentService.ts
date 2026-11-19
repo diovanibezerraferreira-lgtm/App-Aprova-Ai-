@@ -826,11 +826,22 @@ export async function askQuestionAiTutor(
   },
   options?: { signal?: AbortSignal; timeoutMs?: number }
 ): Promise<AiTutorAskResponse> {
+  const compactHistory = Array.isArray(input.history)
+    ? input.history.slice(-4).map((item) => ({
+        role: item.role,
+        content: item.content.replace(/\s+/g, ' ').trim().slice(0, 450),
+      }))
+    : [];
+
   const data = await apiRequest<AiTutorAskResponse>(
     '/api/ai-tutor',
     {
       method: 'POST',
-      body: JSON.stringify(input),
+      body: JSON.stringify({
+        questionId: input.questionId,
+        message: input.message,
+        history: compactHistory,
+      }),
     },
     {
       timeoutMs: options?.timeoutMs ?? AI_TUTOR_CLIENT_TIMEOUT_MS,

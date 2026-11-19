@@ -7,9 +7,12 @@ export const DEFAULT_GEMINI_MODEL = 'gemini-3.1-flash-lite';
 
 export const GEMINI_REQUEST_TIMEOUT_MS = 18_000;
 
+export const DEFAULT_MAX_OUTPUT_TOKENS = 480;
+export const COMPLEX_MAX_OUTPUT_TOKENS = 760;
+
 export const MAX_QUESTION_PROMPT_LENGTH = 600;
-export const MAX_HISTORY_MESSAGES = 6;
-export const MAX_HISTORY_ITEM_LENGTH = 1200;
+export const MAX_HISTORY_MESSAGES = 4;
+export const MAX_HISTORY_ITEM_LENGTH = 450;
 
 const PROHIBITED_MODELS = new Set([
   'gemini-1.5-flash',
@@ -47,6 +50,7 @@ export type AiTutorGenerateFn = (params: {
   model: string;
   systemInstruction: string;
   contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }>;
+  maxOutputTokens?: number;
 }) => Promise<AiTutorGenerationResult>;
 
 export function getAiTutorLimits(env: NodeJS.ProcessEnv = process.env): {
@@ -90,6 +94,17 @@ export function buildThinkingConfigForModel(
   return undefined;
 }
 
+const COMPLEX_PROMPT_PATTERN =
+  /quest[ãa]o semelhante|criar.*quest[ãa]o|todas as alternativas|demais.*errad|cada alternativa|alternativa por alternativa|detalh|aprofund|passo a passo|diferen[çc]a entre|compare/i;
+
+export function resolveMaxOutputTokens(userMessage: string): number {
+  const normalized = userMessage.trim();
+  if (normalized.length > 220 || COMPLEX_PROMPT_PATTERN.test(normalized)) {
+    return COMPLEX_MAX_OUTPUT_TOKENS;
+  }
+  return DEFAULT_MAX_OUTPUT_TOKENS;
+}
+
 export function sanitizeUserMessage(raw: unknown): string {
   if (typeof raw !== 'string') return '';
   return raw.replace(/\s+/g, ' ').trim().slice(0, MAX_QUESTION_PROMPT_LENGTH);
@@ -100,50 +115,47 @@ export function sanitizeConversationHistory(raw: unknown): AiTutorChatMessage[] 
   const cleaned: AiTutorChatMessage[] = [];
   for (const item of raw) {
     if (!item || typeof item !== 'object') continue;
-    const role = (item as any).role === 'assistant' ? 'assistant' : (item as any).role === 'user' ? 'user' : null;
+    const role =
+      (item as any).role === 'assistant'
+        ? 'assistant'
+        : (item as any).role === 'user'
+          ? 'user'
+          : null;
+    if (!role || typeof (item as any).content !== 'string') continue;
+    const normalized = (item as any).content.replace(/\s+/g, ' ').trim();
+    if (!normalized) continue;
     const content =
-      typeof (item as any).content === 'string'
-        ? (item as any).content.trim().slice(0, MAX_HISTORY_ITEM_LENGTH)
-        : '';
-    if (!role || !content) continue;
+      normalized.length > MAX_HISTORY_ITEM_LENGTH
+        ? `${normalized.slice(0, MAX_HISTORY_ITEM_LENGTH - 3).trimEnd()}...`
+        : normalized;
     cleaned.push({ role, content });
   }
   return cleaned.slice(-MAX_HISTORY_MESSAGES);
 }
 
 /**
- * Builds strict legal-pedagogical system instructions for OAB and legal exams.
- * Enforces anti-hallucination rules and strict anti-spoiler protection when solution is locked.
+ * Builds concise legal-pedagogical system instructions for OAB and legal exams.
+ * Minimizes prompt tokens while preserving strict anti-hallucination and anti-spoiler safeguards.
  */
 export function buildAiTutorSystemInstruction(params: {
   canViewSolution: boolean;
 }): string {
   const baseRules = [
-    'Você é o Professor Virtual de Direito do aplicativo Aprova Direito, especialista na preparação para o Exame de Ordem (OAB/FGV) e concursos públicos jurídicos no Brasil.',
-    'Responda sempre em português do Brasil, de forma clara, didática, objetiva e organizada em tópicos curtos quando útil (idealmente entre 150 e 380 palavras, salvo se o aluno pedir uma questão semelhante ou detalhamento completo das quatro alternativas).',
-    'DIRETRIZES RÍGIDAS DE PRECISÃO JURÍDICA:',
-    '1. NUNCA invente números de artigos de lei, incisos, parágrafos, leis, súmulas ou julgados (STF/STJ/TST). Cite apenas dispositivos presentes na fundamentação fornecida ou normas clássicas e inequívocas das quais você tenha certeza absoluta.',
-    '2. Diferencie claramente em sua explicação: (a) Texto legal / norma aplicável, (b) Interpretação doutrinária ou pedagógica, e (c) Entendimento jurisprudencial (quando aplicável e realmente consolidado).',
-    '3. Quando não houver informação suficiente na questão ou na fundamentação disponível para confirmar um detalhe específico, declare isso com transparência.',
-    '4. Priorize sempre o conteúdo da questão fornecida e a fundamentação jurídica cadastrada no banco.',
-    '5. Nunca apresente sua resposta como se fosse o gabarito oficial da banca examinadora; trate-a como orientação didática de apoio ao estudo.',
-    '6. Se o aluno pedir uma questão semelhante para treino, crie 1 questão inédita no padrão FGV com 4 alternativas (A a D) e forneça uma breve explicação pedagógica ao final.',
+    'Você é o Professor Virtual de Direito do Aprova Direito (OAB/FGV e concursos).',
+    'Responda em português do Brasil, direto à dúvida, sem saudações, sem repetir o enunciado/alternativas e sem conclusões genéricas. Use tópicos curtos; respostas curtas para dúvidas simples e explicação objetiva para análises completas.',
+    'Precisão jurídica:',
+    '1. NUNCA invente números de artigos de lei, súmulas ou julgados (STF/STJ/TST); cite apenas dispositivos fornecidos ou normas clássicas inequívocas.',
+    '2. Diferencie norma legal, explicação pedagógica e jurisprudência consolidada quando aplicável; se faltar dado, declare.',
+    '3. Apoio didático (não substitui o gabarito oficial). Se pedirem questão semelhante, gere 1 questão inédita padrão FGV (A–D) com breve justificativa.',
   ];
 
   if (!params.canViewSolution) {
     baseRules.push(
-      'REGRA ABSOLUTA DE BLOQUEIO DE GABARITO (MODO ORIENTADOR SEM SPOILER):',
-      '- Este aluno ainda NÃO respondeu a questão e NÃO tem autorização para ver o gabarito oficial neste momento.',
-      '- VOCÊ ESTÁ TERMINANTEMENTE PROIBIDO de revelar, sugerir, confirmar ou insinuar qual alternativa (A, B, C ou D) é a correta ou quais são as erradas.',
-      '- Mesmo que o aluno pergunte diretamente "qual é a resposta certa?" ou "por que a letra X está correta?", recuse educadamente revelar o gabarito antes da resposta e ofereça explicação conceitual dos institutos jurídicos envolvidos no enunciado para ajudá-lo a raciocinar sozinho.',
-      '- Incentive o aluno a marcar sua resposta na tela para desbloquear o gabarito oficial, o comentário completo e a análise alternativa por alternativa.'
+      'SEM SPOILER: aluno gratuito ainda não respondeu. VOCÊ ESTÁ TERMINANTEMENTE PROIBIDO de revelar, sugerir ou confirmar qual alternativa (A–D) é correta ou errada. Explique apenas os conceitos jurídicos e oriente a responder na tela.'
     );
   } else {
     baseRules.push(
-      'MODO ANÁLISE COMPLETA (GABARITO LIBERADO):',
-      '- O aluno já tem autorização para visualizar o gabarito e o comentário oficial fornecidos no contexto.',
-      '- Quando perguntado, explique com clareza por que a alternativa correta está alinhada ao ordenamento jurídico e por que cada uma das demais alternativas apresenta erro técnico, pegadinha típica da FGV ou contradição com a lei.',
-      '- Mantenha coerência com o gabarito oficial e a fundamentação jurídica fornecidos no contexto da questão.'
+      'GABARITO LIBERADO: mantenha coerência com o gabarito e a fundamentação fornecidos, destacando erros técnicos e pegadinhas da FGV quando solicitado.'
     );
   }
 
@@ -151,7 +163,8 @@ export function buildAiTutorSystemInstruction(params: {
 }
 
 /**
- * Assembles the authorized question context sent to the LLM.
+ * Assembles a compact, authorized question context sent to the LLM.
+ * Avoids repeating explanation/legalFoundation when already represented.
  * CRITICAL: Never injects correctOptionId, explanation, or legalFoundation when canViewSolution is false.
  */
 export function buildAiTutorQuestionContext(params: {
@@ -162,74 +175,83 @@ export function buildAiTutorQuestionContext(params: {
 }): string {
   const { question, disciplineName, canViewSolution, selectedOptionId } = params;
 
+  const headerParts = [`Disciplina: ${disciplineName}`, `Assunto: ${question.subject}`];
+  if (question.examReference) {
+    headerParts.push(`Ref.: ${question.examReference}`);
+  }
+
   const lines: string[] = [
-    '=== CONTEXTO DA QUESTÃO SELECIONADA ===',
-    `ID da questão: ${question.id}`,
-    `Disciplina: ${disciplineName}`,
-    `Assunto: ${question.subject}`,
-    `Dificuldade: ${question.difficulty}`,
+    headerParts.join(' | '),
+    `Enunciado: ${question.statement.trim()}`,
+    'Alternativas:',
+    ...question.options.map((opt) => `${opt.id}) ${opt.text.trim()}`),
   ];
 
-  if (question.examReference) {
-    lines.push(`Referência: ${question.examReference}`);
-  }
-
-  lines.push('', 'Enunciado:', question.statement, '', 'Alternativas:');
-  for (const opt of question.options) {
-    lines.push(`${opt.id}) ${opt.text}`);
-  }
-
   if (canViewSolution) {
-    lines.push(
-      '',
-      '=== DADOS OFICIAIS LIBERADOS PARA ESTE ALUNO ===',
-      `Gabarito oficial cadastrado no banco: Alternativa ${question.correctOptionId}`,
-      `Comentário oficial do banco: ${question.explanation || 'Não informado no banco.'}`,
-      `Fundamentação jurídica cadastrada no banco: ${question.legalFoundation || 'Não informada no banco.'}`
-    );
+    const answerParts = [`Gabarito oficial: Alternativa ${question.correctOptionId}`];
     if (selectedOptionId && ['A', 'B', 'C', 'D'].includes(selectedOptionId)) {
-      lines.push(`Alternativa marcada pelo aluno: ${selectedOptionId}`);
+      answerParts.push(`Marcada pelo aluno: ${selectedOptionId}`);
+    }
+    lines.push(answerParts.join(' | '));
+
+    const cleanExplanation = (question.explanation || '').trim();
+    const cleanFoundation = (question.legalFoundation || '').trim();
+
+    if (cleanExplanation) {
+      lines.push(`Comentário: ${cleanExplanation}`);
+    }
+    if (
+      cleanFoundation &&
+      (!cleanExplanation || !cleanExplanation.toLowerCase().includes(cleanFoundation.toLowerCase()))
+    ) {
+      lines.push(`Fundamentação: ${cleanFoundation}`);
     }
   } else {
-    lines.push(
-      '',
-      '=== STATUS DE ACESSO ===',
-      'Gabarito oficial e comentário oficial BLOQUEADOS (aluno gratuito ainda não respondeu esta questão). NÃO revele nem indique qual alternativa é a correta.'
-    );
+    lines.push('Status: Gabarito bloqueado (não revelar nem indicar alternativa correta).');
   }
 
   return lines.join('\n');
 }
 
+/**
+ * Builds compact multi-turn contents without artificial priming turns or repeated question payloads.
+ */
 export function buildGeminiContents(params: {
   questionContext: string;
   history: AiTutorChatMessage[];
   userMessage: string;
 }): Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> {
-  const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [
-    {
-      role: 'user',
-      parts: [
-        {
-          text: `${params.questionContext}\n\nUtilize exclusivamente os dados acima como base principal para responder às dúvidas do aluno sobre esta questão.`,
-        },
-      ],
-    },
-    {
-      role: 'model',
-      parts: [
-        {
-          text: 'Entendido. Analisei a questão e respeitarei integralmente as regras de precisão jurídica e o status de liberação do gabarito. Qual é a sua dúvida?',
-        },
-      ],
-    },
-  ];
+  const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
 
-  for (const msg of params.history) {
+  if (params.history.length === 0) {
     contents.push({
-      role: msg.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: msg.content }],
+      role: 'user',
+      parts: [{ text: `${params.questionContext}\n\nDúvida do aluno: ${params.userMessage}` }],
     });
+    return contents;
+  }
+
+  let contextAttached = false;
+  for (const msg of params.history) {
+    if (!contextAttached && msg.role === 'user') {
+      contents.push({
+        role: 'user',
+        parts: [{ text: `${params.questionContext}\n\nDúvida do aluno: ${msg.content}` }],
+      });
+      contextAttached = true;
+    } else {
+      if (!contextAttached) {
+        contents.push({
+          role: 'user',
+          parts: [{ text: params.questionContext }],
+        });
+        contextAttached = true;
+      }
+      contents.push({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }],
+      });
+    }
   }
 
   contents.push({
@@ -412,7 +434,6 @@ export interface GeminiGeneratorOptions {
   clientFactory?: (config: {
     apiKey: string;
     httpOptions: {
-      timeout: number;
       retryOptions: { attempts: number };
       headers: Record<string, string>;
     };
@@ -428,8 +449,9 @@ export interface GeminiGeneratorOptions {
 
 /**
  * Creates a server-side Gemini generator using @google/genai.
- * Enforces explicit request timeout and disables both SDK and manual retries
- * so every consultation performs at most 1 bounded call to Gemini.
+ * Uses a single authoritative AbortController timeout (avoiding conflicting SDK
+ * timers and premature X-Server-Timeout deadlines) and disables retries so every
+ * consultation performs at most 1 bounded call to Gemini.
  * Never exposes GEMINI_API_KEY outside server runtime.
  */
 export function createDefaultGeminiGenerator(
@@ -441,7 +463,7 @@ export function createDefaultGeminiGenerator(
     Math.min(25_000, Math.floor(options.timeoutMs ?? GEMINI_REQUEST_TIMEOUT_MS))
   );
 
-  return async ({ model, systemInstruction, contents }) => {
+  return async ({ model, systemInstruction, contents, maxOutputTokens }) => {
     const cleanKey = (apiKey || '').trim();
     if (!cleanKey || cleanKey === 'MY_GEMINI_API_KEY') {
       const err: any = new Error('AI_PROVIDER_NOT_CONFIGURED');
@@ -450,10 +472,12 @@ export function createDefaultGeminiGenerator(
       throw err;
     }
 
+    // Do NOT set httpOptions.timeout alongside AbortController: the SDK turns
+    // httpOptions.timeout into both a second AbortController and an X-Server-Timeout
+    // header that caused premature Google 504 DEADLINE_EXCEEDED responses (~15s).
     const clientConfig = {
       apiKey: cleanKey,
       httpOptions: {
-        timeout: timeoutMs,
         retryOptions: {
           attempts: 1,
         },
@@ -468,6 +492,11 @@ export function createDefaultGeminiGenerator(
       : new GoogleGenAI(clientConfig);
 
     const thinkingConfig = buildThinkingConfigForModel(model);
+    const effectiveMaxOutputTokens =
+      typeof maxOutputTokens === 'number' && Number.isFinite(maxOutputTokens) && maxOutputTokens >= 64
+        ? Math.min(COMPLEX_MAX_OUTPUT_TOKENS, Math.floor(maxOutputTokens))
+        : DEFAULT_MAX_OUTPUT_TOKENS;
+
     const controller = new AbortController();
     let timedOut = false;
     const timer = setTimeout(() => {
@@ -481,6 +510,7 @@ export function createDefaultGeminiGenerator(
         contents,
         config: {
           systemInstruction,
+          maxOutputTokens: effectiveMaxOutputTokens,
           abortSignal: controller.signal,
           ...(thinkingConfig ? { thinkingConfig } : {}),
         },

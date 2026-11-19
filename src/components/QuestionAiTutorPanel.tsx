@@ -173,7 +173,7 @@ export const QuestionAiTutorPanel: React.FC<QuestionAiTutorPanelProps> = ({
       timestamp: new Date().toISOString(),
     };
 
-    const historyPayload = messages.slice(-6).map((m) => ({
+    const historyPayload = messages.slice(-4).map((m) => ({
       role: m.role,
       content: m.content,
     }));
