@@ -9,11 +9,39 @@ import {
   consumeSimuladoQuota,
   saveSimuladoSession,
   getSimuladoSession,
+  claimSimuladoSessionCompletion,
   readJsonBody,
   sendJson,
   FREE_DAILY_SIMULADOS_LIMIT,
 } from './_accessControl.js';
+import { getAdminFirestore, hasAdminCredentials } from './_firebaseAdmin.js';
+import {
+  recordSimuladoCompletionScore,
+  validateSimuladoForRanking,
+  readLeaderboardConfigEligibility,
+  enqueueLeaderboardOutboxWithRetry,
+} from './_leaderboardEngine.js';
 import type { Question, DisciplineId } from '../src/types/index.js';
+
+export interface SimuladosHandlerDeps {
+  resolveAccessContext?: typeof resolveAccessContext;
+  getDailyQuotaStatus?: typeof getDailyQuotaStatus;
+  consumeSimuladoQuota?: typeof consumeSimuladoQuota;
+  saveSimuladoSession?: typeof saveSimuladoSession;
+  getSimuladoSession?: typeof getSimuladoSession;
+  claimSimuladoSessionCompletion?: typeof claimSimuladoSessionCompletion;
+  readJsonBody?: typeof readJsonBody;
+  getLeaderboardFirestore?: () => ReturnType<typeof getAdminFirestore> | null;
+  nowMs?: () => number;
+}
+
+function getSafeLeaderboardDb() {
+  try {
+    return hasAdminCredentials() ? getAdminFirestore() : null;
+  } catch {
+    return null;
+  }
+}
 
 function shuffleArray<T>(array: T[]): T[] {
   const arr = [...array];
@@ -222,12 +250,26 @@ function buildFreeExpressQuestions(): Question[] {
   return picked.slice(0, 10);
 }
 
-export default async function handler(req: IncomingMessage & { body?: any }, res: ServerResponse) {
+export async function handleSimulados(
+  req: IncomingMessage & { body?: any },
+  res: ServerResponse,
+  deps: SimuladosHandlerDeps = {}
+) {
   try {
-    const ctx = await resolveAccessContext(req, res);
+    const resolveCtx = deps.resolveAccessContext || resolveAccessContext;
+    const getQuota = deps.getDailyQuotaStatus || getDailyQuotaStatus;
+    const consumeQuota = deps.consumeSimuladoQuota || consumeSimuladoQuota;
+    const saveSession = deps.saveSimuladoSession || saveSimuladoSession;
+    const getSession = deps.getSimuladoSession || getSimuladoSession;
+    const claimCompletion = deps.claimSimuladoSessionCompletion || claimSimuladoSessionCompletion;
+    const parseBody = deps.readJsonBody || readJsonBody;
+    const getLeaderboardDb = deps.getLeaderboardFirestore || getSafeLeaderboardDb;
+    const nowMs = deps.nowMs ? deps.nowMs() : Date.now();
+
+    const ctx = await resolveCtx(req, res);
 
     if (req.method === 'GET') {
-      const quota = await getDailyQuotaStatus(ctx);
+      const quota = await getQuota(ctx);
       const presets = SIMULADO_PRESETS.map((p) => ({
         ...p,
         isFree: p.id === 'simulado-express-10',
@@ -243,7 +285,7 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
     }
 
     if (req.method === 'POST') {
-      const body = await readJsonBody(req);
+      const body = await parseBody(req);
       const action = body?.action;
 
       if (action === 'start') {
@@ -259,7 +301,7 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
             });
           }
 
-          const quotaRes = await consumeSimuladoQuota(ctx);
+          const quotaRes = await consumeQuota(ctx);
           if (!quotaRes.allowed) {
             return sendJson(res, 403, {
               error: 'DAILY_LIMIT_REACHED',
@@ -272,17 +314,20 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
 
           const questions = buildFreeExpressQuestions();
           const sessionId = `sim_${crypto.randomBytes(10).toString('hex')}`;
-          await saveSimuladoSession({
+          await saveSession({
             id: sessionId,
             title: 'Simulado Express (10 Questões)',
             ownerKey: ctx.primaryQuotaKey,
+            ownerUid: ctx.uid,
             isPremium: false,
             questionIds: questions.map((q) => q.id),
             timeLimitMinutes: 15,
-            createdAt: Date.now(),
+            createdAt: nowMs,
+            completedAt: null,
+            completedByUid: null,
           });
 
-          const updatedQuota = await getDailyQuotaStatus(ctx);
+          const updatedQuota = await getQuota(ctx);
           return sendJson(res, 200, {
             isPremium: false,
             sessionId,
@@ -297,14 +342,17 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
         // Premium user: unlimited access to all 40 presets & custom simulados
         const built = buildPremiumSimuladoQuestions(presetId, customConfig);
         const sessionId = `sim_${crypto.randomBytes(10).toString('hex')}`;
-        await saveSimuladoSession({
+        await saveSession({
           id: sessionId,
           title: built.title,
           ownerKey: ctx.primaryQuotaKey,
+          ownerUid: ctx.uid,
           isPremium: true,
           questionIds: built.questions.map((q) => q.id),
           timeLimitMinutes: built.timeLimitMinutes,
-          createdAt: Date.now(),
+          createdAt: nowMs,
+          completedAt: null,
+          completedByUid: null,
         });
 
         return sendJson(res, 200, {
@@ -314,7 +362,7 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
           disciplineId: built.disciplineId,
           timeLimitMinutes: built.timeLimitMinutes,
           questions: built.questions,
-          quota: await getDailyQuotaStatus(ctx),
+          quota: await getQuota(ctx),
         });
       }
 
@@ -329,7 +377,7 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
           });
         }
 
-        const session = await getSimuladoSession(sessionId);
+        const session = await getSession(sessionId);
         if (!session) {
           return sendJson(res, 404, {
             error: 'NOT_FOUND',
@@ -337,10 +385,43 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
           });
         }
 
-        if (!ctx.isPremium && !ctx.quotaKeys.includes(session.ownerKey)) {
+        // Strict session ownership validation for ALL users (Free AND Premium)
+        if (typeof session.ownerUid === 'string' && session.ownerUid.trim().length > 0) {
+          if (!ctx.isAuthenticated || ctx.uid !== session.ownerUid) {
+            return sendJson(res, 403, {
+              error: 'FORBIDDEN',
+              message: 'Sessão não pertence ao usuário atual.',
+            });
+          }
+        } else if (ctx.isAuthenticated && ctx.uid) {
+          const matchesLegacyUidKey =
+            ctx.quotaKeys.includes(session.ownerKey) ||
+            session.ownerKey.endsWith(`_uid_${ctx.uid}`);
+          if (!matchesLegacyUidKey) {
+            return sendJson(res, 403, {
+              error: 'FORBIDDEN',
+              message: 'Sessão não pertence ao usuário atual.',
+            });
+          }
+        } else if (!ctx.quotaKeys.includes(session.ownerKey)) {
           return sendJson(res, 403, {
             error: 'FORBIDDEN',
             message: 'Sessão não pertence ao usuário atual.',
+          });
+        }
+
+        if (!Array.isArray(session.questionIds) || session.questionIds.length === 0) {
+          return sendJson(res, 400, {
+            error: 'EMPTY_SIMULADO',
+            message: 'Sessão de simulado sem questões válidas.',
+          });
+        }
+
+        // Fast duplicate block if session snapshot already records completion
+        if (typeof session.completedAt === 'number' && session.completedAt > 0) {
+          return sendJson(res, 409, {
+            error: 'SIMULADO_ALREADY_COMPLETED',
+            message: 'Este simulado já foi finalizado anteriormente.',
           });
         }
 
@@ -348,18 +429,129 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
         const gradedQuestions: Question[] = [];
         let correctCount = 0;
 
+        const rankingValidationAnswers: Array<{
+          questionId: string;
+          selectedOptionId: unknown;
+          validOptionIds: string[];
+        }> = [];
+
         const answerDetails = session.questionIds.map((qId, idx) => {
           const q = questionMap.get(qId);
           const selected = userAnswers[idx];
-          const isCorrect = Boolean(q && selected === q.correctOptionId);
+          const validOptionIds: string[] = q ? q.options.map((opt) => opt.id) : [];
+          const isValidOption = typeof selected === 'string' && validOptionIds.includes(selected);
+          const isCorrect = Boolean(q && isValidOption && selected === q.correctOptionId);
           if (isCorrect) correctCount++;
           if (q) gradedQuestions.push(q);
+          rankingValidationAnswers.push({
+            questionId: qId,
+            selectedOptionId: selected,
+            validOptionIds,
+          });
           return {
             questionId: qId,
             selectedOptionId: selected,
             isCorrect,
           };
         });
+
+        const verifiedOwnerUid =
+          ctx.isAuthenticated && ctx.uid
+            ? typeof session.ownerUid === 'string' && session.ownerUid.trim()
+              ? session.ownerUid.trim()
+              : session.ownerKey.endsWith(`_uid_${ctx.uid}`)
+                ? ctx.uid
+                : null
+            : null;
+
+        const rankingValidation = validateSimuladoForRanking({
+          uid: ctx.uid,
+          sessionOwnerUid: verifiedOwnerUid,
+          questionIds: session.questionIds,
+          answers: rankingValidationAnswers,
+        });
+        const isFullyAnsweredForRanking = rankingValidation.valid;
+
+        // Atomically mark session as completed once (blocks duplicate finish calls).
+        // Transient Firestore failure degrades safely without HTTP 500 so grading/gabarito still succeeds.
+        let claim: {
+          claimed: boolean;
+          alreadyCompleted: boolean;
+          storageUnavailable?: boolean;
+          session: any;
+        };
+        try {
+          claim = await claimCompletion(
+            session.id,
+            {
+              completedAt: nowMs,
+              completedByUid: ctx.uid,
+              fullyAnsweredForRanking: isFullyAnsweredForRanking,
+            },
+            deps.getLeaderboardFirestore ? deps.getLeaderboardFirestore() : undefined
+          );
+        } catch (claimErr) {
+          console.warn(
+            'Aviso: erro transitório ao confirmar conclusão do simulado; preservando correção:',
+            (claimErr as any)?.code ?? (claimErr as any)?.message ?? 'UNAVAILABLE'
+          );
+          claim = {
+            claimed: false,
+            alreadyCompleted: false,
+            storageUnavailable: true,
+            session,
+          };
+        }
+
+        if (claim.alreadyCompleted) {
+          return sendJson(res, 409, {
+            error: 'SIMULADO_ALREADY_COMPLETED',
+            message: 'Este simulado já foi finalizado anteriormente.',
+          });
+        }
+
+        // Award +30 leaderboard points ONLY if authenticated, owner-verified, and 100% answered with valid options
+        if (ctx.isAuthenticated && ctx.uid && verifiedOwnerUid === ctx.uid && isFullyAnsweredForRanking) {
+          const lbDb = getLeaderboardDb();
+          if (claim.claimed && !claim.storageUnavailable) {
+            try {
+              await recordSimuladoCompletionScore(lbDb, {
+                uid: ctx.uid,
+                sessionId: session.id,
+                sessionOwnerUid: verifiedOwnerUid,
+                questionIds: session.questionIds,
+                answers: rankingValidationAnswers,
+                occurredAt: nowMs,
+                nowMs,
+              });
+            } catch {
+              // Ranking failure must never interrupt simulado grading
+            }
+          } else if (claim.storageUnavailable && lbDb) {
+            // Do NOT synchronously award unconfirmed points during a Firestore outage.
+            // Best-effort idempotent enqueue (deterministic ob_sim_* / ev_sim_*) only if ranking is active & post-launch.
+            try {
+              const preCheck = await readLeaderboardConfigEligibility(lbDb, nowMs);
+              if (preCheck.eligible) {
+                await enqueueLeaderboardOutboxWithRetry(lbDb, {
+                  uid: ctx.uid,
+                  kind: 'simulado_completed',
+                  sourceId: session.id,
+                  payload: {
+                    sessionId: session.id,
+                    totalQuestions: session.questionIds.length,
+                    fullyAnswered: true,
+                  },
+                  occurredAt: nowMs,
+                  error: new Error('SIMULADO_CLAIM_STORAGE_UNAVAILABLE'),
+                  nowMs,
+                });
+              }
+            } catch {
+              // Never interrupt simulado grading
+            }
+          }
+        }
 
         return sendJson(res, 200, {
           sessionId: session.id,
@@ -384,4 +576,8 @@ export default async function handler(req: IncomingMessage & { body?: any }, res
       message: error?.message || 'Erro interno ao processar simulado.',
     });
   }
+}
+
+export default async function handler(req: IncomingMessage & { body?: any }, res: ServerResponse) {
+  return handleSimulados(req, res);
 }

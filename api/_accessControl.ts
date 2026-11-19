@@ -58,10 +58,14 @@ export interface SimuladoSessionRecord {
   id: string;
   title: string;
   ownerKey: string;
+  ownerUid?: string | null;
   isPremium: boolean;
   questionIds: string[];
   timeLimitMinutes: number;
   createdAt: number;
+  completedAt?: number | null;
+  completedByUid?: string | null;
+  fullyAnsweredForRanking?: boolean;
 }
 
 // Local in-memory fallback only used when Firestore Admin is unavailable (e.g. local dev without Admin credentials)
@@ -708,4 +712,140 @@ export async function getSimuladoSession(sessionId: string): Promise<SimuladoSes
     }
   }
   return memorySimuladoSessions.get(sessionId) || memorySimuladoSessions.get(cleanId) || null;
+}
+
+export async function claimSimuladoSessionCompletion(
+  sessionId: string,
+  params: {
+    completedAt: number;
+    completedByUid: string | null;
+    fullyAnsweredForRanking?: boolean;
+  },
+  overrideDb?: Firestore | null
+): Promise<{
+  claimed: boolean;
+  alreadyCompleted: boolean;
+  storageUnavailable: boolean;
+  session: SimuladoSessionRecord | null;
+}> {
+  assertPreviewNotSharingProductionFirestore();
+  const cleanId = sanitizeKey(sessionId);
+  const db = overrideDb !== undefined ? overrideDb : getUsableFirestore();
+
+  if (db) {
+    try {
+      const ref = db.collection('simulado_sessions').doc(cleanId);
+      return await db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists) {
+          const memFallback =
+            memorySimuladoSessions.get(sessionId) || memorySimuladoSessions.get(cleanId) || null;
+          if (!memFallback) {
+            return { claimed: false, alreadyCompleted: false, storageUnavailable: false, session: null };
+          }
+          if (typeof memFallback.completedAt === 'number' && memFallback.completedAt > 0) {
+            return {
+              claimed: false,
+              alreadyCompleted: true,
+              storageUnavailable: false,
+              session: memFallback,
+            };
+          }
+          const restored: SimuladoSessionRecord = {
+            ...memFallback,
+            completedAt: params.completedAt,
+            completedByUid: params.completedByUid,
+            ...(typeof params.fullyAnsweredForRanking === 'boolean'
+              ? { fullyAnsweredForRanking: params.fullyAnsweredForRanking }
+              : {}),
+          };
+          tx.set(ref, restored, { merge: true });
+          memorySimuladoSessions.set(memFallback.id, restored);
+          return {
+            claimed: true,
+            alreadyCompleted: false,
+            storageUnavailable: false,
+            session: restored,
+          };
+        }
+        const current = snap.data() as SimuladoSessionRecord;
+        if (typeof current.completedAt === 'number' && current.completedAt > 0) {
+          memorySimuladoSessions.set(current.id, current);
+          return { claimed: false, alreadyCompleted: true, storageUnavailable: false, session: current };
+        }
+        const updated: SimuladoSessionRecord = {
+          ...current,
+          completedAt: params.completedAt,
+          completedByUid: params.completedByUid,
+          ...(typeof params.fullyAnsweredForRanking === 'boolean'
+            ? { fullyAnsweredForRanking: params.fullyAnsweredForRanking }
+            : {}),
+        };
+        tx.set(ref, updated, { merge: true });
+        memorySimuladoSessions.set(current.id, updated);
+        return { claimed: true, alreadyCompleted: false, storageUnavailable: false, session: updated };
+      });
+    } catch (err) {
+      if (!isLocalQuotaFallbackAllowed(err)) {
+        // Transient Firestore outage: never break simulado grading with HTTP 500.
+        // Preserve same-instance duplicate guard and flag storageUnavailable so
+        // unconfirmed points are not synchronously awarded.
+        console.warn(
+          'Aviso: falha transitória no Firestore ao confirmar conclusão do simulado:',
+          (err as any)?.code ?? (err as any)?.message ?? 'UNAVAILABLE'
+        );
+        const memExisting =
+          memorySimuladoSessions.get(sessionId) || memorySimuladoSessions.get(cleanId) || null;
+        if (memExisting) {
+          if (typeof memExisting.completedAt === 'number' && memExisting.completedAt > 0) {
+            return {
+              claimed: false,
+              alreadyCompleted: true,
+              storageUnavailable: true,
+              session: memExisting,
+            };
+          }
+          const updatedMem: SimuladoSessionRecord = {
+            ...memExisting,
+            completedAt: params.completedAt,
+            completedByUid: params.completedByUid,
+            ...(typeof params.fullyAnsweredForRanking === 'boolean'
+              ? { fullyAnsweredForRanking: params.fullyAnsweredForRanking }
+              : {}),
+          };
+          memorySimuladoSessions.set(memExisting.id, updatedMem);
+          return {
+            claimed: false,
+            alreadyCompleted: false,
+            storageUnavailable: true,
+            session: updatedMem,
+          };
+        }
+        return {
+          claimed: false,
+          alreadyCompleted: false,
+          storageUnavailable: true,
+          session: null,
+        };
+      }
+    }
+  }
+
+  const existing = memorySimuladoSessions.get(sessionId) || memorySimuladoSessions.get(cleanId) || null;
+  if (!existing) {
+    return { claimed: false, alreadyCompleted: false, storageUnavailable: false, session: null };
+  }
+  if (typeof existing.completedAt === 'number' && existing.completedAt > 0) {
+    return { claimed: false, alreadyCompleted: true, storageUnavailable: false, session: existing };
+  }
+  const updated: SimuladoSessionRecord = {
+    ...existing,
+    completedAt: params.completedAt,
+    completedByUid: params.completedByUid,
+    ...(typeof params.fullyAnsweredForRanking === 'boolean'
+      ? { fullyAnsweredForRanking: params.fullyAnsweredForRanking }
+      : {}),
+  };
+  memorySimuladoSessions.set(existing.id, updated);
+  return { claimed: true, alreadyCompleted: false, storageUnavailable: false, session: updated };
 }

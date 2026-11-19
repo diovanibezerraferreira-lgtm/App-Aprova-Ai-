@@ -165,6 +165,365 @@
         }
       },
       "required": ["id", "configTitle", "totalQuestions", "correctAnswers", "timeSpentSeconds", "date"]
+    },
+    "LeaderboardConfig": {
+      "title": "LeaderboardConfig",
+      "description": "Configuração oficial de lançamento e regras do Ranking Aprova Direito (inativa por padrão até ativação administrativa explícita)",
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "description": "Indica se o ranking oficial está ativo"
+        },
+        "launchAt": {
+          "type": "number",
+          "description": "Timestamp UTC em milissegundos do lançamento oficial"
+        },
+        "launchAtIso": {
+          "type": "string",
+          "description": "Data/hora oficial de lançamento em formato ISO 8601"
+        },
+        "launchDateKey": {
+          "type": "string",
+          "description": "Data oficial de lançamento (AAAA-MM-DD em America/Sao_Paulo)"
+        },
+        "timezone": {
+          "type": "string",
+          "enum": ["America/Sao_Paulo"],
+          "description": "Fuso horário oficial de apuração"
+        },
+        "scoringVersion": {
+          "type": "number",
+          "description": "Versão das regras de pontuação"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp ISO da última atualização administrativa"
+        }
+      },
+      "required": ["active", "timezone", "scoringVersion"]
+    },
+    "LeaderboardPrivateProfile": {
+      "title": "LeaderboardPrivateProfile",
+      "description": "Vínculo privado (somente servidor) entre UID do Firebase, identificador público aleatório e contadores pós-lançamento",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "UID do usuário no Firebase Auth"
+        },
+        "publicProfileId": {
+          "type": "string",
+          "description": "Identificador aleatório público desvinculado do UID"
+        },
+        "nickname": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Apelido público sanitizado sem dados pessoais"
+        },
+        "avatar": {
+          "type": "string",
+          "maxLength": 24,
+          "description": "Token visual de avatar sem URL pessoal"
+        },
+        "dailyQuestionCounts": {
+          "type": "object",
+          "description": "Contagem de questões válidas pós-lançamento por data (AAAA-MM-DD)"
+        },
+        "weeklyQuestionCounts": {
+          "type": "object",
+          "description": "Contagem de questões válidas pós-lançamento por semana (AAAA-MM-DD)"
+        },
+        "activeDateKeys": {
+          "type": "array",
+          "description": "Datas pós-lançamento com atividade de estudo verificada no servidor"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp ISO de criação"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp ISO de atualização"
+        }
+      },
+      "required": ["uid", "publicProfileId", "nickname", "avatar", "createdAt", "updatedAt"]
+    },
+    "LeaderboardPublicProfile": {
+      "title": "LeaderboardPublicProfile",
+      "description": "Perfil público sanitizado do ranking sem UID, nome completo, e-mail, CPF ou informações financeiras",
+      "type": "object",
+      "properties": {
+        "publicProfileId": {
+          "type": "string",
+          "description": "Identificador aleatório público"
+        },
+        "nickname": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Apelido sanitizado"
+        },
+        "avatar": {
+          "type": "string",
+          "maxLength": 24,
+          "description": "Token visual de avatar"
+        },
+        "totalPoints": {
+          "type": "number",
+          "description": "Pontuação total acumulada pós-lançamento"
+        },
+        "questionsPoints": {
+          "type": "number",
+          "description": "Pontos originados de questões"
+        },
+        "simuladosPoints": {
+          "type": "number",
+          "description": "Pontos originados de simulados integralmente concluídos"
+        },
+        "goalsPoints": {
+          "type": "number",
+          "description": "Pontos originados de metas diárias e semanais"
+        },
+        "streakPoints": {
+          "type": "number",
+          "description": "Pontos originados de sequências de 7 dias"
+        },
+        "questionsAnsweredCount": {
+          "type": "number",
+          "description": "Total de questões pontuadas"
+        },
+        "questionsCorrectCount": {
+          "type": "number",
+          "description": "Total de acertos pontuados na primeira resposta"
+        },
+        "simuladosCompletedCount": {
+          "type": "number",
+          "description": "Total de simulados integralmente concluídos e pontuados"
+        },
+        "dailyGoalsCompletedCount": {
+          "type": "number",
+          "description": "Total de metas diárias concluídas"
+        },
+        "weeklyGoalsCompletedCount": {
+          "type": "number",
+          "description": "Total de metas semanais concluídas"
+        },
+        "streak7dCount": {
+          "type": "number",
+          "description": "Total de ciclos de 7 dias consecutivos premiados"
+        },
+        "currentStreakDays": {
+          "type": "number",
+          "description": "Sequência atual de dias consecutivos pós-lançamento"
+        },
+        "bestStreakDays": {
+          "type": "number",
+          "description": "Maior sequência de dias consecutivos pós-lançamento"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp ISO da última atualização"
+        }
+      },
+      "required": ["publicProfileId", "nickname", "avatar", "totalPoints", "updatedAt"]
+    },
+    "LeaderboardPeriodEntry": {
+      "title": "LeaderboardPeriodEntry",
+      "description": "Agregação sanitizada de pontuação semanal ou mensal identificada por publicProfileId",
+      "type": "object",
+      "properties": {
+        "periodKey": {
+          "type": "string",
+          "description": "Chave do período (semana AAAA-MM-DD ou mês AAAA-MM)"
+        },
+        "publicProfileId": {
+          "type": "string",
+          "description": "Identificador aleatório público"
+        },
+        "nickname": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Apelido sanitizado"
+        },
+        "avatar": {
+          "type": "string",
+          "maxLength": 24,
+          "description": "Token visual de avatar"
+        },
+        "points": {
+          "type": "number",
+          "description": "Pontos acumulados no período"
+        },
+        "eventsCount": {
+          "type": "number",
+          "description": "Quantidade de eventos válidos no período"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp ISO da última atualização"
+        }
+      },
+      "required": ["periodKey", "publicProfileId", "nickname", "avatar", "points", "eventsCount", "updatedAt"]
+    },
+    "LeaderboardEvent": {
+      "title": "LeaderboardEvent",
+      "description": "Registro imutável e determinístico de evento de pontuação auditável (somente servidor)",
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "description": "Identificador determinístico único para prevenção de duplicidade"
+        },
+        "uid": {
+          "type": "string",
+          "description": "UID autenticado proprietário do evento"
+        },
+        "publicProfileId": {
+          "type": "string",
+          "description": "Identificador público associado ao evento"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["question_answer", "simulado_completed", "daily_goal_completed", "weekly_goal_completed", "streak_7d_completed"],
+          "description": "Tipo oficial do evento de pontuação"
+        },
+        "sourceId": {
+          "type": "string",
+          "description": "Identificador de origem (questionId, sessionId, data ou semana)"
+        },
+        "points": {
+          "type": "number",
+          "description": "Pontuação total positiva creditada"
+        },
+        "basePoints": {
+          "type": "number",
+          "description": "Pontuação base do evento"
+        },
+        "bonusPoints": {
+          "type": "number",
+          "description": "Pontuação adicional (ex.: acerto na primeira resposta)"
+        },
+        "dateKey": {
+          "type": "string",
+          "description": "Data do evento em America/Sao_Paulo (AAAA-MM-DD)"
+        },
+        "weekKey": {
+          "type": "string",
+          "description": "Chave semanal do evento (segunda-feira AAAA-MM-DD)"
+        },
+        "monthKey": {
+          "type": "string",
+          "description": "Chave mensal do evento (AAAA-MM)"
+        },
+        "occurredAt": {
+          "type": "number",
+          "description": "Timestamp UTC real da ação do estudante"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp ISO de gravação do evento"
+        }
+      },
+      "required": ["eventId", "uid", "publicProfileId", "type", "sourceId", "points", "dateKey", "weekKey", "monthKey", "occurredAt", "createdAt"]
+    },
+    "LeaderboardOutbox": {
+      "title": "LeaderboardOutbox",
+      "description": "Fila persistente e idempotente para recuperação segura de falhas transitórias de pontuação",
+      "type": "object",
+      "properties": {
+        "outboxId": {
+          "type": "string",
+          "description": "Identificador determinístico da tarefa de recuperação"
+        },
+        "uid": {
+          "type": "string",
+          "description": "UID autenticado do evento pendente"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["question_answer", "simulado_completed", "study_activity"],
+          "description": "Categoria da ação pendente"
+        },
+        "sourceId": {
+          "type": "string",
+          "description": "Identificador de origem"
+        },
+        "payload": {
+          "type": "object",
+          "description": "Metadados mínimos não sensíveis para reprocessamento"
+        },
+        "occurredAt": {
+          "type": "number",
+          "description": "Timestamp original da ação do estudante"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "processed", "skipped", "failed"],
+          "description": "Status do reprocessamento"
+        },
+        "attempts": {
+          "type": "number",
+          "description": "Quantidade de tentativas realizadas"
+        },
+        "lastError": {
+          "type": "string",
+          "description": "Erro sanitizado da última tentativa"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp ISO de criação"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp ISO da última atualização"
+        },
+        "processedAt": {
+          "type": "string",
+          "description": "Timestamp ISO de conclusão"
+        }
+      },
+      "required": ["outboxId", "uid", "kind", "sourceId", "occurredAt", "status", "attempts", "createdAt", "updatedAt"]
+    },
+    "LeaderboardVerifiedAction": {
+      "title": "LeaderboardVerifiedAction",
+      "description": "Prova imutável gravada exclusivamente pelo servidor para reconciliação secundária de pontuação pós-lançamento",
+      "type": "object",
+      "properties": {
+        "actionId": {
+          "type": "string",
+          "description": "Identificador determinístico da ação verificada no servidor"
+        },
+        "uid": {
+          "type": "string",
+          "description": "UID autenticado do estudante"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["question_answer", "simulado_completed", "study_activity"],
+          "description": "Tipo de ação verificada no servidor"
+        },
+        "sourceId": {
+          "type": "string",
+          "description": "Identificador de origem (questionId, sessionId ou activityId)"
+        },
+        "payload": {
+          "type": "object",
+          "description": "Metadados mínimos não sensíveis validados pelo servidor"
+        },
+        "occurredAt": {
+          "type": "number",
+          "description": "Timestamp UTC real da ação"
+        },
+        "serverVerified": {
+          "type": "boolean",
+          "description": "Confirmação explícita de origem exclusiva do servidor"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp ISO de gravação"
+        }
+      },
+      "required": ["actionId", "uid", "kind", "sourceId", "occurredAt", "serverVerified", "createdAt"]
     }
   },
   "firestore": {
@@ -185,6 +544,54 @@
         "$ref": "#/entities/UserSimulado"
       },
       "description": "Histórico de simulados cronometrados do aluno autenticado"
+    },
+    "/leaderboard_config/{configId}": {
+      "schema": {
+        "$ref": "#/entities/LeaderboardConfig"
+      },
+      "description": "Configuração oficial do ranking (inativa por padrão; gerida exclusivamente no servidor)"
+    },
+    "/leaderboard_private_profiles/{userId}": {
+      "schema": {
+        "$ref": "#/entities/LeaderboardPrivateProfile"
+      },
+      "description": "Mapeamento privado UID -> publicProfileId e estado de pontuação pós-lançamento (somente servidor)"
+    },
+    "/leaderboard_public/{publicProfileId}": {
+      "schema": {
+        "$ref": "#/entities/LeaderboardPublicProfile"
+      },
+      "description": "Perfis públicos sanitizados do ranking geral sem PII ou UID"
+    },
+    "/leaderboard_weekly/{entryId}": {
+      "schema": {
+        "$ref": "#/entities/LeaderboardPeriodEntry"
+      },
+      "description": "Pontuações semanais sanitizadas do ranking por publicProfileId"
+    },
+    "/leaderboard_monthly/{entryId}": {
+      "schema": {
+        "$ref": "#/entities/LeaderboardPeriodEntry"
+      },
+      "description": "Pontuações mensais sanitizadas do ranking por publicProfileId"
+    },
+    "/leaderboard_events/{eventId}": {
+      "schema": {
+        "$ref": "#/entities/LeaderboardEvent"
+      },
+      "description": "Ledger imutável e determinístico de eventos de pontuação (somente servidor)"
+    },
+    "/leaderboard_outbox/{outboxId}": {
+      "schema": {
+        "$ref": "#/entities/LeaderboardOutbox"
+      },
+      "description": "Fila persistente idempotente para recuperação de falhas transitórias do ranking (somente servidor)"
+    },
+    "/leaderboard_verified_actions/{actionId}": {
+      "schema": {
+        "$ref": "#/entities/LeaderboardVerifiedAction"
+      },
+      "description": "Registro imutável somente servidor para reconciliação secundária quando transação e outbox falham (somente servidor)"
     }
   }
 }

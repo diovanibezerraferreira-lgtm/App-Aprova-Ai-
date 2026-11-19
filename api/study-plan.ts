@@ -25,6 +25,7 @@ import {
   ACTIVITY_TYPE_LABELS,
   type StudyActivityType,
 } from './_studyPlanEngine.js';
+import { recordStudyActivityStreakCheck } from './_leaderboardEngine.js';
 
 export interface StudyPlanDeps {
   verifyFirebaseUser: typeof verifyFirebaseUser;
@@ -362,6 +363,19 @@ export async function handleStudyPlan(
 
       await activitiesCol.doc(id).set(docPayload);
 
+      if (isDirectLog) {
+        try {
+          await recordStudyActivityStreakCheck(db, {
+            uid: user.uid,
+            activityId: id,
+            occurredAt: nowMs,
+            nowMs,
+          });
+        } catch {
+          // Ranking failure must never interrupt study plan logging
+        }
+      }
+
       const ctx = await loadUserStudyContext(db, user.uid, nowMs);
       const payload = buildStudyPlanPayload({
         userData: ctx.userData,
@@ -462,6 +476,19 @@ export async function handleStudyPlan(
       }
 
       await actRef.set({ ...current, ...updates }, { merge: true });
+
+      if (action === 'complete_activity' && current.status !== 'completed') {
+        try {
+          await recordStudyActivityStreakCheck(db, {
+            uid: user.uid,
+            activityId,
+            occurredAt: nowMs,
+            nowMs,
+          });
+        } catch {
+          // Ranking failure must never interrupt study plan completion
+        }
+      }
 
       const ctx = await loadUserStudyContext(db, user.uid, nowMs);
       const payload = buildStudyPlanPayload({

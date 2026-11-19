@@ -9,6 +9,25 @@ import {
   sendJson,
   FREE_DAILY_QUESTIONS_LIMIT,
 } from './_accessControl.js';
+import { getAdminFirestore, hasAdminCredentials } from './_firebaseAdmin.js';
+import { recordQuestionAnswerScore } from './_leaderboardEngine.js';
+
+export interface QuestionsHandlerDeps {
+  resolveAccessContext?: typeof resolveAccessContext;
+  getDailyQuotaStatus?: typeof getDailyQuotaStatus;
+  consumeQuestionQuota?: typeof consumeQuestionQuota;
+  readJsonBody?: typeof readJsonBody;
+  getLeaderboardFirestore?: () => ReturnType<typeof getAdminFirestore> | null;
+  nowMs?: () => number;
+}
+
+function getSafeLeaderboardDb() {
+  try {
+    return hasAdminCredentials() ? getAdminFirestore() : null;
+  } catch {
+    return null;
+  }
+}
 
 function getDailySeed(dateKey: string): number {
   let hash = 0;
@@ -73,9 +92,20 @@ function buildStatsForPool(pool: typeof MOCK_QUESTIONS) {
   };
 }
 
-export default async function handler(req: IncomingMessage & { query?: any; body?: any }, res: ServerResponse) {
+export async function handleQuestions(
+  req: IncomingMessage & { query?: any; body?: any },
+  res: ServerResponse,
+  deps: QuestionsHandlerDeps = {}
+) {
   try {
-    const ctx = await resolveAccessContext(req, res);
+    const resolveCtx = deps.resolveAccessContext || resolveAccessContext;
+    const getQuota = deps.getDailyQuotaStatus || getDailyQuotaStatus;
+    const consumeQuota = deps.consumeQuestionQuota || consumeQuestionQuota;
+    const parseBody = deps.readJsonBody || readJsonBody;
+    const getLeaderboardDb = deps.getLeaderboardFirestore || getSafeLeaderboardDb;
+    const nowMs = deps.nowMs ? deps.nowMs() : Date.now();
+
+    const ctx = await resolveCtx(req, res);
 
     if (req.method === 'GET') {
       const urlObj = new URL(req.url || '/api/questions', 'http://localhost');
@@ -96,7 +126,7 @@ export default async function handler(req: IncomingMessage & { query?: any; body
           ).slice(0, 50)
         : [];
 
-      const quota = await getDailyQuotaStatus(ctx);
+      const quota = await getQuota(ctx);
 
       const byDiscipline: Record<string, number> = {};
       for (const q of MOCK_QUESTIONS) {
@@ -278,7 +308,7 @@ export default async function handler(req: IncomingMessage & { query?: any; body
     }
 
     if (req.method === 'POST') {
-      const body = await readJsonBody(req);
+      const body = await parseBody(req);
       const questionId = typeof body?.questionId === 'string' ? body.questionId.trim() : '';
       const selectedOptionId = body?.selectedOptionId;
 
@@ -297,8 +327,10 @@ export default async function handler(req: IncomingMessage & { query?: any; body
         });
       }
 
+      const isCorrect = selectedOptionId === question.correctOptionId;
+
       if (!ctx.isPremium) {
-        const quotaRes = await consumeQuestionQuota(ctx, questionId);
+        const quotaRes = await consumeQuota(ctx, questionId);
         if (!quotaRes.allowed) {
           return sendJson(res, 403, {
             error: 'DAILY_LIMIT_REACHED',
@@ -309,10 +341,24 @@ export default async function handler(req: IncomingMessage & { query?: any; body
           });
         }
 
+        if (ctx.isAuthenticated && ctx.uid) {
+          try {
+            await recordQuestionAnswerScore(getLeaderboardDb(), {
+              uid: ctx.uid,
+              questionId: question.id,
+              isCorrect,
+              occurredAt: nowMs,
+              nowMs,
+            });
+          } catch {
+            // Ranking failure must never interrupt question answering
+          }
+        }
+
         return sendJson(res, 200, {
           isPremium: false,
           questionId: question.id,
-          isCorrect: selectedOptionId === question.correctOptionId,
+          isCorrect,
           correctOptionId: question.correctOptionId,
           explanation: question.explanation,
           legalFoundation: question.legalFoundation,
@@ -323,10 +369,24 @@ export default async function handler(req: IncomingMessage & { query?: any; body
         });
       }
 
+      if (ctx.isAuthenticated && ctx.uid) {
+        try {
+          await recordQuestionAnswerScore(getLeaderboardDb(), {
+            uid: ctx.uid,
+            questionId: question.id,
+            isCorrect,
+            occurredAt: nowMs,
+            nowMs,
+          });
+        } catch {
+          // Ranking failure must never interrupt question answering
+        }
+      }
+
       return sendJson(res, 200, {
         isPremium: true,
         questionId: question.id,
-        isCorrect: selectedOptionId === question.correctOptionId,
+        isCorrect,
         correctOptionId: question.correctOptionId,
         explanation: question.explanation,
         legalFoundation: question.legalFoundation,
@@ -345,4 +405,8 @@ export default async function handler(req: IncomingMessage & { query?: any; body
       message: error?.message || 'Erro interno ao processar questões.',
     });
   }
+}
+
+export default async function handler(req: IncomingMessage & { query?: any; body?: any }, res: ServerResponse) {
+  return handleQuestions(req, res);
 }

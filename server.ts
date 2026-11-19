@@ -171,6 +171,30 @@ async function startServer() {
     }
   });
 
+  app.all('/api/leaderboard', async (req, res) => {
+    try {
+      const { default: handler } = await import('./api/leaderboard.js');
+      await handler(req, res);
+    } catch (err: any) {
+      console.error('Error in /api/leaderboard:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: err.message || 'Internal server error' });
+      }
+    }
+  });
+
+  app.all('/api/leaderboard-recover', async (req, res) => {
+    try {
+      const { default: handler } = await import('./api/leaderboard-recover.js');
+      await handler(req, res);
+    } catch (err: any) {
+      console.error('Error in /api/leaderboard-recover:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: err.message || 'Internal server error' });
+      }
+    }
+  });
+
   // Safe healthcheck endpoint (never leaks secret keys)
   app.get('/api/health', (_req, res) => {
     const hasAsaasKey = !!process.env.ASAAS_API_KEY;

@@ -79,5 +79,38 @@ service cloud.firestore {
         allow delete: if isOwner(userId) && isValidId(userId) && isValidId(simuladoId);
       }
     }
+
+    // Ranking Aprova Direito (server-only via Firebase Admin SDK; client SDK cannot read/write directly)
+    match /leaderboard_config/{configId} {
+      allow read, write: if false;
+    }
+
+    match /leaderboard_private_profiles/{userId} {
+      allow read, write: if false;
+    }
+
+    match /leaderboard_events/{eventId} {
+      allow read, write: if false;
+    }
+
+    match /leaderboard_outbox/{outboxId} {
+      allow read, write: if false;
+    }
+
+    match /leaderboard_verified_actions/{actionId} {
+      allow read, write: if false;
+    }
+
+    match /leaderboard_public/{publicProfileId} {
+      allow read, write: if false;
+    }
+
+    match /leaderboard_weekly/{entryId} {
+      allow read, write: if false;
+    }
+
+    match /leaderboard_monthly/{entryId} {
+      allow read, write: if false;
+    }
   }
 }
