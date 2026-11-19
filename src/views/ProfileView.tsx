@@ -272,6 +272,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <Receipt className="w-3.5 h-3.5 shrink-0" />
               <span>Minha Assinatura</span>
             </button>
+            <button
+              type="button"
+              onClick={() => onSelectTab('plano')}
+              className="w-full py-2 px-3 bg-white border border-slate-200 hover:bg-slate-50 text-[#0B1F3A] font-bold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5"
+            >
+              <Calendar className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+              <span>Plano de Estudos</span>
+            </button>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-xs space-y-1">

@@ -175,6 +175,7 @@ export type ActiveTab =
   | 'pecas'
   | 'apostilas'
   | 'desempenho'
+  | 'plano'
   | 'premium'
   | 'perfil'
   | 'assinatura'

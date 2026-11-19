@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ActiveTab, UserProfile } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { Scale, Crown, User, Menu, X, LogOut, CheckCircle2, HelpCircle } from 'lucide-react';
+import { Scale, Crown, User, Menu, X, LogOut, CheckCircle2, HelpCircle, CalendarDays } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallBanner';
 
 interface NavbarProps {
@@ -32,7 +32,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'pecas', label: 'Peças' },
     { id: 'apostilas', label: 'Apostilas' },
     { id: 'desempenho', label: 'Desempenho' },
-    { id: 'suporte', label: 'Ajuda e Suporte' },
+    { id: 'plano', label: 'Plano de Estudos' },
+    { id: 'suporte', label: 'Suporte' },
   ];
 
   const handleNavClick = (tab: ActiveTab) => {
@@ -158,6 +159,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                       <span>Meu Desempenho</span>
+                    </button>
+                    <button
+                      onClick={() => handleNavClick('plano')}
+                      className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                    >
+                      <CalendarDays className="w-3.5 h-3.5 text-[#0B1F3A]" />
+                      <span>Plano de Estudos</span>
                     </button>
                     <button
                       onClick={() => handleNavClick('suporte')}

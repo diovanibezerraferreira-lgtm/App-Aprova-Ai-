@@ -443,3 +443,236 @@ export async function fetchMaterialsCatalog(): Promise<MaterialsResponse> {
     method: 'GET',
   });
 }
+
+// ============================================================================
+// Plano de Estudos & Calendário
+// ============================================================================
+
+export type StudyActivityType =
+  | 'revisao'
+  | 'apostila'
+  | 'questoes'
+  | 'simulado'
+  | 'peca';
+
+export type StudyActivityStatus = 'planned' | 'completed' | 'cancelled';
+export type WeekdayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type PreferredTimeSlot = 'manha' | 'tarde' | 'noite' | 'madrugada';
+
+export interface StudyReminderSettings {
+  enabled: boolean;
+  time: string;
+  days: WeekdayIndex[];
+  browserNotificationsEnabled: boolean;
+}
+
+export interface StudyPlanConfig {
+  isConfigured: boolean;
+  dailyGoalQuestions: number;
+  weeklyGoalQuestions: number;
+  weeklyGoalHours: number;
+  availableDays: WeekdayIndex[];
+  preferredTimeSlots: PreferredTimeSlot[];
+  selectedDisciplines: string[];
+  weeklySchedule: Record<string, string[]>;
+  reminders: StudyReminderSettings;
+  updatedAt: string | null;
+}
+
+export interface StudyActivityItem {
+  id: string;
+  title: string;
+  type: StudyActivityType;
+  disciplineId: string;
+  disciplineName: string;
+  subject: string;
+  date: string;
+  startTime: string;
+  plannedMinutes: number;
+  actualMinutes: number;
+  status: StudyActivityStatus;
+  notes: string;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StudyCalendarDaySummary {
+  dateKey: string;
+  questionsAnswered: number;
+  questionsCorrect: number;
+  simuladosCompleted: number;
+  simuladosMinutes: number;
+  plannedActivities: number;
+  completedActivities: number;
+  cancelledActivities: number;
+  plannedMinutes: number;
+  loggedActivityMinutes: number;
+  totalLoggedMinutes: number;
+  hasRealActivity: boolean;
+}
+
+export interface StudyActivityTypeBreakdown {
+  type: StudyActivityType;
+  label: string;
+  plannedCount: number;
+  completedCount: number;
+  plannedMinutes: number;
+  loggedMinutes: number;
+}
+
+export interface StudyPlanSuggestedDistribution {
+  basedOnPerformance: boolean;
+  summary: string;
+  rationale: string[];
+  schedule: Record<string, string[]>;
+  recommendedDailyMinutes: number;
+  recommendedDailyQuestions: number;
+}
+
+export interface StudyPlanTracking {
+  todayDateKey: string;
+  weekStartKey: string;
+  weekEndKey: string;
+  todayAnswered: number;
+  dailyGoalQuestions: number;
+  dailyGoalPercent: number;
+  weekAnswered: number;
+  weeklyGoalQuestions: number;
+  weeklyQuestionsPercent: number;
+  weeklyGoalMinutes: number;
+  weeklyPlannedMinutes: number;
+  weeklyLoggedActivityMinutes: number;
+  weeklySimuladosMinutes: number;
+  weeklyTotalLoggedMinutes: number;
+  weeklyHoursPercent: number;
+  totalLoggedMinutesAllTime: number;
+  activitiesTotalPlanned: number;
+  activitiesTotalCompleted: number;
+  activitiesTotalCancelled: number;
+  weekActivitiesPlanned: number;
+  weekActivitiesCompleted: number;
+  weekSimuladosCompleted: number;
+  totalSimuladosCompleted: number;
+  currentStreakDays: number;
+  longestStreakDays: number;
+  activeDaysThisWeek: number;
+  activeDaysThisMonth: number;
+  calendarDays: Record<string, StudyCalendarDaySummary>;
+  byActivityType: StudyActivityTypeBreakdown[];
+}
+
+export interface StudyPlanResponse {
+  generatedAt: string;
+  isPremium: boolean;
+  subscriptionStatus: string;
+  plan: StudyPlanConfig;
+  activities: StudyActivityItem[];
+  tracking: StudyPlanTracking;
+  suggestedDistribution: StudyPlanSuggestedDistribution;
+  remindersCapabilities: {
+    browserLocalSupported: boolean;
+    backgroundPushConfigured: boolean;
+    pushLimitationNote: string;
+  };
+}
+
+export interface StudyActivityActionResponse {
+  activity: StudyActivityItem;
+  report: StudyPlanResponse;
+}
+
+export async function fetchStudyPlan(): Promise<StudyPlanResponse> {
+  return apiRequest<StudyPlanResponse>('/api/study-plan', {
+    method: 'GET',
+  });
+}
+
+export async function saveStudyPlanConfig(
+  plan: Partial<StudyPlanConfig>
+): Promise<StudyPlanResponse> {
+  return apiRequest<StudyPlanResponse>('/api/study-plan', {
+    method: 'PUT',
+    body: JSON.stringify({ plan }),
+  });
+}
+
+export async function createStudyActivity(input: {
+  type: StudyActivityType;
+  disciplineId: string;
+  subject?: string;
+  title?: string;
+  date: string;
+  startTime: string;
+  plannedMinutes: number;
+  actualMinutes?: number;
+  status?: 'planned' | 'completed';
+  notes?: string;
+}): Promise<StudyActivityActionResponse> {
+  return apiRequest<StudyActivityActionResponse>('/api/study-plan', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'create_activity',
+      ...input,
+    }),
+  });
+}
+
+export async function updateStudyActivity(input: {
+  activityId: string;
+  date?: string;
+  startTime?: string;
+  type?: StudyActivityType;
+  disciplineId?: string;
+  subject?: string;
+  title?: string;
+  plannedMinutes?: number;
+  notes?: string;
+  restorePlanned?: boolean;
+}): Promise<StudyActivityActionResponse> {
+  return apiRequest<StudyActivityActionResponse>('/api/study-plan', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'update_activity',
+      ...input,
+    }),
+  });
+}
+
+export async function completeStudyActivity(input: {
+  activityId: string;
+  actualMinutes: number;
+  notes?: string;
+}): Promise<StudyActivityActionResponse> {
+  return apiRequest<StudyActivityActionResponse>('/api/study-plan', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'complete_activity',
+      ...input,
+    }),
+  });
+}
+
+export async function cancelStudyActivity(
+  activityId: string
+): Promise<StudyActivityActionResponse> {
+  return apiRequest<StudyActivityActionResponse>('/api/study-plan', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'cancel_activity',
+      activityId,
+    }),
+  });
+}
+
+export async function reopenStudyActivity(
+  activityId: string
+): Promise<StudyActivityActionResponse> {
+  return apiRequest<StudyActivityActionResponse>('/api/study-plan', {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'reopen_activity',
+      activityId,
+    }),
+  });
+}

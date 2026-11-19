@@ -20,6 +20,7 @@ import { PremiumView } from './views/PremiumView';
 import { ProfileView } from './views/ProfileView';
 import { HelpSupportView } from './views/HelpSupportView';
 import { SubscriptionHistoryView } from './views/SubscriptionHistoryView';
+import { StudyPlanView } from './views/StudyPlanView';
 
 function AppContent() {
   const {
@@ -150,6 +151,20 @@ function AppContent() {
             onGoToSimulados={() => setActiveTab('simulados')}
             onPracticeDiscipline={handleStartQuestionsFromDiscipline}
             onRetryQuestions={handleRetryQuestionsFromPerformance}
+            onOpenAuth={() => openAuthModal('login')}
+            onOpenPremium={() => setPremiumModalOpen(true)}
+          />
+        )}
+
+        {activeTab === 'plano' && (
+          <StudyPlanView
+            userProfile={activeUserProfile}
+            onUpdateProfile={(p) => updateProfileData(p)}
+            onGoToQuestions={() => {
+              setRetryQuestionIds(undefined);
+              setActiveTab('questoes');
+            }}
+            onGoToPerformance={() => setActiveTab('desempenho')}
             onOpenAuth={() => openAuthModal('login')}
             onOpenPremium={() => setPremiumModalOpen(true)}
           />

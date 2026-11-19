@@ -147,6 +147,18 @@ async function startServer() {
     }
   });
 
+  app.all('/api/study-plan', async (req, res) => {
+    try {
+      const { default: handler } = await import('./api/study-plan.js');
+      await handler(req, res);
+    } catch (err: any) {
+      console.error('Error in /api/study-plan:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: err.message || 'Internal server error' });
+      }
+    }
+  });
+
   // Safe healthcheck endpoint (never leaks secret keys)
   app.get('/api/health', (_req, res) => {
     const hasAsaasKey = !!process.env.ASAAS_API_KEY;
