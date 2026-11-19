@@ -36,6 +36,8 @@ import {
 
 interface QuestionsViewProps {
   initialDisciplineId?: string;
+  retryQuestionIds?: string[];
+  onClearRetryMode?: () => void;
   onRefreshPerformance?: () => void;
   onOpenAuth?: () => void;
   onOpenPremium?: () => void;
@@ -49,11 +51,15 @@ interface RevealedSolution {
 
 export const QuestionsView: React.FC<QuestionsViewProps> = ({
   initialDisciplineId,
+  retryQuestionIds,
+  onClearRetryMode,
   onRefreshPerformance,
   onOpenAuth,
   onOpenPremium
 }) => {
   const { currentUser, isPremiumActive } = useAuth();
+  const isRetryMode = Boolean(retryQuestionIds && retryQuestionIds.length > 0);
+  const retryIdsKey = isRetryMode ? retryQuestionIds!.join(',') : '';
 
   const [selectedDiscipline, setSelectedDiscipline] = useState<string>(initialDisciplineId || 'todas');
   const [selectedSubject, setSelectedSubject] = useState<string>('todos');
@@ -95,17 +101,29 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
     }
   }, [initialDisciplineId]);
 
+  useEffect(() => {
+    if (retryIdsKey) {
+      setCurrentQueueIndex(0);
+      setSelectedOptionId(null);
+      setIsAnswered(false);
+    }
+  }, [retryIdsKey]);
+
   const loadFeed = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
     try {
-      const res = await fetchQuestionsFeed({
-        disciplineId: selectedDiscipline,
-        subject: selectedSubject,
-        difficulty: selectedDifficulty,
-        page,
-        limit: 300,
-      });
+      const res = await fetchQuestionsFeed(
+        isRetryMode
+          ? { questionIds: retryQuestionIds }
+          : {
+              disciplineId: selectedDiscipline,
+              subject: selectedSubject,
+              difficulty: selectedDifficulty,
+              page,
+              limit: 300,
+            }
+      );
 
       setQuestionsPool(res.questions);
       setServerIsPremium(res.isPremium);
@@ -128,7 +146,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [selectedDiscipline, selectedSubject, selectedDifficulty, page]);
+  }, [isRetryMode, retryIdsKey, selectedDiscipline, selectedSubject, selectedDifficulty, page]);
 
   useEffect(() => {
     loadFeed();
@@ -151,13 +169,14 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
     return questionsPool.filter(q => answersMap.has(q.id));
   }, [questionsPool, answersMap]);
 
-  const isCycleComplete = questionsPool.length > 0 && unansweredPool.length === 0;
+  const isCycleComplete = !isRetryMode && questionsPool.length > 0 && unansweredPool.length === 0;
 
   const activeQueue = useMemo(() => {
     if (questionsPool.length === 0) return [];
+    if (isRetryMode) return questionsPool;
     if (unansweredPool.length > 0) return unansweredPool;
     return answeredPool;
-  }, [questionsPool, unansweredPool, answeredPool]);
+  }, [isRetryMode, questionsPool, unansweredPool, answeredPool]);
 
   const safeIndex = currentQueueIndex < activeQueue.length ? currentQueueIndex : 0;
   const currentQuestion: QuestionItem | undefined = activeQueue[safeIndex];
@@ -179,6 +198,7 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
   }, [currentQuestion, revealedSolutions]);
 
   const handleDisciplineChange = (discId: string) => {
+    if (isRetryMode && onClearRetryMode) onClearRetryMode();
     setSelectedDiscipline(discId);
     setSelectedSubject('todos');
     setPage(1);
@@ -365,6 +385,31 @@ export const QuestionsView: React.FC<QuestionsViewProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Retry Wrong Questions Mode Banner */}
+        {isRetryMode && (
+          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <RotateCcw className="w-4 h-4 text-[#9A7B16] shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-[#0B1F3A]">
+                  Modo Revisão de Erros ({activeQueue.length} {activeQueue.length === 1 ? 'questão' : 'questões'})
+                </p>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Refazendo questões erradas selecionadas a partir do seu Relatório de Desempenho. Suas novas respostas atualizam seu histórico automaticamente.
+                </p>
+              </div>
+            </div>
+            {onClearRetryMode && (
+              <button
+                onClick={onClearRetryMode}
+                className="px-3.5 py-2 rounded-lg bg-white hover:bg-slate-50 border border-slate-300 text-xs font-semibold text-[#0B1F3A] transition-colors shrink-0 text-center"
+              >
+                Voltar ao banco completo
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Daily Freemium Quota Tracker */}
         {!loading && !serverIsPremium && (

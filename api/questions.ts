@@ -84,12 +84,93 @@ export default async function handler(req: IncomingMessage & { query?: any; body
       const difficulty = urlObj.searchParams.get('difficulty') || 'todas';
       const page = Math.max(1, parseInt(urlObj.searchParams.get('page') || '1', 10) || 1);
       const limit = Math.min(350, Math.max(1, parseInt(urlObj.searchParams.get('limit') || '300', 10) || 300));
+      const rawQuestionIds = (urlObj.searchParams.get('questionIds') || '').trim();
+      const requestedQuestionIds = rawQuestionIds
+        ? Array.from(
+            new Set(
+              rawQuestionIds
+                .split(',')
+                .map((id) => id.trim())
+                .filter(Boolean)
+            )
+          ).slice(0, 50)
+        : [];
 
       const quota = await getDailyQuotaStatus(ctx);
 
       const byDiscipline: Record<string, number> = {};
       for (const q of MOCK_QUESTIONS) {
         byDiscipline[q.disciplineId] = (byDiscipline[q.disciplineId] || 0) + 1;
+      }
+
+      // Targeted retry mode (e.g., redoing wrong questions from Performance Report)
+      // Preserves identical Premium/Free answer protection and POST daily quota enforcement
+      if (requestedQuestionIds.length > 0) {
+        const catalogMap = new Map(MOCK_QUESTIONS.map((q) => [q.id, q]));
+        const matchedQuestions = requestedQuestionIds
+          .map((id) => catalogMap.get(id))
+          .filter((q): q is (typeof MOCK_QUESTIONS)[number] => Boolean(q));
+
+        const { availableSubjects } = buildStatsForPool(matchedQuestions);
+        const { difficultyCounts } = buildStatsForPool(matchedQuestions);
+
+        if (ctx.isPremium) {
+          return sendJson(res, 200, {
+            isPremium: true,
+            subscriptionStatus: ctx.subscriptionStatus,
+            quota,
+            catalogStats: {
+              total: MOCK_QUESTIONS.length,
+              byDiscipline,
+            },
+            availableSubjects,
+            difficultyCounts,
+            questions: matchedQuestions,
+            pagination: {
+              page: 1,
+              limit: matchedQuestions.length || 1,
+              total: matchedQuestions.length,
+              totalPages: 1,
+            },
+          });
+        }
+
+        const answeredTodaySet = new Set(quota.answeredQuestionIdsToday);
+        const safeRetryQuestions = matchedQuestions.map((q) => {
+          const alreadyAnswered = answeredTodaySet.has(q.id);
+          return {
+            id: q.id,
+            disciplineId: q.disciplineId,
+            subject: q.subject,
+            statement: q.statement,
+            options: q.options,
+            difficulty: q.difficulty,
+            examReference: q.examReference,
+            // Never expose correctOptionId or explanations before user consumes daily quota
+            correctOptionId: alreadyAnswered ? q.correctOptionId : undefined,
+            explanation: alreadyAnswered ? q.explanation : '',
+            legalFoundation: alreadyAnswered ? q.legalFoundation : '',
+          };
+        });
+
+        return sendJson(res, 200, {
+          isPremium: false,
+          subscriptionStatus: ctx.subscriptionStatus,
+          quota,
+          catalogStats: {
+            total: MOCK_QUESTIONS.length,
+            byDiscipline,
+          },
+          availableSubjects,
+          difficultyCounts,
+          questions: safeRetryQuestions,
+          pagination: {
+            page: 1,
+            limit: safeRetryQuestions.length || 1,
+            total: safeRetryQuestions.length,
+            totalPages: 1,
+          },
+        });
       }
 
       if (ctx.isPremium) {

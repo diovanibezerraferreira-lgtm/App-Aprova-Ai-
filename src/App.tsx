@@ -37,6 +37,7 @@ function AppContent() {
   const [premiumModalOpen, setPremiumModalOpen] = useState<boolean>(false);
   const [selectedDiscipline, setSelectedDiscipline] = useState<Discipline | null>(null);
   const [targetedDisciplineForQuestions, setTargetedDisciplineForQuestions] = useState<string | undefined>(undefined);
+  const [retryQuestionIds, setRetryQuestionIds] = useState<string[] | undefined>(undefined);
 
   // Scroll to top on tab change
   useEffect(() => {
@@ -44,7 +45,15 @@ function AppContent() {
   }, [activeTab]);
 
   const handleStartQuestionsFromDiscipline = (discId: string) => {
+    setRetryQuestionIds(undefined);
     setTargetedDisciplineForQuestions(discId);
+    setActiveTab('questoes');
+  };
+
+  const handleRetryQuestionsFromPerformance = (questionIds: string[]) => {
+    if (!questionIds.length) return;
+    setTargetedDisciplineForQuestions(undefined);
+    setRetryQuestionIds(questionIds);
     setActiveTab('questoes');
   };
 
@@ -102,6 +111,8 @@ function AppContent() {
         {activeTab === 'questoes' && (
           <QuestionsView
             initialDisciplineId={targetedDisciplineForQuestions}
+            retryQuestionIds={retryQuestionIds}
+            onClearRetryMode={() => setRetryQuestionIds(undefined)}
             onOpenAuth={() => openAuthModal('login')}
             onOpenPremium={() => setPremiumModalOpen(true)}
           />
@@ -132,7 +143,15 @@ function AppContent() {
           <PerformanceView
             userProfile={activeUserProfile}
             onUpdateProfile={(p) => updateProfileData(p)}
-            onGoToQuestions={() => setActiveTab('questoes')}
+            onGoToQuestions={() => {
+              setRetryQuestionIds(undefined);
+              setActiveTab('questoes');
+            }}
+            onGoToSimulados={() => setActiveTab('simulados')}
+            onPracticeDiscipline={handleStartQuestionsFromDiscipline}
+            onRetryQuestions={handleRetryQuestionsFromPerformance}
+            onOpenAuth={() => openAuthModal('login')}
+            onOpenPremium={() => setPremiumModalOpen(true)}
           />
         )}
 

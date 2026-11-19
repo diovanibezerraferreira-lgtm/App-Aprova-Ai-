@@ -170,23 +170,217 @@ async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
   return data as T;
 }
 
+export interface PerformancePeriodComparison {
+  periodDays: 7 | 30 | 90;
+  hasEnoughData: boolean;
+  minRequiredPerPeriod: number;
+  currentCount: number;
+  previousCount: number;
+  currentAccuracy: number | null;
+  previousAccuracy: number | null;
+  accuracyDelta: number | null;
+  volumeDelta: number;
+}
+
+export interface PerformanceEvolutionPoint {
+  dateKey: string;
+  label: string;
+  answered: number;
+  correct: number;
+  incorrect: number;
+  accuracyPercent: number;
+}
+
+export interface PerformanceEvolutionSeries {
+  periodDays: 7 | 30 | 90;
+  totalAnswered: number;
+  totalCorrect: number;
+  totalIncorrect: number;
+  accuracyPercent: number;
+  activeDays: number;
+  hasEnoughData: boolean;
+  insufficientReason: string | null;
+  points: PerformanceEvolutionPoint[];
+  comparison: PerformancePeriodComparison;
+}
+
+export interface PerformanceDisciplineItem {
+  disciplineId: string;
+  disciplineName: string;
+  shortName: string;
+  oabWeight: number;
+  answered: number;
+  correct: number;
+  incorrect: number;
+  accuracyPercent: number;
+  needsAttention: boolean;
+  attentionReason: string | null;
+  status: 'strong' | 'evolving' | 'attention' | 'insufficient';
+  statusLabel: string;
+}
+
+export interface PerformanceUnstudiedDiscipline {
+  disciplineId: string;
+  disciplineName: string;
+  shortName: string;
+  oabWeight: number;
+  catalogCount: number;
+}
+
+export interface PerformanceSubjectItem {
+  disciplineId: string;
+  disciplineName: string;
+  subject: string;
+  answered: number;
+  correct: number;
+  incorrect: number;
+  accuracyPercent: number;
+  catalogCount: number;
+}
+
+export interface PerformanceErrorHistoryItem {
+  questionId: string;
+  disciplineId: string;
+  disciplineName: string;
+  subject: string;
+  statement: string;
+  answeredAt: number;
+  answeredAtIso: string;
+  selectedOptionId: 'A' | 'B' | 'C' | 'D';
+  selectedOptionText: string;
+  correctOptionId: 'A' | 'B' | 'C' | 'D' | null;
+  correctOptionText: string;
+  explanation: string;
+  legalFoundation: string;
+  difficulty: string;
+  examReference: string | null;
+}
+
+export interface PerformanceSimuladoHistoryItem {
+  id: string;
+  configTitle: string;
+  disciplineId: string;
+  disciplineName: string;
+  totalQuestions: number;
+  correctAnswers: number;
+  incorrectAnswers: number;
+  accuracyPercent: number;
+  timeSpentSeconds: number;
+  dateIso: string;
+}
+
+export interface PerformanceRecommendationItem {
+  id: string;
+  priority: 'alta' | 'media' | 'informativa';
+  category: 'disciplina' | 'assunto' | 'revisao' | 'cobertura' | 'simulado';
+  title: string;
+  description: string;
+  metricSummary: string;
+  actionLabel: string;
+  targetDisciplineId?: string;
+  targetQuestionIds?: string[];
+}
+
+export interface PerformanceReportResponse {
+  generatedAt: string;
+  isPremium: boolean;
+  subscriptionStatus: string;
+  overview: {
+    hasAnswers: boolean;
+    totalAnswered: number;
+    totalCorrect: number;
+    totalIncorrect: number;
+    accuracyPercent: number;
+    todayAnswered: number;
+    simuladosCompleted: number;
+    studiedDisciplinesCount: number;
+    totalDisciplinesCount: number;
+    periodComparison: PerformancePeriodComparison;
+  };
+  evolution: Record<'7' | '30' | '90', PerformanceEvolutionSeries>;
+  disciplines: PerformanceDisciplineItem[];
+  unstudiedDisciplines: PerformanceUnstudiedDiscipline[];
+  subjects: {
+    hasEnoughData: boolean;
+    minAnswersPerSubject: number;
+    totalTrackedSubjects: number;
+    strongest: PerformanceSubjectItem[];
+    weakest: PerformanceSubjectItem[];
+    understudied: PerformanceSubjectItem[];
+  };
+  errorHistory: {
+    totalErrors: number;
+    filteredTotal: number;
+    selectedDisciplineId: string;
+    page: number;
+    limit: number;
+    totalPages: number;
+    availableDisciplines: { disciplineId: string; disciplineName: string; count: number }[];
+    retryableQuestionIds: string[];
+    items: PerformanceErrorHistoryItem[];
+  };
+  simuladosHistory: {
+    total: number;
+    averageAccuracy: number | null;
+    page: number;
+    limit: number;
+    totalPages: number;
+    items: PerformanceSimuladoHistoryItem[];
+  };
+  recommendations: {
+    hasEnoughData: boolean;
+    minRequiredAnswers: number;
+    currentAnswers: number;
+    message: string | null;
+    items: PerformanceRecommendationItem[];
+  };
+}
+
 export async function fetchQuestionsFeed(params: {
   disciplineId?: string;
   subject?: string;
   difficulty?: string;
   page?: number;
   limit?: number;
+  questionIds?: string[];
 }): Promise<QuestionsFeedResponse> {
   const search = new URLSearchParams();
-  if (params.disciplineId) search.set('disciplineId', params.disciplineId);
-  if (params.subject) search.set('subject', params.subject);
-  if (params.difficulty) search.set('difficulty', params.difficulty);
-  if (params.page) search.set('page', String(params.page));
-  if (params.limit) search.set('limit', String(params.limit));
+  if (params.questionIds && params.questionIds.length > 0) {
+    search.set('questionIds', params.questionIds.slice(0, 50).join(','));
+  } else {
+    if (params.disciplineId) search.set('disciplineId', params.disciplineId);
+    if (params.subject) search.set('subject', params.subject);
+    if (params.difficulty) search.set('difficulty', params.difficulty);
+    if (params.page) search.set('page', String(params.page));
+    if (params.limit) search.set('limit', String(params.limit));
+  }
 
   return apiRequest<QuestionsFeedResponse>(`/api/questions?${search.toString()}`, {
     method: 'GET',
   });
+}
+
+export async function fetchPerformanceReport(params?: {
+  errorsPage?: number;
+  errorsLimit?: number;
+  errorDisciplineId?: string;
+  simuladosPage?: number;
+  simuladosLimit?: number;
+}): Promise<PerformanceReportResponse> {
+  const search = new URLSearchParams();
+  if (params?.errorsPage) search.set('errorsPage', String(params.errorsPage));
+  if (params?.errorsLimit) search.set('errorsLimit', String(params.errorsLimit));
+  if (params?.errorDisciplineId && params.errorDisciplineId !== 'todas') {
+    search.set('errorDisciplineId', params.errorDisciplineId);
+  }
+  if (params?.simuladosPage) search.set('simuladosPage', String(params.simuladosPage));
+  if (params?.simuladosLimit) search.set('simuladosLimit', String(params.simuladosLimit));
+
+  const qs = search.toString();
+  return apiRequest<PerformanceReportResponse>(
+    qs ? `/api/performance-report?${qs}` : '/api/performance-report',
+    { method: 'GET' }
+  );
 }
 
 export async function submitQuestionAnswer(
