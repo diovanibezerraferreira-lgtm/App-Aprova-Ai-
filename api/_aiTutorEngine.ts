@@ -710,13 +710,14 @@ export interface ExecuteResilientGenerationParams {
   clockMs?: () => number;
 }
 
+export const PRIMARY_ATTEMPT_1_MAX_MS = 8_000;
+
 /**
  * Executes Gemini generation with bounded resilience:
- * - Attempt 1: primary model (e.g. gemini-3.1-flash-lite).
- * - Attempt 2: at most 1 automatic retry with short backoff ONLY on transient 503/UNAVAILABLE or 429/RESOURCE_EXHAUSTED.
- * - Attempt 3: optional single fallback to compatible secondary model (e.g. gemini-4-hydrogen with ThinkingLevel.LOW)
- *   ONLY if primary remains transiently unavailable and sufficient time remains within the shared 18s budget.
- * - Permanent errors (400/401/403/404, invalid key), timeouts (504/AbortError), and empty responses NEVER retry.
+ * - Attempt 1: primary model (e.g. gemini-3.1-flash-lite) capped at max 8,000 ms.
+ * - On local timeout (local_abort_timeout / AI_TIMEOUT): do NOT retry primary model; immediately trigger fallback (gemini-4-hydrogen) if >= 4,000 ms remain.
+ * - On transient 503/UNAVAILABLE or 429/RESOURCE_EXHAUSTED: at most 1 automatic retry with short backoff on primary model, then fallback if budget allows.
+ * - Permanent errors (400/401/403/404, invalid key), timeouts without fallback budget, and empty responses never retry.
  */
 export async function executeAiTutorGenerationWithResilience(
   params: ExecuteResilientGenerationParams
@@ -762,9 +763,14 @@ export async function executeAiTutorGenerationWithResilience(
     backoffMsApplied,
   });
 
-  const runSingleAttempt = async (modelName: string): Promise<AiTutorGenerationResult> => {
+  const runSingleAttempt = async (modelName: string, maxTimeoutMs?: number): Promise<AiTutorGenerationResult> => {
     const remainingMs = getRemainingMs();
-    if (remainingMs < 50) {
+    const effectiveTimeoutMs =
+      typeof maxTimeoutMs === 'number' && Number.isFinite(maxTimeoutMs)
+        ? Math.max(50, Math.min(remainingMs, maxTimeoutMs))
+        : remainingMs;
+
+    if (effectiveTimeoutMs < 50) {
       const timeoutErr: any = new Error('Tempo limite excedido ao aguardar o provedor de IA.');
       timeoutErr.code = 'AI_TIMEOUT';
       timeoutErr.status = 504;
@@ -783,7 +789,7 @@ export async function executeAiTutorGenerationWithResilience(
       systemInstruction: params.systemInstruction,
       contents: params.contents,
       maxOutputTokens: params.maxOutputTokens,
-      timeoutMs: remainingMs,
+      timeoutMs: effectiveTimeoutMs,
     });
 
     if (typeof generation?.answer !== 'string' || !generation.answer.trim()) {
@@ -796,24 +802,59 @@ export async function executeAiTutorGenerationWithResilience(
     return generation;
   };
 
-  // Attempt 1: Primary model
+  // Attempt 1: Primary model (capped at max 8,000 ms)
   let lastError: any;
   try {
-    const generation = await runSingleAttempt(primaryModel);
+    const generation = await runSingleAttempt(primaryModel, PRIMARY_ATTEMPT_1_MAX_MS);
     return {
       generation,
       resilience: buildMeta(generation.model || primaryModel),
     };
   } catch (err: any) {
     lastError = err;
+
+    // If local timeout occurred on primary model Attempt 1: do NOT retry primary model; immediately fallback if budget allows.
+    if (isTimeoutGeminiError(err)) {
+      if (fallbackModel && getRemainingMs() >= minFallbackRemainingMs) {
+        fallbackUsed = true;
+        try {
+          const generation = await runSingleAttempt(fallbackModel);
+          return {
+            generation,
+            resilience: buildMeta(generation.model || fallbackModel),
+          };
+        } catch (fallbackErr: any) {
+          attachResilienceToError(fallbackErr, buildMeta(fallbackModel));
+          throw fallbackErr;
+        }
+      } else {
+        attachResilienceToError(err, buildMeta(primaryModel));
+        throw err;
+      }
+    }
+
+    // If permanent error or non-retryable error:
     if (!isTransientRetryableGeminiError(err)) {
       attachResilienceToError(err, buildMeta(primaryModel));
       throw err;
     }
   }
 
-  // Attempt 2: At most 1 automatic retry on primary model with short backoff
+  // Attempt 2: At most 1 automatic retry on primary model with short backoff (for transient 503 / 429)
   if (getRemainingMs() < retryBackoffMs + minRetryRemainingMs) {
+    if (fallbackModel && getRemainingMs() >= minFallbackRemainingMs) {
+      fallbackUsed = true;
+      try {
+        const generation = await runSingleAttempt(fallbackModel);
+        return {
+          generation,
+          resilience: buildMeta(generation.model || fallbackModel),
+        };
+      } catch (fallbackErr: any) {
+        attachResilienceToError(fallbackErr, buildMeta(fallbackModel));
+        throw fallbackErr;
+      }
+    }
     attachResilienceToError(lastError, buildMeta(primaryModel));
     throw lastError;
   }
@@ -824,6 +865,19 @@ export async function executeAiTutorGenerationWithResilience(
   }
 
   if (getRemainingMs() < minRetryRemainingMs) {
+    if (fallbackModel && getRemainingMs() >= minFallbackRemainingMs) {
+      fallbackUsed = true;
+      try {
+        const generation = await runSingleAttempt(fallbackModel);
+        return {
+          generation,
+          resilience: buildMeta(generation.model || fallbackModel),
+        };
+      } catch (fallbackErr: any) {
+        attachResilienceToError(fallbackErr, buildMeta(fallbackModel));
+        throw fallbackErr;
+      }
+    }
     attachResilienceToError(lastError, buildMeta(primaryModel));
     throw lastError;
   }
@@ -837,6 +891,23 @@ export async function executeAiTutorGenerationWithResilience(
     };
   } catch (err: any) {
     lastError = err;
+
+    if (isTimeoutGeminiError(err)) {
+      if (fallbackModel && getRemainingMs() >= minFallbackRemainingMs) {
+        fallbackUsed = true;
+        try {
+          const generation = await runSingleAttempt(fallbackModel);
+          return {
+            generation,
+            resilience: buildMeta(generation.model || fallbackModel),
+          };
+        } catch (fallbackErr: any) {
+          attachResilienceToError(fallbackErr, buildMeta(fallbackModel));
+          throw fallbackErr;
+        }
+      }
+    }
+
     if (!isTransientRetryableGeminiError(err)) {
       attachResilienceToError(err, buildMeta(primaryModel));
       throw err;

@@ -727,6 +727,7 @@ test('9. Timeout do Gemini aciona AbortSignal, não faz retry duplicado, retorna
         history: [],
       },
       generateAiAnswer: slowGenerator,
+      resolveFallbackModel: () => null,
     })
   );
 
@@ -1763,7 +1764,7 @@ test('22. Orçamento total de 18s limita retries/fallback quando tempo restante 
     );
 
     assert.deepEqual(modelsTried, [DEFAULT_GEMINI_MODEL]);
-    assert.deepEqual(observedTimeouts, [18_000]);
+    assert.deepEqual(observedTimeouts, [8_000]);
   }
 
   // Scenario B: Attempt 1 (500ms) + backoff (500ms) + Attempt 2 (14_000ms) leaves 3_000ms (< 4_000ms) -> NO fallback!
@@ -1800,7 +1801,82 @@ test('22. Orçamento total de 18s limita retries/fallback quando tempo restante 
     );
 
     assert.deepEqual(modelsTried, [DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_MODEL]);
-    assert.deepEqual(observedTimeouts, [18_000, 17_000]);
+    assert.deepEqual(observedTimeouts, [8_000, 17_000]);
   }
 });
+
+test('23. Timeout local do Gemini 3.1 Flash Lite na tentativa 1 (cap 8s) aciona imediatamente o fallback Gemini 4 Hydrogen com sucesso se houver >= 4s restantes', async () => {
+  let fakeClock = 3_000_000;
+  const modelsTried: string[] = [];
+  const timeoutValues: number[] = [];
+
+  const res = await executeAiTutorGenerationWithResilience({
+    primaryModel: DEFAULT_GEMINI_MODEL,
+    fallbackModel: DEFAULT_FALLBACK_GEMINI_MODEL,
+    systemInstruction: 'sys',
+    contents: [{ role: 'user', parts: [{ text: 'Dúvida' }] }],
+    totalTimeoutMs: GEMINI_REQUEST_TIMEOUT_MS,
+    minFallbackRemainingMs: GEMINI_MIN_FALLBACK_REMAINING_MS,
+    clockMs: () => fakeClock,
+    sleepFn: async (ms) => {
+      fakeClock += ms;
+    },
+    generateOnce: async ({ model, timeoutMs }) => {
+      modelsTried.push(model);
+      timeoutValues.push(timeoutMs ?? -1);
+      if (model === DEFAULT_GEMINI_MODEL) {
+        fakeClock += 8_000;
+        const err: any = new Error('Tempo limite excedido');
+        err.code = 'AI_TIMEOUT';
+        err.status = 504;
+        throw err;
+      }
+      fakeClock += 2_000;
+      return {
+        answer: 'Resposta gerada com sucesso pelo fallback após timeout local do principal.',
+        model,
+        usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+      };
+    },
+  });
+
+  assert.deepEqual(modelsTried, [DEFAULT_GEMINI_MODEL, DEFAULT_FALLBACK_GEMINI_MODEL]);
+  assert.equal(timeoutValues[0], 8_000);
+  assert.equal(res.resilience.fallbackUsed, true);
+  assert.equal(res.resilience.attemptCount, 2);
+  assert.equal(res.generation.model, DEFAULT_FALLBACK_GEMINI_MODEL);
+});
+
+test('24. Timeout local sem tempo suficiente restante (< 4s) rejeita imediatamente sem tentar fallback', async () => {
+  let fakeClock = 4_000_000;
+  const modelsTried: string[] = [];
+
+  await assert.rejects(
+    () =>
+      executeAiTutorGenerationWithResilience({
+        primaryModel: DEFAULT_GEMINI_MODEL,
+        fallbackModel: DEFAULT_FALLBACK_GEMINI_MODEL,
+        systemInstruction: 'sys',
+        contents: [{ role: 'user', parts: [{ text: 'Dúvida' }] }],
+        totalTimeoutMs: GEMINI_REQUEST_TIMEOUT_MS,
+        minFallbackRemainingMs: GEMINI_MIN_FALLBACK_REMAINING_MS,
+        clockMs: () => fakeClock,
+        sleepFn: async (ms) => {
+          fakeClock += ms;
+        },
+        generateOnce: async ({ model }) => {
+          modelsTried.push(model);
+          fakeClock += 15_000;
+          const err: any = new Error('Tempo limite excedido');
+          err.code = 'AI_TIMEOUT';
+          err.status = 504;
+          throw err;
+        },
+      }),
+    (err: any) => err?.code === 'AI_TIMEOUT' && err?.resilience?.fallbackUsed === false
+  );
+
+  assert.deepEqual(modelsTried, [DEFAULT_GEMINI_MODEL]);
+});
+
 
