@@ -3,20 +3,20 @@ import {
   verifyFirebaseUser,
   getAdminFirestore,
   isPreviewSharingProductionFirestore,
-} from './_firebaseAdmin.js';
-import { getAsaasConfig, asaasFetch } from './_asaas.js';
+} from '../_firebaseAdmin.js';
+import { getAsaasConfig, asaasFetch } from '../_asaas.js';
 import {
   evaluatePremiumAccess,
   type PremiumAccessEvaluation,
   type SubscriptionLifecycleStatus,
-} from './_premiumValidity.js';
+} from '../_premiumValidity.js';
 import {
   getPaidPlansCatalog,
   resolvePlanIdFromValueOrCycle,
   resolveUserPlanDetails,
   type PlanDefinition,
   type PlanId,
-} from './_plans.js';
+} from '../_plans.js';
 
 export interface SubscriptionHistoryDeps {
   verifyFirebaseUser: typeof verifyFirebaseUser;

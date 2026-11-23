@@ -5,7 +5,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
   handleSubscriptionHistory,
   type SubscriptionHistoryDeps,
-} from '../api/subscription-history.ts';
+} from '../api/_subscriptions/history.ts';
 
 function createMockReq(options: {
   method?: string;

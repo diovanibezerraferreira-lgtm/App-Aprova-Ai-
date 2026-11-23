@@ -17,6 +17,12 @@ import {
   type LeaderboardPeriodEntry,
   type LeaderboardEventRecord,
 } from './_leaderboardEngine.js';
+import leaderboardRecoverHandler, {
+  handleLeaderboardRecover,
+  type LeaderboardRecoverDeps,
+} from './_leaderboardRecover.js';
+
+export { handleLeaderboardRecover, type LeaderboardRecoverDeps };
 
 export interface LeaderboardApiDeps {
   verifyFirebaseUser: typeof verifyFirebaseUser;
@@ -307,6 +313,58 @@ export async function handleLeaderboard(
   }
 }
 
-export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  return handleLeaderboard(req, res, defaultDeps);
+export type LeaderboardRouteTarget = 'leaderboard' | 'recover';
+
+export interface LeaderboardRouterDeps {
+  leaderboard?: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
+  recover?: (req: IncomingMessage & { body?: any }, res: ServerResponse) => Promise<void>;
+}
+
+export function resolveLeaderboardTarget(req: IncomingMessage): LeaderboardRouteTarget | null {
+  try {
+    const parsed = new URL(req.url || '/api/leaderboard', 'http://localhost');
+    const explicitAction = (parsed.searchParams.get('__action') || '').trim().toLowerCase();
+    if (explicitAction === 'recover') {
+      return 'recover';
+    }
+    if (explicitAction) {
+      return null;
+    }
+
+    const pathname = parsed.pathname.replace(/\/+$/, '');
+    if (pathname === '/api/leaderboard-recover') {
+      return 'recover';
+    }
+    return 'leaderboard';
+  } catch {
+    return 'leaderboard';
+  }
+}
+
+export async function handleLeaderboardRoute(
+  req: IncomingMessage & { body?: any },
+  res: ServerResponse,
+  deps?: LeaderboardRouterDeps
+): Promise<void> {
+  const target = resolveLeaderboardTarget(req);
+  if (target === 'recover') {
+    const fn = deps?.recover || leaderboardRecoverHandler;
+    return fn(req, res);
+  }
+  if (target === 'leaderboard') {
+    const fn = deps?.leaderboard || ((r, s) => handleLeaderboard(r, s, defaultDeps));
+    return fn(req, res);
+  }
+
+  return sendJson(res, 404, {
+    error: 'NOT_FOUND',
+    message: 'Rota do ranking não encontrada.',
+  });
+}
+
+export default async function handler(
+  req: IncomingMessage & { body?: any },
+  res: ServerResponse
+): Promise<void> {
+  return handleLeaderboardRoute(req, res);
 }

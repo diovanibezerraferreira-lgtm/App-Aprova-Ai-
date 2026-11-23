@@ -3,14 +3,14 @@ import {
   verifyFirebaseUser,
   getAdminFirestore,
   isPreviewSharingProductionFirestore,
-} from './_firebaseAdmin.js';
-import { getAsaasConfig, asaasFetch } from './_asaas.js';
+} from '../_firebaseAdmin.js';
+import { getAsaasConfig, asaasFetch } from '../_asaas.js';
 import {
   computePaidPeriodEndIso,
   evaluatePremiumAccess,
   normalizeSubscriptionStatus,
   parseDateTimestamp,
-} from './_premiumValidity.js';
+} from '../_premiumValidity.js';
 
 export interface SubscriptionStatusDeps {
   verifyFirebaseUser: typeof verifyFirebaseUser;

@@ -41,7 +41,7 @@ async function startServer() {
   // Mount API endpoints matching Vercel serverless functions in /api/
   app.all('/api/create-subscription', async (req, res) => {
     try {
-      const { default: handler } = await import('./api/create-subscription.js');
+      const { default: handler } = await import('./api/subscriptions.js');
       await handler(req, res);
     } catch (err: any) {
       console.error('Error in /api/create-subscription:', err);
@@ -63,9 +63,21 @@ async function startServer() {
     }
   });
 
+  app.all('/api/webhook-basics', async (req, res) => {
+    try {
+      const { default: handler } = await import('./api/webhook-asaas.js');
+      await handler(req, res);
+    } catch (err: any) {
+      console.error('Error in /api/webhook-basics:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: err.message || 'Internal server error' });
+      }
+    }
+  });
+
   app.all('/api/subscription-status', async (req, res) => {
     try {
-      const { default: handler } = await import('./api/subscription-status.js');
+      const { default: handler } = await import('./api/subscriptions.js');
       await handler(req, res);
     } catch (err: any) {
       console.error('Error in /api/subscription-status:', err);
@@ -77,7 +89,7 @@ async function startServer() {
 
   app.all('/api/subscription-history', async (req, res) => {
     try {
-      const { default: handler } = await import('./api/subscription-history.js');
+      const { default: handler } = await import('./api/subscriptions.js');
       await handler(req, res);
     } catch (err: any) {
       console.error('Error in /api/subscription-history:', err);
@@ -113,7 +125,7 @@ async function startServer() {
 
   app.all('/api/briefs', async (req, res) => {
     try {
-      const { default: handler } = await import('./api/briefs.js');
+      const { default: handler } = await import('./api/content.js');
       await handler(req, res);
     } catch (err: any) {
       console.error('Error in /api/briefs:', err);
@@ -125,7 +137,7 @@ async function startServer() {
 
   app.all('/api/materials', async (req, res) => {
     try {
-      const { default: handler } = await import('./api/materials.js');
+      const { default: handler } = await import('./api/content.js');
       await handler(req, res);
     } catch (err: any) {
       console.error('Error in /api/materials:', err);
@@ -185,7 +197,7 @@ async function startServer() {
 
   app.all('/api/leaderboard-recover', async (req, res) => {
     try {
-      const { default: handler } = await import('./api/leaderboard-recover.js');
+      const { default: handler } = await import('./api/leaderboard.js');
       await handler(req, res);
     } catch (err: any) {
       console.error('Error in /api/leaderboard-recover:', err);

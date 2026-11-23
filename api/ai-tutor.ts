@@ -13,15 +13,18 @@ import {
   buildAiTutorSystemInstruction,
   buildGeminiContents,
   createDefaultGeminiGenerator,
+  executeAiTutorGenerationWithResilience,
   extractSanitizedSdkError,
   getAiTutorLimits,
   isTimeoutGeminiError,
+  resolveFallbackGeminiModel,
   resolveGeminiModel,
   resolveMaxOutputTokens,
   sanitizeConversationHistory,
   sanitizeUserMessage,
   type AiTutorGenerateFn,
   type AiTutorQuotaInfo,
+  type ResilientGenerationMetadata,
 } from './_aiTutorEngine.js';
 
 export interface AiTutorDeps {
@@ -33,6 +36,13 @@ export interface AiTutorDeps {
   generateAiAnswer: AiTutorGenerateFn;
   getLimits: typeof getAiTutorLimits;
   resolveModel: typeof resolveGeminiModel;
+  resolveFallbackModel?: (primaryModel: string) => string | null;
+  totalTimeoutMs?: number;
+  retryBackoffMs?: number;
+  minRetryRemainingMs?: number;
+  minFallbackRemainingMs?: number;
+  sleepFn?: (ms: number) => Promise<void>;
+  clockMs?: () => number;
   nowMs?: () => number;
 }
 
@@ -45,6 +55,7 @@ const defaultDeps: AiTutorDeps = {
   generateAiAnswer: (params) => createDefaultGeminiGenerator(process.env.GEMINI_API_KEY)(params),
   getLimits: getAiTutorLimits,
   resolveModel: resolveGeminiModel,
+  resolveFallbackModel: (primaryModel) => resolveFallbackGeminiModel(primaryModel),
   nowMs: () => Date.now(),
 };
 
@@ -136,8 +147,13 @@ async function resolveUserTutorContext(params: {
 
 function mapAiProviderError(err: any): { status: number; code: string; message: string } {
   const code = String(err?.code || '').toUpperCase();
-  const status = Number(err?.status ?? err?.statusCode ?? 0);
-  const msg = String(err?.message || '').toUpperCase();
+  const diag =
+    err?.sdkDiagnostic && typeof err.sdkDiagnostic === 'object'
+      ? err.sdkDiagnostic
+      : extractSanitizedSdkError(err);
+  const status = Number(diag.httpStatus ?? diag.googleCode ?? err?.status ?? err?.statusCode ?? 0);
+  const googleStatus = String(diag.googleStatus || '').toUpperCase();
+  const msg = String(diag.googleMessage || err?.message || '').toUpperCase();
 
   if (code === 'AI_PROVIDER_NOT_CONFIGURED') {
     return {
@@ -166,7 +182,13 @@ function mapAiProviderError(err: any): { status: number; code: string; message: 
     };
   }
 
-  if (status === 429 || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('QUOTA')) {
+  if (
+    status === 429 ||
+    googleStatus === 'RESOURCE_EXHAUSTED' ||
+    msg.includes('RESOURCE_EXHAUSTED') ||
+    msg.includes('QUOTA') ||
+    msg.includes('TOO MANY REQUESTS')
+  ) {
     return {
       status: 503,
       code: 'AI_PROVIDER_RATE_LIMITED',
@@ -179,6 +201,9 @@ function mapAiProviderError(err: any): { status: number; code: string; message: 
     status === 400 ||
     status === 401 ||
     status === 403 ||
+    googleStatus === 'PERMISSION_DENIED' ||
+    googleStatus === 'UNAUTHENTICATED' ||
+    googleStatus === 'INVALID_ARGUMENT' ||
     msg.includes('API_KEY_INVALID') ||
     msg.includes('PERMISSION_DENIED')
   ) {
@@ -187,6 +212,21 @@ function mapAiProviderError(err: any): { status: number; code: string; message: 
       code: 'AI_PROVIDER_AUTH_ERROR',
       message:
         'Serviço do Professor Virtual temporariamente indisponível por configuração do provedor de IA. Nenhuma consulta foi descontada da sua cota.',
+    };
+  }
+
+  if (
+    status === 503 ||
+    googleStatus === 'UNAVAILABLE' ||
+    msg.includes('UNAVAILABLE') ||
+    msg.includes('HIGH DEMAND') ||
+    msg.includes('OVERLOADED')
+  ) {
+    return {
+      status: 503,
+      code: 'AI_PROVIDER_UNAVAILABLE',
+      message:
+        'O Professor Virtual está temporariamente sobrecarregado devido à alta demanda do provedor de IA. Tente novamente em alguns instantes — nenhuma consulta foi descontada da sua cota.',
     };
   }
 
@@ -404,37 +444,69 @@ export async function handleAiTutor(
     userMessage,
   });
 
-  // 7. Call Gemini API strictly on backend
+  // 7. Call Gemini API strictly on backend with bounded retry (503/429) & fallback within 18s total budget
   const model = deps.resolveModel();
+  const fallbackModel = deps.resolveFallbackModel
+    ? deps.resolveFallbackModel(model)
+    : resolveFallbackGeminiModel(model);
   const maxOutputTokens = resolveMaxOutputTokens(userMessage);
-  const aiStartMs = Date.now();
+  const clockMs = deps.clockMs || Date.now;
+  const aiStartMs = clockMs();
   let generation: Awaited<ReturnType<AiTutorGenerateFn>>;
+  let resilienceMeta: ResilientGenerationMetadata;
   try {
-    generation = await deps.generateAiAnswer({
-      model,
+    const resilientResult = await executeAiTutorGenerationWithResilience({
+      generateOnce: deps.generateAiAnswer,
+      primaryModel: model,
+      fallbackModel,
       systemInstruction,
       contents,
       maxOutputTokens,
+      totalTimeoutMs: deps.totalTimeoutMs,
+      retryBackoffMs: deps.retryBackoffMs,
+      minRetryRemainingMs: deps.minRetryRemainingMs,
+      minFallbackRemainingMs: deps.minFallbackRemainingMs,
+      sleepFn: deps.sleepFn,
+      clockMs,
     });
+    generation = resilientResult.generation;
+    resilienceMeta = resilientResult.resilience;
 
-    if (typeof generation?.answer !== 'string' || !generation.answer.trim()) {
-      const emptyErr: any = new Error('O provedor de IA retornou uma resposta vazia.');
-      emptyErr.code = 'AI_EMPTY_RESPONSE';
-      emptyErr.status = 502;
-      throw emptyErr;
+    if (resilienceMeta.retriedPrimary || resilienceMeta.fallbackUsed) {
+      console.warn(
+        JSON.stringify({
+          event: 'ai_tutor_resilience_recovered',
+          primaryModel: resilienceMeta.primaryModel,
+          finalModel: resilienceMeta.finalModel,
+          modelsTried: resilienceMeta.modelsTried,
+          attemptCount: resilienceMeta.attemptCount,
+          retriedPrimary: resilienceMeta.retriedPrimary,
+          fallbackUsed: resilienceMeta.fallbackUsed,
+          backoffMsApplied: resilienceMeta.backoffMsApplied,
+          elapsedMs: Math.max(0, clockMs() - aiStartMs),
+        })
+      );
     }
   } catch (err: any) {
-    const elapsedMs = Date.now() - aiStartMs;
+    const elapsedMs = Math.max(0, clockMs() - aiStartMs);
     const mapped = mapAiProviderError(err);
     const sdkDiagnostic =
       err?.sdkDiagnostic && typeof err.sdkDiagnostic === 'object'
         ? err.sdkDiagnostic
         : extractSanitizedSdkError(err);
+    const failedResilience: ResilientGenerationMetadata | undefined =
+      err?.resilience && typeof err.resilience === 'object' ? err.resilience : undefined;
 
     console.error(
       JSON.stringify({
         event: 'ai_tutor_provider_error',
-        model,
+        model: failedResilience?.finalModel || model,
+        primaryModel: model,
+        fallbackModel,
+        modelsTried: failedResilience?.modelsTried || [model],
+        attemptCount: failedResilience?.attemptCount || 1,
+        retriedPrimary: Boolean(failedResilience?.retriedPrimary),
+        fallbackUsed: Boolean(failedResilience?.fallbackUsed),
         maxOutputTokens,
         historyCount: history.length,
         mappedCode: mapped.code,

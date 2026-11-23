@@ -5,6 +5,34 @@
     {
       "source": "/((?!api/|icons/|manifest\\.webmanifest|sw\\.js|workbox-.*|assets/).*)",
       "destination": "/index.html"
+    },
+    {
+      "source": "/api/webhook-basics",
+      "destination": "/api/webhook-asaas"
+    },
+    {
+      "source": "/api/create-subscription",
+      "destination": "/api/subscriptions?__action=create"
+    },
+    {
+      "source": "/api/subscription-status",
+      "destination": "/api/subscriptions?__action=status"
+    },
+    {
+      "source": "/api/subscription-history",
+      "destination": "/api/subscriptions?__action=history"
+    },
+    {
+      "source": "/api/materials",
+      "destination": "/api/content?__resource=materials"
+    },
+    {
+      "source": "/api/briefs",
+      "destination": "/api/content?__resource=briefs"
+    },
+    {
+      "source": "/api/leaderboard-recover",
+      "destination": "/api/leaderboard?__action=recover"
     }
   ]
 }

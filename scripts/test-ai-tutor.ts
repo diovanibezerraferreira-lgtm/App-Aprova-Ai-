@@ -9,11 +9,15 @@ import { deleteApp, getApps } from 'firebase/app';
 import { handleAiTutor, type AiTutorDeps } from '../api/ai-tutor.js';
 import {
   COMPLEX_MAX_OUTPUT_TOKENS,
+  DEFAULT_FALLBACK_GEMINI_MODEL,
   DEFAULT_FREE_AI_DAILY_LIMIT,
   DEFAULT_MAX_OUTPUT_TOKENS,
   DEFAULT_PREMIUM_AI_DAILY_LIMIT,
   DEFAULT_GEMINI_MODEL,
+  GEMINI_MIN_FALLBACK_REMAINING_MS,
+  GEMINI_MIN_RETRY_REMAINING_MS,
   GEMINI_REQUEST_TIMEOUT_MS,
+  GEMINI_RETRY_BACKOFF_MS,
   MAX_HISTORY_ITEM_LENGTH,
   MAX_HISTORY_MESSAGES,
   buildAiTutorQuestionContext,
@@ -21,8 +25,12 @@ import {
   buildGeminiContents,
   buildThinkingConfigForModel,
   createDefaultGeminiGenerator,
+  executeAiTutorGenerationWithResilience,
   extractSanitizedSdkError,
   getAiTutorLimits,
+  isPermanentGeminiError,
+  isTransientRetryableGeminiError,
+  resolveFallbackGeminiModel,
   resolveGeminiModel,
   resolveMaxOutputTokens,
   sanitizeConversationHistory,
@@ -202,6 +210,14 @@ function makeDeps(opts: {
   previewBlocked?: boolean;
   authError?: Error;
   generateAiAnswer?: AiTutorGenerateFn;
+  resolveModel?: () => string;
+  resolveFallbackModel?: (primaryModel: string) => string | null;
+  totalTimeoutMs?: number;
+  retryBackoffMs?: number;
+  minRetryRemainingMs?: number;
+  minFallbackRemainingMs?: number;
+  sleepFn?: (ms: number) => Promise<void>;
+  clockMs?: () => number;
 }): AiTutorDeps {
   return {
     verifyFirebaseUser: async () => {
@@ -223,7 +239,15 @@ function makeDeps(opts: {
       freeDailyLimit: DEFAULT_FREE_AI_DAILY_LIMIT,
       premiumDailyLimit: DEFAULT_PREMIUM_AI_DAILY_LIMIT,
     }),
-    resolveModel: () => DEFAULT_GEMINI_MODEL,
+    resolveModel: opts.resolveModel || (() => DEFAULT_GEMINI_MODEL),
+    resolveFallbackModel:
+      opts.resolveFallbackModel || ((primary) => resolveFallbackGeminiModel(primary, {})),
+    totalTimeoutMs: opts.totalTimeoutMs,
+    retryBackoffMs: opts.retryBackoffMs,
+    minRetryRemainingMs: opts.minRetryRemainingMs,
+    minFallbackRemainingMs: opts.minFallbackRemainingMs,
+    sleepFn: opts.sleepFn || (async () => {}),
+    clockMs: opts.clockMs,
     nowMs: () => NOW_MS,
   };
 }
@@ -786,15 +810,15 @@ test('10. Resposta vazia da IA retorna HTTP 502 (nunca HTTP 200) e NÃO desconta
   );
 });
 
-test('11. Erro da API (503 / 429 / chave ausente) faz no máximo 1 chamada, não expõe chave e NÃO desconta cota', async () => {
+test('11. Erro 503 persistente executa no máximo 1 retry + 1 fallback (3 chamadas), não expõe chave e NÃO desconta cota', async () => {
   const secretKey = 'AIzaSyFakeSecretDoNotExpose123456';
-  let callCount = 0;
+  const modelsCalled: string[] = [];
 
   const failingGen = createDefaultGeminiGenerator(secretKey, {
     clientFactory: () => ({
       models: {
-        async generateContent() {
-          callCount += 1;
+        async generateContent(params: any) {
+          modelsCalled.push(params.model);
           const err: any = new Error(`Upstream 503 UNAVAILABLE for key ${secretKey}`);
           err.status = 503;
           throw err;
@@ -830,10 +854,15 @@ test('11. Erro da API (503 / 429 / chave ausente) faz no máximo 1 chamada, não
     })
   );
 
-  assert.equal(callCount, 1, 'Erro 503 não deve disparar retries duplicados');
+  assert.deepEqual(
+    modelsCalled,
+    [DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_MODEL, DEFAULT_FALLBACK_GEMINI_MODEL],
+    'Erro 503 persistente deve limitar-se a 1 tentativa + 1 retry no principal + 1 fallback'
+  );
   assert.equal(state.statusCode, 503);
   assert.ok(!state.body.includes(secretKey), 'Resposta nunca pode vazar GEMINI_API_KEY');
   const body = JSON.parse(state.body);
+  assert.equal(body.error, 'AI_PROVIDER_UNAVAILABLE');
   assert.equal(body.unavailable, true);
   assert.equal(body.quota.usedToday, 2);
   assert.equal(users.get('uid-api-err')!.ai_tutor_usage[DATE_KEY].count, 2);
@@ -1308,3 +1337,470 @@ test('17. Limite adaptativo de maxOutputTokens (simples vs complexo) e limite di
     assert.equal(body.quota.remainingToday, 0);
   }
 });
+
+test('18. Resiliência 503 UNAVAILABLE: aplica backoff curto, recupera na 2ª tentativa do modelo principal e desconta apenas 1 consulta', async () => {
+  const { db, users } = createMockFirestore({
+    users: {
+      'uid-retry-ok': {
+        profile: { isPremium: false },
+        answers: {
+          [PENAL_QUESTION.id]: {
+            questionId: PENAL_QUESTION.id,
+            selectedOptionId: PENAL_QUESTION.correctOptionId,
+            isCorrect: true,
+            timestamp: NOW_MS - 30_000,
+          },
+        },
+        ai_tutor_usage: {
+          [DATE_KEY]: { dateKey: DATE_KEY, count: 1, planType: 'free' },
+        },
+      },
+    },
+  });
+
+  const modelsCalled: string[] = [];
+  const backoffDelays: number[] = [];
+  const capturedWarns: string[] = [];
+  const originalConsoleWarn = console.warn;
+  console.warn = (...args: any[]) => {
+    capturedWarns.push(args.map((a) => String(a)).join(' '));
+  };
+
+  try {
+    const flakyGen = createDefaultGeminiGenerator('test-secret-key', {
+      clientFactory: () => ({
+        models: {
+          async generateContent(params: any) {
+            modelsCalled.push(params.model);
+            if (modelsCalled.length === 1) {
+              const err: any = new Error(
+                JSON.stringify({
+                  error: {
+                    code: 503,
+                    status: 'UNAVAILABLE',
+                    message:
+                      'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.',
+                  },
+                })
+              );
+              err.name = 'ApiError';
+              err.status = 503;
+              throw err;
+            }
+            return {
+              text: 'Explicação jurídica recuperada após nova tentativa automática.',
+              usageMetadata: { promptTokenCount: 250, candidatesTokenCount: 90, totalTokens: 340 },
+            };
+          },
+        },
+      }),
+    });
+
+    const { res, state } = createMockRes();
+    await handleAiTutor(
+      createMockReq('POST'),
+      res,
+      makeDeps({
+        uid: 'uid-retry-ok',
+        db,
+        body: {
+          questionId: PENAL_QUESTION.id,
+          message: 'Qual artigo fundamenta o gabarito?',
+          history: [],
+        },
+        generateAiAnswer: flakyGen,
+        sleepFn: async (ms) => {
+          backoffDelays.push(ms);
+        },
+      })
+    );
+
+    assert.equal(state.statusCode, 200);
+    assert.deepEqual(modelsCalled, [DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_MODEL]);
+    assert.deepEqual(backoffDelays, [GEMINI_RETRY_BACKOFF_MS]);
+
+    const body = JSON.parse(state.body);
+    assert.equal(body.answer, 'Explicação jurídica recuperada após nova tentativa automática.');
+    assert.equal(body.quota.usedToday, 2);
+    assert.equal(body.quota.remainingToday, 1);
+    assert.equal(users.get('uid-retry-ok')!.ai_tutor_usage[DATE_KEY].count, 2);
+
+    // Sanitized recovery log recorded without leaking UID or question text
+    assert.equal(capturedWarns.length, 1);
+    const parsedWarn = JSON.parse(capturedWarns[0]);
+    assert.equal(parsedWarn.event, 'ai_tutor_resilience_recovered');
+    assert.equal(parsedWarn.retriedPrimary, true);
+    assert.equal(parsedWarn.fallbackUsed, false);
+    assert.equal(parsedWarn.attemptCount, 2);
+    assert.ok(!capturedWarns[0].includes('uid-retry-ok'));
+    assert.ok(!capturedWarns[0].includes(PENAL_QUESTION.statement));
+  } finally {
+    console.warn = originalConsoleWarn;
+  }
+});
+
+test('19. Resiliência 429 RESOURCE_EXHAUSTED: faz 1 retry no principal e usa fallback gemini-4-hydrogen com ThinkingLevel.LOW contabilizando 1 consulta', async () => {
+  const { db, users } = createMockFirestore({
+    users: {
+      'uid-fallback-ok': {
+        profile: {
+          isPremium: true,
+          subscriptionStatus: 'ACTIVE',
+          premiumUntil: '2027-01-01T00:00:00.000Z',
+        },
+        ai_tutor_usage: {
+          [DATE_KEY]: { dateKey: DATE_KEY, count: 5, planType: 'premium' },
+        },
+      },
+    },
+  });
+
+  const capturedCalls: Array<{ model: string; thinkingLevel: unknown }> = [];
+  const backoffDelays: number[] = [];
+
+  const rateLimitedPrimaryGen = createDefaultGeminiGenerator('test-secret-key', {
+    clientFactory: () => ({
+      models: {
+        async generateContent(params: any) {
+          capturedCalls.push({
+            model: params.model,
+            thinkingLevel: params?.config?.thinkingConfig?.thinkingLevel,
+          });
+          if (params.model === DEFAULT_GEMINI_MODEL) {
+            const err: any = new Error(
+              JSON.stringify({
+                error: {
+                  code: 429,
+                  status: 'RESOURCE_EXHAUSTED',
+                  message: 'Quota exceeded for model gemini-3.1-flash-lite.',
+                },
+              })
+            );
+            err.name = 'ApiError';
+            err.status = 429;
+            throw err;
+          }
+          return {
+            text: 'Resposta jurídica gerada com segurança pelo modelo alternativo.',
+            usageMetadata: { promptTokenCount: 280, candidatesTokenCount: 110, totalTokens: 390 },
+          };
+        },
+      },
+    }),
+  });
+
+  const { res, state } = createMockRes();
+  await handleAiTutor(
+    createMockReq('POST'),
+    res,
+    makeDeps({
+      uid: 'uid-fallback-ok',
+      db,
+      body: {
+        questionId: CIVIL_QUESTION.id,
+        message: 'Explique por que a alternativa correta prevalece.',
+        history: [],
+      },
+      generateAiAnswer: rateLimitedPrimaryGen,
+      sleepFn: async (ms) => {
+        backoffDelays.push(ms);
+      },
+    })
+  );
+
+  assert.equal(state.statusCode, 200);
+  assert.deepEqual(backoffDelays, [GEMINI_RETRY_BACKOFF_MS]);
+  assert.deepEqual(capturedCalls, [
+    { model: 'gemini-3.1-flash-lite', thinkingLevel: ThinkingLevel.MINIMAL },
+    { model: 'gemini-3.1-flash-lite', thinkingLevel: ThinkingLevel.MINIMAL },
+    { model: 'gemini-4-hydrogen', thinkingLevel: ThinkingLevel.LOW },
+  ]);
+
+  const body = JSON.parse(state.body);
+  assert.equal(body.answer, 'Resposta jurídica gerada com segurança pelo modelo alternativo.');
+  assert.equal(body.quota.dailyLimit, 30);
+  assert.equal(body.quota.usedToday, 6);
+  assert.equal(body.quota.remainingToday, 24);
+  assert.equal(users.get('uid-fallback-ok')!.ai_tutor_usage[DATE_KEY].count, 6);
+});
+
+test('20. Falha simultânea do modelo principal (503) e do modelo alternativo retorna HTTP 503 amigável, log sanitizado e ZERO desconto de cota', async () => {
+  const secretKey = 'AIzaSyFallbackSecretLeakCheck99999';
+  const { db, users } = createMockFirestore({
+    users: {
+      'uid-both-fail': {
+        profile: { isPremium: false },
+        ai_tutor_usage: {
+          [DATE_KEY]: { dateKey: DATE_KEY, count: 2, planType: 'free' },
+        },
+      },
+    },
+  });
+
+  const modelsCalled: string[] = [];
+  const capturedErrors: string[] = [];
+  const originalConsoleError = console.error;
+  console.error = (...args: any[]) => {
+    capturedErrors.push(args.map((a) => String(a)).join(' '));
+  };
+
+  try {
+    const bothFailGen = createDefaultGeminiGenerator(secretKey, {
+      clientFactory: () => ({
+        models: {
+          async generateContent(params: any) {
+            modelsCalled.push(params.model);
+            const err: any = new Error(
+              JSON.stringify({
+                error: {
+                  code: 503,
+                  status: 'UNAVAILABLE',
+                  message: `Model ${params.model} overloaded for key ${secretKey} aluno@teste.com`,
+                },
+              })
+            );
+            err.name = 'ApiError';
+            err.status = 503;
+            throw err;
+          },
+        },
+      }),
+    });
+
+    const { res, state } = createMockRes();
+    await handleAiTutor(
+      createMockReq('POST'),
+      res,
+      makeDeps({
+        uid: 'uid-both-fail',
+        db,
+        body: {
+          questionId: PENAL_QUESTION.id,
+          message: 'Explique o erro das alternativas.',
+          history: [],
+        },
+        generateAiAnswer: bothFailGen,
+      })
+    );
+
+    assert.deepEqual(modelsCalled, [
+      DEFAULT_GEMINI_MODEL,
+      DEFAULT_GEMINI_MODEL,
+      DEFAULT_FALLBACK_GEMINI_MODEL,
+    ]);
+    assert.equal(state.statusCode, 503);
+    const body = JSON.parse(state.body);
+    assert.equal(body.error, 'AI_PROVIDER_UNAVAILABLE');
+    assert.equal(body.unavailable, true);
+    assert.match(body.message, /nenhuma consulta foi descontada/i);
+    assert.equal(body.quota.usedToday, 2);
+    assert.equal(body.quota.remainingToday, 1);
+    assert.equal(users.get('uid-both-fail')!.ai_tutor_usage[DATE_KEY].count, 2);
+
+    assert.equal(capturedErrors.length, 1);
+    const rawLog = capturedErrors[0];
+    const parsedLog = JSON.parse(rawLog);
+    assert.equal(parsedLog.event, 'ai_tutor_provider_error');
+    assert.equal(parsedLog.primaryModel, DEFAULT_GEMINI_MODEL);
+    assert.equal(parsedLog.fallbackModel, DEFAULT_FALLBACK_GEMINI_MODEL);
+    assert.deepEqual(parsedLog.modelsTried, [
+      DEFAULT_GEMINI_MODEL,
+      DEFAULT_GEMINI_MODEL,
+      DEFAULT_FALLBACK_GEMINI_MODEL,
+    ]);
+    assert.equal(parsedLog.attemptCount, 3);
+    assert.equal(parsedLog.retriedPrimary, true);
+    assert.equal(parsedLog.fallbackUsed, true);
+    assert.equal(parsedLog.mappedCode, 'AI_PROVIDER_UNAVAILABLE');
+    assert.ok(!rawLog.includes(secretKey));
+    assert.ok(!rawLog.includes('aluno@teste.com'));
+    assert.ok(!rawLog.includes('uid-both-fail'));
+    assert.ok(!rawLog.includes(PENAL_QUESTION.statement));
+  } finally {
+    console.error = originalConsoleError;
+  }
+});
+
+test('21. Erros permanentes (400 API_KEY_INVALID, 401, 403 PERMISSION_DENIED, 404 NOT_FOUND e chave ausente) NUNCA disparam retry ou fallback', async () => {
+  const permanentCases = [
+    { status: 400, googleStatus: 'INVALID_ARGUMENT', message: 'API_KEY_INVALID' },
+    { status: 401, googleStatus: 'UNAUTHENTICATED', message: 'Invalid authentication credentials' },
+    { status: 403, googleStatus: 'PERMISSION_DENIED', message: 'Permission denied on project' },
+    { status: 404, googleStatus: 'NOT_FOUND', message: 'Model not found' },
+  ];
+
+  for (const item of permanentCases) {
+    const modelsCalled: string[] = [];
+    const { db, users } = createMockFirestore({
+      users: {
+        'uid-perm': {
+          profile: { isPremium: false },
+          ai_tutor_usage: { [DATE_KEY]: { dateKey: DATE_KEY, count: 1, planType: 'free' } },
+        },
+      },
+    });
+
+    const permGen = createDefaultGeminiGenerator('test-secret-key', {
+      clientFactory: () => ({
+        models: {
+          async generateContent(params: any) {
+            modelsCalled.push(params.model);
+            const err: any = new Error(
+              JSON.stringify({
+                error: {
+                  code: item.status,
+                  status: item.googleStatus,
+                  message: item.message,
+                },
+              })
+            );
+            err.name = 'ApiError';
+            err.status = item.status;
+            throw err;
+          },
+        },
+      }),
+    });
+
+    const { res, state } = createMockRes();
+    await handleAiTutor(
+      createMockReq('POST'),
+      res,
+      makeDeps({
+        uid: 'uid-perm',
+        db,
+        body: { questionId: PENAL_QUESTION.id, message: 'Explique o tema.', history: [] },
+        generateAiAnswer: permGen,
+      })
+    );
+
+    assert.deepEqual(
+      modelsCalled,
+      [DEFAULT_GEMINI_MODEL],
+      `Erro permanente ${item.status}/${item.googleStatus} deve executar exatamente 1 chamada`
+    );
+    assert.equal(state.statusCode, 503);
+    assert.equal(users.get('uid-perm')!.ai_tutor_usage[DATE_KEY].count, 1);
+  }
+
+  // Missing API key -> 0 external calls, no retry/fallback
+  let missingKeyCalls = 0;
+  const missingKeyGen = createDefaultGeminiGenerator('', {
+    clientFactory: () => ({
+      models: {
+        async generateContent() {
+          missingKeyCalls += 1;
+          return { text: 'não deve chamar' };
+        },
+      },
+    }),
+  });
+  await assert.rejects(
+    () =>
+      executeAiTutorGenerationWithResilience({
+        generateOnce: missingKeyGen,
+        primaryModel: DEFAULT_GEMINI_MODEL,
+        fallbackModel: DEFAULT_FALLBACK_GEMINI_MODEL,
+        systemInstruction: 'sys',
+        contents: [{ role: 'user', parts: [{ text: 'hi' }] }],
+      }),
+    (err: any) => err?.code === 'AI_PROVIDER_NOT_CONFIGURED' && err?.resilience?.attemptCount === 1
+  );
+  assert.equal(missingKeyCalls, 0);
+
+  // Direct classifier assertions
+  assert.equal(isPermanentGeminiError({ status: 403, message: 'PERMISSION_DENIED' }), true);
+  assert.equal(isTransientRetryableGeminiError({ status: 403, message: 'PERMISSION_DENIED' }), false);
+  assert.equal(isTransientRetryableGeminiError({ status: 503, message: 'UNAVAILABLE' }), true);
+  assert.equal(isTransientRetryableGeminiError({ status: 429, message: 'RESOURCE_EXHAUSTED' }), true);
+  assert.equal(isTransientRetryableGeminiError({ code: 'AI_TIMEOUT', status: 504 }), false);
+});
+
+test('22. Orçamento total de 18s limita retries/fallback quando tempo restante é insuficiente e resolveFallbackGeminiModel valida configuração', async () => {
+  // Fallback model resolution guards
+  assert.equal(resolveFallbackGeminiModel('gemini-3.1-flash-lite', {}), 'gemini-4-hydrogen');
+  assert.equal(
+    resolveFallbackGeminiModel('gemini-3.1-flash-lite', { GEMINI_FALLBACK_MODEL: 'gemini-1.5-flash' }),
+    'gemini-4-hydrogen'
+  );
+  assert.equal(
+    resolveFallbackGeminiModel('gemini-3.1-flash-lite', { GEMINI_FALLBACK_MODEL: 'none' }),
+    null
+  );
+  assert.equal(resolveFallbackGeminiModel('gemini-4-hydrogen', {}), null);
+
+  // Scenario A: Attempt 1 fails with 503 after consuming 16s of the 18s budget -> NO retry, NO fallback!
+  {
+    let fakeClock = 1_000_000;
+    const observedTimeouts: number[] = [];
+    const modelsTried: string[] = [];
+
+    await assert.rejects(
+      () =>
+        executeAiTutorGenerationWithResilience({
+          primaryModel: DEFAULT_GEMINI_MODEL,
+          fallbackModel: DEFAULT_FALLBACK_GEMINI_MODEL,
+          systemInstruction: 'sys',
+          contents: [{ role: 'user', parts: [{ text: 'Dúvida' }] }],
+          totalTimeoutMs: GEMINI_REQUEST_TIMEOUT_MS,
+          retryBackoffMs: GEMINI_RETRY_BACKOFF_MS,
+          minRetryRemainingMs: GEMINI_MIN_RETRY_REMAINING_MS,
+          minFallbackRemainingMs: GEMINI_MIN_FALLBACK_REMAINING_MS,
+          clockMs: () => fakeClock,
+          sleepFn: async (ms) => {
+            fakeClock += ms;
+          },
+          generateOnce: async ({ model, timeoutMs }) => {
+            modelsTried.push(model);
+            observedTimeouts.push(timeoutMs ?? -1);
+            fakeClock += 16_000; // Leaves only 2_000ms (< 500 + 3_000)
+            const err: any = new Error('503 UNAVAILABLE');
+            err.status = 503;
+            throw err;
+          },
+        }),
+      (err: any) => err?.status === 503 && err?.resilience?.attemptCount === 1
+    );
+
+    assert.deepEqual(modelsTried, [DEFAULT_GEMINI_MODEL]);
+    assert.deepEqual(observedTimeouts, [18_000]);
+  }
+
+  // Scenario B: Attempt 1 (500ms) + backoff (500ms) + Attempt 2 (14_000ms) leaves 3_000ms (< 4_000ms) -> NO fallback!
+  {
+    let fakeClock = 2_000_000;
+    const observedTimeouts: number[] = [];
+    const modelsTried: string[] = [];
+
+    await assert.rejects(
+      () =>
+        executeAiTutorGenerationWithResilience({
+          primaryModel: DEFAULT_GEMINI_MODEL,
+          fallbackModel: DEFAULT_FALLBACK_GEMINI_MODEL,
+          systemInstruction: 'sys',
+          contents: [{ role: 'user', parts: [{ text: 'Dúvida' }] }],
+          totalTimeoutMs: GEMINI_REQUEST_TIMEOUT_MS,
+          retryBackoffMs: GEMINI_RETRY_BACKOFF_MS,
+          minRetryRemainingMs: GEMINI_MIN_RETRY_REMAINING_MS,
+          minFallbackRemainingMs: GEMINI_MIN_FALLBACK_REMAINING_MS,
+          clockMs: () => fakeClock,
+          sleepFn: async (ms) => {
+            fakeClock += ms;
+          },
+          generateOnce: async ({ model, timeoutMs }) => {
+            modelsTried.push(model);
+            observedTimeouts.push(timeoutMs ?? -1);
+            fakeClock += modelsTried.length === 1 ? 500 : 14_000;
+            const err: any = new Error('503 UNAVAILABLE');
+            err.status = 503;
+            throw err;
+          },
+        }),
+      (err: any) => err?.status === 503 && err?.resilience?.attemptCount === 2 && err?.resilience?.fallbackUsed === false
+    );
+
+    assert.deepEqual(modelsTried, [DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_MODEL]);
+    assert.deepEqual(observedTimeouts, [18_000, 17_000]);
+  }
+});
+

@@ -25,7 +25,7 @@ import {
   type LeaderboardOutboxRecord,
 } from '../api/_leaderboardEngine.js';
 import { handleLeaderboard } from '../api/leaderboard.js';
-import { handleLeaderboardRecover } from '../api/leaderboard-recover.js';
+import { handleLeaderboardRecover } from '../api/_leaderboardRecover.js';
 import { handleQuestions } from '../api/questions.js';
 import { handleSimulados } from '../api/simulados.js';
 import { handleStudyPlan } from '../api/study-plan.js';

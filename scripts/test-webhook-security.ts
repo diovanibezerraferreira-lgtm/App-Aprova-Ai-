@@ -6,7 +6,10 @@ import path from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { getAsaasConfig, asaasFetch } from '../api/_asaas.ts';
 import webhookAsaasHandler from '../api/webhook-asaas.ts';
-import webhookBasicsHandler, { handleWebhook, type WebhookDeps } from '../api/webhook-basics.ts';
+import webhookBasicsHandler, {
+  handleWebhook,
+  type WebhookDeps,
+} from '../api/_webhookAsaasHandler.ts';
 import {
   getFirebaseAdminDiagnostics,
   getProductionFirebaseIdentifiers,
@@ -16,11 +19,11 @@ import {
 import {
   handleCreateSubscription,
   type CreateSubscriptionDeps,
-} from '../api/create-subscription.ts';
+} from '../api/_subscriptions/create.ts';
 import {
   handleSubscriptionStatus,
   type SubscriptionStatusDeps,
-} from '../api/subscription-status.ts';
+} from '../api/_subscriptions/status.ts';
 import {
   resolveAccessContext,
   getDailyQuotaStatus,
@@ -37,8 +40,8 @@ import {
 } from '../api/_premiumValidity.ts';
 import questionsHandler from '../api/questions.ts';
 import simuladosHandler from '../api/simulados.ts';
-import materialsHandler from '../api/materials.ts';
-import briefsHandler from '../api/briefs.ts';
+import materialsHandler from '../api/_content/materials.ts';
+import briefsHandler from '../api/_content/briefs.ts';
 
 const PROD_PROJECT_ID = 'gen-lang-client-0793753103';
 const PROD_DATABASE_ID = 'ai-studio-aprovadireito-858e292a-4f1d-4483-a130-1a8041386c5a';
@@ -245,11 +248,18 @@ test('api/_asaas.ts compara VERCEL_ENV e ASAAS_ENVIRONMENT com valores literais 
   );
 });
 
-test('Rota pública /api/webhook-asaas encaminha ao manipulador único api/webhook-basics.ts e protege corretamente', async () => {
-  // Verifica wiring no vercel.json e server.ts e delegação de api/webhook-asaas.ts -> api/webhook-basics.ts
+test('Rota pública /api/webhook-asaas encaminha ao manipulador único api/_webhookAsaasHandler.ts e protege corretamente', async () => {
+  // Verifica wiring no vercel.json e server.ts e delegação de api/webhook-asaas.ts -> api/_webhookAsaasHandler.ts
   const vercelJson = JSON.parse(readFileSync(path.resolve(process.cwd(), 'vercel.json'), 'utf-8'));
   const rewriteSource = String(vercelJson?.rewrites?.[0]?.source || '');
   assert.ok(rewriteSource.includes('api/'), 'vercel.json deve excluir api/ do rewrite para index.html');
+  assert.ok(
+    Array.isArray(vercelJson?.rewrites) &&
+      vercelJson.rewrites.some(
+        (r: any) => r?.source === '/api/webhook-basics' && r?.destination === '/api/webhook-asaas'
+      ),
+    'vercel.json deve manter rewrite retrocompatível de /api/webhook-basics para /api/webhook-asaas'
+  );
 
   const serverTs = readFileSync(path.resolve(process.cwd(), 'server.ts'), 'utf-8');
   assert.ok(serverTs.includes("app.all('/api/webhook-asaas'"), 'server.ts deve montar /api/webhook-asaas');
@@ -262,17 +272,17 @@ test('Rota pública /api/webhook-asaas encaminha ao manipulador único api/webho
     path.resolve(process.cwd(), 'api/webhook-asaas.ts'),
     'utf-8'
   );
-  const webhookBasicsSrc = readFileSync(
-    path.resolve(process.cwd(), 'api/webhook-basics.ts'),
+  const webhookInternalSrc = readFileSync(
+    path.resolve(process.cwd(), 'api/_webhookAsaasHandler.ts'),
     'utf-8'
   );
 
   assert.ok(
-    webhookAsaasSrc.includes("from './webhook-basics.js'"),
-    'api/webhook-asaas.ts deve delegar para ./webhook-basics.js sem duplicar implementação'
+    webhookAsaasSrc.includes("from './_webhookAsaasHandler.js'"),
+    'api/webhook-asaas.ts deve delegar para ./_webhookAsaasHandler.js sem duplicar implementação'
   );
   assert.ok(
-    webhookAsaasSrc.includes('return webhookBasicsHandler(req, res)'),
+    webhookAsaasSrc.includes('return webhookAsaasHandler(req, res)'),
     'api/webhook-asaas.ts deve encaminhar req e res sem alterar o conteúdo'
   );
   assert.ok(
@@ -280,11 +290,11 @@ test('Rota pública /api/webhook-asaas encaminha ao manipulador único api/webho
     'api/webhook-asaas.ts não pode conter autorreferência'
   );
   assert.ok(
-    !webhookBasicsSrc.includes('webhook-asaas') && !webhookBasicsSrc.includes('webhook-basics'),
-    'api/webhook-basics.ts não pode conter importação circular ou autorreferência'
+    !webhookInternalSrc.includes('webhook-asaas') && !webhookInternalSrc.includes('_webhookAsaasHandler'),
+    'api/_webhookAsaasHandler.ts não pode conter importação circular ou autorreferência'
   );
 
-  // Verifica ambos os entrypoints (webhook-asaas.ts e webhook-basics.ts) respondendo 405, 401 e 403 em VERCEL_ENV='preview'
+  // Verifica entrypoint público e manipulador interno respondendo 405, 401 e 403 em VERCEL_ENV='preview'
   await withEnv(
     {
       VERCEL_ENV: 'preview',

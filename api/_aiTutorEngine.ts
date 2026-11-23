@@ -4,8 +4,12 @@ import type { Question } from '../src/types/index.js';
 export const DEFAULT_FREE_AI_DAILY_LIMIT = 3;
 export const DEFAULT_PREMIUM_AI_DAILY_LIMIT = 30;
 export const DEFAULT_GEMINI_MODEL = 'gemini-3.1-flash-lite';
+export const DEFAULT_FALLBACK_GEMINI_MODEL = 'gemini-4-hydrogen';
 
 export const GEMINI_REQUEST_TIMEOUT_MS = 18_000;
+export const GEMINI_RETRY_BACKOFF_MS = 500;
+export const GEMINI_MIN_RETRY_REMAINING_MS = 3_000;
+export const GEMINI_MIN_FALLBACK_REMAINING_MS = 4_000;
 
 export const DEFAULT_MAX_OUTPUT_TOKENS = 480;
 export const COMPLEX_MAX_OUTPUT_TOKENS = 760;
@@ -51,7 +55,24 @@ export type AiTutorGenerateFn = (params: {
   systemInstruction: string;
   contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }>;
   maxOutputTokens?: number;
+  timeoutMs?: number;
 }) => Promise<AiTutorGenerationResult>;
+
+export interface ResilientGenerationMetadata {
+  primaryModel: string;
+  fallbackModel: string | null;
+  finalModel: string;
+  modelsTried: string[];
+  attemptCount: number;
+  retriedPrimary: boolean;
+  fallbackUsed: boolean;
+  backoffMsApplied: number;
+}
+
+export interface ResilientGenerationResult {
+  generation: AiTutorGenerationResult;
+  resilience: ResilientGenerationMetadata;
+}
 
 export function getAiTutorLimits(env: NodeJS.ProcessEnv = process.env): {
   freeDailyLimit: number;
@@ -79,6 +100,24 @@ export function resolveGeminiModel(env: NodeJS.ProcessEnv = process.env): string
     return DEFAULT_GEMINI_MODEL;
   }
   return configured;
+}
+
+const DISABLED_FALLBACK_VALUES = new Set(['none', 'off', 'false', 'disabled']);
+
+export function resolveFallbackGeminiModel(
+  primaryModel: string = DEFAULT_GEMINI_MODEL,
+  env: NodeJS.ProcessEnv = process.env
+): string | null {
+  const raw = (env.GEMINI_FALLBACK_MODEL || '').trim();
+  if (raw && DISABLED_FALLBACK_VALUES.has(raw.toLowerCase())) {
+    return null;
+  }
+  const candidate =
+    raw && !PROHIBITED_MODELS.has(raw.toLowerCase()) ? raw : DEFAULT_FALLBACK_GEMINI_MODEL;
+  if (candidate.toLowerCase() === primaryModel.trim().toLowerCase()) {
+    return null;
+  }
+  return candidate;
 }
 
 export function buildThinkingConfigForModel(
@@ -429,6 +468,79 @@ export function isTimeoutGeminiError(err: any): boolean {
   );
 }
 
+export function isPermanentGeminiError(err: any): boolean {
+  const code = String(err?.code || '').toUpperCase();
+  if (code === 'AI_PROVIDER_NOT_CONFIGURED' || code === 'AI_EMPTY_RESPONSE') {
+    return true;
+  }
+
+  const diag: SanitizedSdkErrorDiagnostic =
+    err?.sdkDiagnostic && typeof err.sdkDiagnostic === 'object'
+      ? err.sdkDiagnostic
+      : extractSanitizedSdkError(err);
+
+  const status = diag.httpStatus ?? diag.googleCode ?? Number(err?.status ?? err?.statusCode ?? 0);
+  const googleStatus = String(diag.googleStatus || '').toUpperCase();
+  const msg = String(diag.googleMessage || err?.message || '').toUpperCase();
+
+  if (status === 400 || status === 401 || status === 403 || status === 404) {
+    return true;
+  }
+
+  if (
+    googleStatus === 'INVALID_ARGUMENT' ||
+    googleStatus === 'UNAUTHENTICATED' ||
+    googleStatus === 'PERMISSION_DENIED' ||
+    googleStatus === 'NOT_FOUND' ||
+    googleStatus === 'FAILED_PRECONDITION'
+  ) {
+    return true;
+  }
+
+  return (
+    msg.includes('API_KEY_INVALID') ||
+    msg.includes('API KEY NOT VALID') ||
+    msg.includes('PERMISSION_DENIED') ||
+    msg.includes('UNAUTHENTICATED') ||
+    msg.includes('INVALID_ARGUMENT')
+  );
+}
+
+/**
+ * Returns true ONLY for transient provider overload / rate-limit errors (503 UNAVAILABLE or 429 RESOURCE_EXHAUSTED).
+ * Never returns true for permanent auth/config errors, timeouts, or empty responses.
+ */
+export function isTransientRetryableGeminiError(err: any): boolean {
+  if (!err || isPermanentGeminiError(err) || isTimeoutGeminiError(err)) {
+    return false;
+  }
+
+  const diag: SanitizedSdkErrorDiagnostic =
+    err?.sdkDiagnostic && typeof err.sdkDiagnostic === 'object'
+      ? err.sdkDiagnostic
+      : extractSanitizedSdkError(err);
+
+  const status = diag.httpStatus ?? diag.googleCode ?? Number(err?.status ?? err?.statusCode ?? 0);
+  const googleStatus = String(diag.googleStatus || '').toUpperCase();
+  const msg = String(diag.googleMessage || err?.message || '').toUpperCase();
+
+  if (status === 503 || status === 429) {
+    return true;
+  }
+
+  if (googleStatus === 'UNAVAILABLE' || googleStatus === 'RESOURCE_EXHAUSTED') {
+    return true;
+  }
+
+  return (
+    msg.includes('UNAVAILABLE') ||
+    msg.includes('HIGH DEMAND') ||
+    msg.includes('OVERLOADED') ||
+    msg.includes('RESOURCE_EXHAUSTED') ||
+    msg.includes('TOO MANY REQUESTS')
+  );
+}
+
 export interface GeminiGeneratorOptions {
   timeoutMs?: number;
   clientFactory?: (config: {
@@ -450,20 +562,20 @@ export interface GeminiGeneratorOptions {
 /**
  * Creates a server-side Gemini generator using @google/genai.
  * Uses a single authoritative AbortController timeout (avoiding conflicting SDK
- * timers and premature X-Server-Timeout deadlines) and disables retries so every
- * consultation performs at most 1 bounded call to Gemini.
+ * timers and premature X-Server-Timeout deadlines) and disables SDK-internal retries
+ * so retry/fallback orchestration stays explicit and bounded.
  * Never exposes GEMINI_API_KEY outside server runtime.
  */
 export function createDefaultGeminiGenerator(
   apiKey: string | undefined = process.env.GEMINI_API_KEY,
   options: GeminiGeneratorOptions = {}
 ): AiTutorGenerateFn {
-  const timeoutMs = Math.max(
+  const defaultTimeoutMs = Math.max(
     50,
     Math.min(25_000, Math.floor(options.timeoutMs ?? GEMINI_REQUEST_TIMEOUT_MS))
   );
 
-  return async ({ model, systemInstruction, contents, maxOutputTokens }) => {
+  return async ({ model, systemInstruction, contents, maxOutputTokens, timeoutMs: callTimeoutMs }) => {
     const cleanKey = (apiKey || '').trim();
     if (!cleanKey || cleanKey === 'MY_GEMINI_API_KEY') {
       const err: any = new Error('AI_PROVIDER_NOT_CONFIGURED');
@@ -471,6 +583,11 @@ export function createDefaultGeminiGenerator(
       err.status = 503;
       throw err;
     }
+
+    const effectiveTimeoutMs =
+      typeof callTimeoutMs === 'number' && Number.isFinite(callTimeoutMs)
+        ? Math.max(50, Math.min(defaultTimeoutMs, Math.floor(callTimeoutMs)))
+        : defaultTimeoutMs;
 
     // Do NOT set httpOptions.timeout alongside AbortController: the SDK turns
     // httpOptions.timeout into both a second AbortController and an X-Server-Timeout
@@ -502,7 +619,7 @@ export function createDefaultGeminiGenerator(
     const timer = setTimeout(() => {
       timedOut = true;
       controller.abort();
-    }, timeoutMs);
+    }, effectiveTimeoutMs);
 
     try {
       const response = await ai.models.generateContent({
@@ -563,4 +680,184 @@ export function createDefaultGeminiGenerator(
       clearTimeout(timer);
     }
   };
+}
+
+const defaultSleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+function attachResilienceToError(err: any, resilience: ResilientGenerationMetadata): void {
+  if (err && typeof err === 'object') {
+    try {
+      err.resilience = resilience;
+    } catch {
+      // ignore non-extensible error objects
+    }
+  }
+}
+
+export interface ExecuteResilientGenerationParams {
+  generateOnce: AiTutorGenerateFn;
+  primaryModel: string;
+  fallbackModel?: string | null;
+  systemInstruction: string;
+  contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }>;
+  maxOutputTokens?: number;
+  totalTimeoutMs?: number;
+  retryBackoffMs?: number;
+  minRetryRemainingMs?: number;
+  minFallbackRemainingMs?: number;
+  sleepFn?: (ms: number) => Promise<void>;
+  clockMs?: () => number;
+}
+
+/**
+ * Executes Gemini generation with bounded resilience:
+ * - Attempt 1: primary model (e.g. gemini-3.1-flash-lite).
+ * - Attempt 2: at most 1 automatic retry with short backoff ONLY on transient 503/UNAVAILABLE or 429/RESOURCE_EXHAUSTED.
+ * - Attempt 3: optional single fallback to compatible secondary model (e.g. gemini-4-hydrogen with ThinkingLevel.LOW)
+ *   ONLY if primary remains transiently unavailable and sufficient time remains within the shared 18s budget.
+ * - Permanent errors (400/401/403/404, invalid key), timeouts (504/AbortError), and empty responses NEVER retry.
+ */
+export async function executeAiTutorGenerationWithResilience(
+  params: ExecuteResilientGenerationParams
+): Promise<ResilientGenerationResult> {
+  const clockMs = params.clockMs ?? Date.now;
+  const sleepFn = params.sleepFn ?? defaultSleep;
+  const totalTimeoutMs = Math.max(
+    50,
+    Math.min(25_000, Math.floor(params.totalTimeoutMs ?? GEMINI_REQUEST_TIMEOUT_MS))
+  );
+  const retryBackoffMs = Math.max(0, Math.min(2_000, Math.floor(params.retryBackoffMs ?? GEMINI_RETRY_BACKOFF_MS)));
+  const minRetryRemainingMs = Math.max(
+    50,
+    Math.floor(params.minRetryRemainingMs ?? GEMINI_MIN_RETRY_REMAINING_MS)
+  );
+  const minFallbackRemainingMs = Math.max(
+    50,
+    Math.floor(params.minFallbackRemainingMs ?? GEMINI_MIN_FALLBACK_REMAINING_MS)
+  );
+
+  const primaryModel = params.primaryModel.trim() || DEFAULT_GEMINI_MODEL;
+  const rawFallback = typeof params.fallbackModel === 'string' ? params.fallbackModel.trim() : '';
+  const fallbackModel =
+    rawFallback && rawFallback.toLowerCase() !== primaryModel.toLowerCase() ? rawFallback : null;
+
+  const deadlineMs = clockMs() + totalTimeoutMs;
+  const getRemainingMs = () => Math.max(0, deadlineMs - clockMs());
+
+  const modelsTried: string[] = [];
+  let attemptCount = 0;
+  let retriedPrimary = false;
+  let fallbackUsed = false;
+  let backoffMsApplied = 0;
+
+  const buildMeta = (finalModel: string): ResilientGenerationMetadata => ({
+    primaryModel,
+    fallbackModel,
+    finalModel,
+    modelsTried: [...modelsTried],
+    attemptCount,
+    retriedPrimary,
+    fallbackUsed,
+    backoffMsApplied,
+  });
+
+  const runSingleAttempt = async (modelName: string): Promise<AiTutorGenerationResult> => {
+    const remainingMs = getRemainingMs();
+    if (remainingMs < 50) {
+      const timeoutErr: any = new Error('Tempo limite excedido ao aguardar o provedor de IA.');
+      timeoutErr.code = 'AI_TIMEOUT';
+      timeoutErr.status = 504;
+      timeoutErr.sdkDiagnostic = extractSanitizedSdkError(timeoutErr, {
+        localTimedOut: true,
+        abortSignalAborted: true,
+      });
+      throw timeoutErr;
+    }
+
+    attemptCount += 1;
+    modelsTried.push(modelName);
+
+    const generation = await params.generateOnce({
+      model: modelName,
+      systemInstruction: params.systemInstruction,
+      contents: params.contents,
+      maxOutputTokens: params.maxOutputTokens,
+      timeoutMs: remainingMs,
+    });
+
+    if (typeof generation?.answer !== 'string' || !generation.answer.trim()) {
+      const emptyErr: any = new Error('O provedor de IA retornou uma resposta vazia.');
+      emptyErr.code = 'AI_EMPTY_RESPONSE';
+      emptyErr.status = 502;
+      throw emptyErr;
+    }
+
+    return generation;
+  };
+
+  // Attempt 1: Primary model
+  let lastError: any;
+  try {
+    const generation = await runSingleAttempt(primaryModel);
+    return {
+      generation,
+      resilience: buildMeta(generation.model || primaryModel),
+    };
+  } catch (err: any) {
+    lastError = err;
+    if (!isTransientRetryableGeminiError(err)) {
+      attachResilienceToError(err, buildMeta(primaryModel));
+      throw err;
+    }
+  }
+
+  // Attempt 2: At most 1 automatic retry on primary model with short backoff
+  if (getRemainingMs() < retryBackoffMs + minRetryRemainingMs) {
+    attachResilienceToError(lastError, buildMeta(primaryModel));
+    throw lastError;
+  }
+
+  if (retryBackoffMs > 0) {
+    await sleepFn(retryBackoffMs);
+    backoffMsApplied = retryBackoffMs;
+  }
+
+  if (getRemainingMs() < minRetryRemainingMs) {
+    attachResilienceToError(lastError, buildMeta(primaryModel));
+    throw lastError;
+  }
+
+  retriedPrimary = true;
+  try {
+    const generation = await runSingleAttempt(primaryModel);
+    return {
+      generation,
+      resilience: buildMeta(generation.model || primaryModel),
+    };
+  } catch (err: any) {
+    lastError = err;
+    if (!isTransientRetryableGeminiError(err)) {
+      attachResilienceToError(err, buildMeta(primaryModel));
+      throw err;
+    }
+  }
+
+  // Attempt 3: Optional single fallback to secondary compatible Gemini model
+  if (!fallbackModel || getRemainingMs() < minFallbackRemainingMs) {
+    attachResilienceToError(lastError, buildMeta(primaryModel));
+    throw lastError;
+  }
+
+  fallbackUsed = true;
+  try {
+    const generation = await runSingleAttempt(fallbackModel);
+    return {
+      generation,
+      resilience: buildMeta(generation.model || fallbackModel),
+    };
+  } catch (err: any) {
+    attachResilienceToError(err, buildMeta(fallbackModel));
+    throw err;
+  }
 }

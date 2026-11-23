@@ -1,5 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import webhookBasicsHandler, { handleWebhook, type WebhookDeps } from './webhook-basics.js';
+import webhookAsaasHandler, {
+  handleWebhook,
+  type WebhookDeps,
+} from './_webhookAsaasHandler.js';
 
 export { handleWebhook, type WebhookDeps };
 
@@ -7,5 +10,5 @@ export default async function handler(
   req: IncomingMessage & { body?: any },
   res: ServerResponse
 ) {
-  return webhookBasicsHandler(req, res);
+  return webhookAsaasHandler(req, res);
 }

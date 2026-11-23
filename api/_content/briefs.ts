@@ -1,10 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { LEGAL_BRIEFS } from './_data/legalBriefs.js';
+import { LEGAL_BRIEFS } from '../_data/legalBriefs.js';
 import {
   resolveAccessContext,
   sendJson,
   FREE_BRIEF_IDS,
-} from './_accessControl.js';
+} from '../_accessControl.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== 'GET') {

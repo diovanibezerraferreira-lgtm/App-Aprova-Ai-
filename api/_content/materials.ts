@@ -1,10 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { STUDY_MATERIALS } from './_data/studyMaterials.js';
+import { STUDY_MATERIALS } from '../_data/studyMaterials.js';
 import {
   resolveAccessContext,
   sendJson,
   FREE_MATERIAL_IDS,
-} from './_accessControl.js';
+} from '../_accessControl.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== 'GET') {

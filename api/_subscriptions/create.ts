@@ -3,7 +3,7 @@ import {
   verifyFirebaseUser,
   getAdminFirestore,
   isPreviewSharingProductionFirestore,
-} from './_firebaseAdmin.js';
+} from '../_firebaseAdmin.js';
 import {
   getAsaasConfig,
   getOrCreateCustomer,
@@ -11,7 +11,7 @@ import {
   getSubscriptionPendingCheckoutUrl,
   sanitizeFullName,
   isValidFullName,
-} from './_asaas.js';
+} from '../_asaas.js';
 
 type RequestWithBody = IncomingMessage & { body?: any };
 
