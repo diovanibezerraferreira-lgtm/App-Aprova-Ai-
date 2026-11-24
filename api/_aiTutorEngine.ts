@@ -4,7 +4,7 @@ import type { Question } from '../src/types/index.js';
 export const DEFAULT_FREE_AI_DAILY_LIMIT = 3;
 export const DEFAULT_PREMIUM_AI_DAILY_LIMIT = 30;
 export const DEFAULT_GEMINI_MODEL = 'gemini-3.1-flash-lite';
-export const DEFAULT_FALLBACK_GEMINI_MODEL = 'gemini-4-hydrogen';
+export const DEFAULT_FALLBACK_GEMINI_MODEL = 'gemini-3.5-flash-lite';
 
 export const GEMINI_REQUEST_TIMEOUT_MS = 18_000;
 export const GEMINI_RETRY_BACKOFF_MS = 500;
@@ -715,7 +715,7 @@ export const PRIMARY_ATTEMPT_1_MAX_MS = 8_000;
 /**
  * Executes Gemini generation with bounded resilience:
  * - Attempt 1: primary model (e.g. gemini-3.1-flash-lite) capped at max 8,000 ms.
- * - On local timeout (local_abort_timeout / AI_TIMEOUT): do NOT retry primary model; immediately trigger fallback (gemini-4-hydrogen) if >= 4,000 ms remain.
+ * - On local timeout (local_abort_timeout / AI_TIMEOUT): do NOT retry primary model; immediately trigger fallback (gemini-3.5-flash-lite) if >= 4,000 ms remain.
  * - On transient 503/UNAVAILABLE or 429/RESOURCE_EXHAUSTED: at most 1 automatic retry with short backoff on primary model, then fallback if budget allows.
  * - Permanent errors (400/401/403/404, invalid key), timeouts without fallback budget, and empty responses never retry.
  */

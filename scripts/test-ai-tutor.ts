@@ -626,8 +626,8 @@ test('8. Modelo padrão é gemini-3.1-flash-lite compatível com @google/genai e
   assert.deepEqual(buildThinkingConfigForModel('gemini-3.1-flash-lite'), {
     thinkingLevel: ThinkingLevel.MINIMAL,
   });
-  assert.deepEqual(buildThinkingConfigForModel('gemini-4-hydrogen'), {
-    thinkingLevel: ThinkingLevel.LOW,
+  assert.deepEqual(buildThinkingConfigForModel('gemini-3.5-flash-lite'), {
+    thinkingLevel: ThinkingLevel.MINIMAL,
   });
   assert.equal(buildThinkingConfigForModel('gemini-2.5-flash'), undefined);
 
@@ -1440,7 +1440,7 @@ test('18. Resiliência 503 UNAVAILABLE: aplica backoff curto, recupera na 2ª te
   }
 });
 
-test('19. Resiliência 429 RESOURCE_EXHAUSTED: faz 1 retry no principal e usa fallback gemini-4-hydrogen com ThinkingLevel.LOW contabilizando 1 consulta', async () => {
+test('19. Resiliência 429 RESOURCE_EXHAUSTED: faz 1 retry no principal e usa fallback gemini-3.5-flash-lite com ThinkingLevel.MINIMAL contabilizando 1 consulta', async () => {
   const { db, users } = createMockFirestore({
     users: {
       'uid-fallback-ok': {
@@ -1514,7 +1514,7 @@ test('19. Resiliência 429 RESOURCE_EXHAUSTED: faz 1 retry no principal e usa fa
   assert.deepEqual(capturedCalls, [
     { model: 'gemini-3.1-flash-lite', thinkingLevel: ThinkingLevel.MINIMAL },
     { model: 'gemini-3.1-flash-lite', thinkingLevel: ThinkingLevel.MINIMAL },
-    { model: 'gemini-4-hydrogen', thinkingLevel: ThinkingLevel.LOW },
+    { model: 'gemini-3.5-flash-lite', thinkingLevel: ThinkingLevel.MINIMAL },
   ]);
 
   const body = JSON.parse(state.body);
@@ -1719,16 +1719,16 @@ test('21. Erros permanentes (400 API_KEY_INVALID, 401, 403 PERMISSION_DENIED, 40
 
 test('22. Orçamento total de 18s limita retries/fallback quando tempo restante é insuficiente e resolveFallbackGeminiModel valida configuração', async () => {
   // Fallback model resolution guards
-  assert.equal(resolveFallbackGeminiModel('gemini-3.1-flash-lite', {}), 'gemini-4-hydrogen');
+  assert.equal(resolveFallbackGeminiModel('gemini-3.1-flash-lite', {}), 'gemini-3.5-flash-lite');
   assert.equal(
     resolveFallbackGeminiModel('gemini-3.1-flash-lite', { GEMINI_FALLBACK_MODEL: 'gemini-1.5-flash' }),
-    'gemini-4-hydrogen'
+    'gemini-3.5-flash-lite'
   );
   assert.equal(
     resolveFallbackGeminiModel('gemini-3.1-flash-lite', { GEMINI_FALLBACK_MODEL: 'none' }),
     null
   );
-  assert.equal(resolveFallbackGeminiModel('gemini-4-hydrogen', {}), null);
+  assert.equal(resolveFallbackGeminiModel('gemini-3.5-flash-lite', {}), null);
 
   // Scenario A: Attempt 1 fails with 503 after consuming 16s of the 18s budget -> NO retry, NO fallback!
   {

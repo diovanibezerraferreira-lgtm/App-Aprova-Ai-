@@ -542,11 +542,11 @@ test('6. Webhook oficial /api/webhook-asaas mantém proteção (405 GET, 401 tok
   );
 });
 
-test('7. Professor Virtual IA permanece dedicado com retry, fallback gemini-4-hydrogen, ThinkingLevel.LOW e orçamento total de 18s', () => {
+test('7. Professor Virtual IA permanece dedicado com retry, fallback gemini-3.5-flash-lite, ThinkingLevel.MINIMAL e orçamento total de 18s', () => {
   assert.equal(DEFAULT_GEMINI_MODEL, 'gemini-3.1-flash-lite');
-  assert.equal(DEFAULT_FALLBACK_GEMINI_MODEL, 'gemini-4-hydrogen');
+  assert.equal(DEFAULT_FALLBACK_GEMINI_MODEL, 'gemini-3.5-flash-lite');
   assert.equal(GEMINI_REQUEST_TIMEOUT_MS, 18_000);
-  assert.deepEqual(buildThinkingConfigForModel('gemini-4-hydrogen'), {
-    thinkingLevel: ThinkingLevel.LOW,
+  assert.deepEqual(buildThinkingConfigForModel('gemini-3.5-flash-lite'), {
+    thinkingLevel: ThinkingLevel.MINIMAL,
   });
 });
