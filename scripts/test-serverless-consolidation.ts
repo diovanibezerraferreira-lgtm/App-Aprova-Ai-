@@ -31,6 +31,7 @@ const API_DIR = path.resolve(ROOT_DIR, 'api');
 const EXPECTED_SERVERLESS_FUNCTIONS = [
   'ai-tutor.ts',
   'content.ts',
+  'flash-lite-test.ts',
   'leaderboard.ts',
   'performance-report.ts',
   'questions.ts',
@@ -150,7 +151,7 @@ test('1. Contagem de Serverless Functions na pasta api/ respeita limite da Verce
     functions.length <= 12,
     `Limite do plano Vercel Hobby excedido: encontradas ${functions.length} funções (${functions.join(', ')})`
   );
-  assert.equal(functions.length, 9, `Esperadas exatamente 9 funções Serverless, encontradas ${functions.length}`);
+  assert.equal(functions.length, 10, `Esperadas exatamente 10 funções Serverless, encontradas ${functions.length}`);
   assert.deepEqual(functions, EXPECTED_SERVERLESS_FUNCTIONS);
 
   // Verifica ausência de dependência circular nos módulos internos consolidados
