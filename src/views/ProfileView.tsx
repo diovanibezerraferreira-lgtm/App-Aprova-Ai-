@@ -35,6 +35,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [name, setName] = useState('');
   const [studyFocus, setStudyFocus] = useState<UserProfile['studyFocus']>('OAB 1ª Fase');
   const [dailyGoal, setDailyGoal] = useState<number>(20);
+  const [whatsapp, setWhatsapp] = useState('');
+  const [whatsappConsent, setWhatsappConsent] = useState(false);
+  const [emailConsent, setEmailConsent] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -43,6 +46,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       setName(userProfile.name || '');
       setStudyFocus(userProfile.studyFocus || 'OAB 1ª Fase');
       setDailyGoal(userProfile.dailyGoalQuestions || 20);
+      setWhatsapp(userProfile.whatsapp || '');
+      setWhatsappConsent(Boolean(userProfile.consents?.whatsapp));
+      setEmailConsent(Boolean(userProfile.consents?.email));
     } else if (currentUser) {
       setName(currentUser.displayName || currentUser.email?.split('@')[0] || '');
     }
@@ -54,10 +60,41 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     setSavedSuccess(false);
 
     try {
+      const now = new Date().toISOString();
+      const existingHistory = userProfile?.consentHistory || [];
+      const prevWhatsappConsent = Boolean(userProfile?.consents?.whatsapp);
+      const prevEmailConsent = Boolean(userProfile?.consents?.email);
+
+      const newHistory = [...existingHistory];
+      if (whatsappConsent !== prevWhatsappConsent) {
+        newHistory.push({
+          channel: 'whatsapp',
+          granted: whatsappConsent,
+          timestamp: now,
+          version: 'v1.0',
+          origin: 'profile_settings'
+        });
+      }
+      if (emailConsent !== prevEmailConsent) {
+        newHistory.push({
+          channel: 'email',
+          granted: emailConsent,
+          timestamp: now,
+          version: 'v1.0',
+          origin: 'profile_settings'
+        });
+      }
+
       await updateProfileData({
         name,
         studyFocus,
-        dailyGoalQuestions: Number(dailyGoal) || 20
+        dailyGoalQuestions: Number(dailyGoal) || 20,
+        whatsapp: whatsapp.trim(),
+        consents: {
+          whatsapp: whatsappConsent,
+          email: emailConsent
+        },
+        consentHistory: newHistory
       });
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 2500);
@@ -385,6 +422,55 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <span className="text-[11px] text-slate-400 mt-1 block">
                 Sua meta será sincronizada com o Painel de Desempenho.
               </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                WhatsApp com DDD (Opcional)
+              </label>
+              <input
+                type="tel"
+                value={whatsapp}
+                onChange={e => setWhatsapp(e.target.value)}
+                placeholder="(11) 99999-9999"
+                className="w-full min-w-0 max-w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+              />
+            </div>
+
+            {/* Communication Preferences (LGPD) */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <h3 className="text-xs font-bold text-[#0B1F3A] uppercase tracking-wider">
+                Preferências de Comunicação & LGPD
+              </h3>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Gerencie para quais canais você autoriza o envio de dicas de estudo, simulados e novidades da plataforma.
+              </p>
+
+              <div className="space-y-2 pt-1">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={whatsappConsent}
+                    onChange={e => setWhatsappConsent(e.target.checked)}
+                    className="mt-1 w-4 h-4 rounded border-slate-300 text-[#0B1F3A] focus:ring-[#0B1F3A]"
+                  />
+                  <span className="text-xs text-slate-700 leading-snug">
+                    Autorizo o recebimento de mensagens e dicas de estudo via <strong>WhatsApp</strong>.
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={emailConsent}
+                    onChange={e => setEmailConsent(e.target.checked)}
+                    className="mt-1 w-4 h-4 rounded border-slate-300 text-[#0B1F3A] focus:ring-[#0B1F3A]"
+                  />
+                  <span className="text-xs text-slate-700 leading-snug">
+                    Autorizo o recebimento de materiais, apostilas e ofertas promocionais por <strong>E-mail</strong>.
+                  </span>
+                </label>
+              </div>
             </div>
 
             <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">

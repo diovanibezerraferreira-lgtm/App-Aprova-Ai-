@@ -14,7 +14,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db, googleProvider } from './firebase';
-import { UserProfile } from '../types';
+import { UserProfile, CommunicationConsentRecord } from '../types';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 export interface ExtendedUserProfile extends UserProfile {
@@ -224,7 +224,17 @@ export async function fetchUserProfile(uid: string): Promise<{ profile: Extended
     if (!snap.exists()) {
       return { profile: null, readFailed: false };
     }
-    return { profile: snap.data() as ExtendedUserProfile, readFailed: false };
+    const data = snap.data() as ExtendedUserProfile;
+    if (!data.consents) {
+      data.consents = { whatsapp: false, email: false };
+    }
+    if (data.whatsapp === undefined) {
+      data.whatsapp = '';
+    }
+    if (!data.consentHistory) {
+      data.consentHistory = [];
+    }
+    return { profile: data, readFailed: false };
   } catch (error) {
     console.warn('Notice reading user profile from Firestore:', error);
     return { profile: null, readFailed: true };
@@ -235,9 +245,38 @@ export async function createUserProfileDoc(
   user: User,
   name: string,
   studyFocus: UserProfile['studyFocus'],
-  dailyGoalQuestions: number = 20
+  dailyGoalQuestions: number = 20,
+  whatsapp?: string,
+  whatsappConsent?: boolean,
+  emailConsent?: boolean,
+  consentVersion: string = 'v1.0',
+  consentOrigin: 'onboarding' | 'profile_settings' = 'onboarding'
 ): Promise<ExtendedUserProfile> {
   const now = new Date().toISOString();
+  const consents = {
+    whatsapp: Boolean(whatsappConsent),
+    email: Boolean(emailConsent)
+  };
+  const consentHistory: CommunicationConsentRecord[] = [];
+  if (whatsappConsent) {
+    consentHistory.push({
+      channel: 'whatsapp',
+      granted: true,
+      timestamp: now,
+      version: consentVersion,
+      origin: consentOrigin
+    });
+  }
+  if (emailConsent) {
+    consentHistory.push({
+      channel: 'email',
+      granted: true,
+      timestamp: now,
+      version: consentVersion,
+      origin: consentOrigin
+    });
+  }
+
   const profile: ExtendedUserProfile = {
     id: user.uid,
     name: name || user.displayName || user.email?.split('@')[0] || 'Estudante',
@@ -250,6 +289,9 @@ export async function createUserProfileDoc(
     termsAccepted: true,
     isPremium: false,
     subscriptionStatus: 'NONE',
+    whatsapp: whatsapp || '',
+    consents,
+    consentHistory,
     createdAt: now,
     updatedAt: now
   };
@@ -258,7 +300,17 @@ export async function createUserProfileDoc(
     const docRef = doc(db, 'users', user.uid);
     const existing = await getDoc(docRef);
     if (existing.exists()) {
-      return existing.data() as ExtendedUserProfile;
+      const existingData = existing.data() as ExtendedUserProfile;
+      if (!existingData.consents) {
+        existingData.consents = consents;
+      }
+      if (existingData.whatsapp === undefined) {
+        existingData.whatsapp = whatsapp || '';
+      }
+      if (!existingData.consentHistory) {
+        existingData.consentHistory = consentHistory;
+      }
+      return existingData;
     }
     await setDoc(docRef, profile);
   } catch (error) {
@@ -303,6 +355,9 @@ export async function ensureUserProfile(
         termsAccepted: true,
         isPremium: false,
         subscriptionStatus: 'NONE',
+        whatsapp: '',
+        consents: { whatsapp: false, email: false },
+        consentHistory: [],
         createdAt: now,
         updatedAt: now
       };
@@ -337,7 +392,10 @@ export async function registerWithEmail(
   name: string,
   email: string,
   pass: string,
-  studyFocus: UserProfile['studyFocus']
+  studyFocus: UserProfile['studyFocus'],
+  whatsapp?: string,
+  whatsappConsent?: boolean,
+  emailConsent?: boolean
 ): Promise<ExtendedUserProfile> {
   try {
     await setPersistence(auth, browserLocalPersistence);
@@ -356,7 +414,7 @@ export async function registerWithEmail(
     }
   }
 
-  return ensureUserProfile(user, name, studyFocus);
+  return createUserProfileDoc(user, name, studyFocus, 20, whatsapp, whatsappConsent, emailConsent, 'v1.0', 'onboarding');
 }
 
 export async function loginWithEmail(email: string, pass: string): Promise<User> {

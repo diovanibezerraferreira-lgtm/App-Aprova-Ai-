@@ -48,6 +48,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [studyFocus, setStudyFocus] = useState<UserProfile['studyFocus']>('OAB 1ª Fase');
+  const [whatsapp, setWhatsapp] = useState('');
+  const [whatsappConsent, setWhatsappConsent] = useState(false);
+  const [emailConsent, setEmailConsent] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -115,7 +118,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           return;
         }
 
-        await signUp(name.trim(), email.trim(), password, studyFocus);
+        await signUp(
+          name.trim(),
+          email.trim(),
+          password,
+          studyFocus,
+          whatsapp.trim(),
+          whatsappConsent,
+          emailConsent
+        );
         setSuccessMsg('Conta criada com sucesso! Redirecionando...');
         setTimeout(() => {
           onClose();
@@ -416,6 +427,46 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <option value="OAB 2ª Fase">Exame de Ordem - OAB 2ª Fase (Peças)</option>
                   <option value="Concursos Jurídicos">Concursos Jurídicos (Magistratura, MP, DPE)</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  WhatsApp com DDD (Opcional)
+                </label>
+                <input
+                  type="tel"
+                  value={whatsapp}
+                  onChange={e => setWhatsapp(e.target.value)}
+                  placeholder="(11) 99999-9999"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0B1F3A]"
+                />
+              </div>
+
+              {/* Communication Opt-ins (LGPD Optional) */}
+              <div className="space-y-2 pt-1">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={whatsappConsent}
+                    onChange={e => setWhatsappConsent(e.target.checked)}
+                    className="mt-1 w-4 h-4 rounded border-slate-300 text-[#0B1F3A] focus:ring-[#0B1F3A]"
+                  />
+                  <span className="text-xs text-slate-600 leading-snug">
+                    Aceito receber dicas de estudo e avisos importantes por <strong>WhatsApp</strong> (opcional).
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={emailConsent}
+                    onChange={e => setEmailConsent(e.target.checked)}
+                    className="mt-1 w-4 h-4 rounded border-slate-300 text-[#0B1F3A] focus:ring-[#0B1F3A]"
+                  />
+                  <span className="text-xs text-slate-600 leading-snug">
+                    Aceito receber materiais, apostilas e ofertas promocionais por <strong>E-mail</strong> (opcional).
+                  </span>
+                </label>
               </div>
 
               {/* Terms of Use & Privacy Acceptance */}

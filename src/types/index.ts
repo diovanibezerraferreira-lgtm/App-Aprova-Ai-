@@ -146,6 +146,14 @@ export interface StudyMaterial {
   chapters: StudyChapter[];
 }
 
+export interface CommunicationConsentRecord {
+  channel: 'whatsapp' | 'email';
+  granted: boolean;
+  timestamp: string;
+  version: string;
+  origin: 'onboarding' | 'profile_settings';
+}
+
 export interface UserProfile {
   name: string;
   email: string;
@@ -164,6 +172,12 @@ export interface UserProfile {
   lastPaymentDate?: string;
   paymentMethod?: string;
   cpf?: string;
+  whatsapp?: string;
+  consents?: {
+    whatsapp?: boolean;
+    email?: boolean;
+  };
+  consentHistory?: CommunicationConsentRecord[];
 }
 
 export type ActiveTab =

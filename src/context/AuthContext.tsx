@@ -41,7 +41,15 @@ interface AuthContextType {
   openAuthModal: (mode?: 'login' | 'signup' | 'forgot') => void;
   closeAuthModal: () => void;
   getAuthHeaders: () => Promise<Record<string, string>>;
-  signUp: (name: string, email: string, pass: string, focus: UserProfile['studyFocus']) => Promise<void>;
+  signUp: (
+    name: string,
+    email: string,
+    pass: string,
+    focus: UserProfile['studyFocus'],
+    whatsapp?: string,
+    whatsappConsent?: boolean,
+    emailConsent?: boolean
+  ) => Promise<void>;
   signIn: (email: string, pass: string) => Promise<void>;
   signInGoogle: (options?: { forcePopup?: boolean }) => Promise<'authenticated' | 'redirecting'>;
   signInLocally: (name: string, email: string, focus: UserProfile['studyFocus']) => void;
@@ -277,9 +285,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthModalOpen(false);
   };
 
-  const signUp = async (name: string, email: string, pass: string, focus: UserProfile['studyFocus']) => {
+  const signUp = async (
+    name: string,
+    email: string,
+    pass: string,
+    focus: UserProfile['studyFocus'],
+    whatsapp?: string,
+    whatsappConsent?: boolean,
+    emailConsent?: boolean
+  ) => {
     setAuthRedirectError(null);
-    const profile = await registerWithEmail(name, email, pass, focus);
+    const profile = await registerWithEmail(name, email, pass, focus, whatsapp, whatsappConsent, emailConsent);
     setUserProfile(profile);
     saveStoredProfile(profile);
   };
