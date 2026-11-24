@@ -34,11 +34,59 @@ function AppContent() {
     updateProfileData
   } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>('inicio');
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
+    if (typeof window === 'undefined') return 'inicio';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam) return tabParam as ActiveTab;
+      const hash = window.location.hash.replace('#', '').trim();
+      if (hash) return hash as ActiveTab;
+      const pending = sessionStorage.getItem('aprova_pending_tab');
+      if (pending) return pending as ActiveTab;
+    } catch {
+      // ignore
+    }
+    return 'inicio';
+  });
   const [premiumModalOpen, setPremiumModalOpen] = useState<boolean>(false);
   const [selectedDiscipline, setSelectedDiscipline] = useState<Discipline | null>(null);
   const [targetedDisciplineForQuestions, setTargetedDisciplineForQuestions] = useState<string | undefined>(undefined);
   const [retryQuestionIds, setRetryQuestionIds] = useState<string[] | undefined>(undefined);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam) {
+        setActiveTab(tabParam as ActiveTab);
+        sessionStorage.setItem('aprova_pending_tab', tabParam);
+      } else {
+        const hash = window.location.hash.replace('#', '').trim();
+        if (hash) {
+          setActiveTab(hash as ActiveTab);
+          sessionStorage.setItem('aprova_pending_tab', hash);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      try {
+        const pending = sessionStorage.getItem('aprova_pending_tab');
+        if (pending) {
+          setActiveTab(pending as ActiveTab);
+          sessionStorage.removeItem('aprova_pending_tab');
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [currentUser]);
 
   // Scroll to top on tab change
   useEffect(() => {
