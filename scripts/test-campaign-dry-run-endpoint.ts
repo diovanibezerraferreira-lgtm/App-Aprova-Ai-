@@ -1,4 +1,4 @@
-import handler from '../api/campaign-dry-run.js';
+import handler from '../api/admin-diagnostics.js';
 import { IncomingMessage, ServerResponse } from 'http';
 import { Socket } from 'net';
 
@@ -9,6 +9,7 @@ async function simulateRequest(options: {
 }): Promise<{ status: number; body: any }> {
   const req = new IncomingMessage(new Socket()) as IncomingMessage & { body?: any };
   req.method = options.method || 'POST';
+  req.url = '/api/admin-diagnostics?__action=campaign-dry-run';
   req.headers = options.headers || {};
   if (options.body !== undefined) {
     req.body = options.body;
@@ -46,7 +47,7 @@ async function simulateRequest(options: {
 }
 
 async function runEndpointTests() {
-  console.log('Running Campaign Dry-Run Endpoint Tests...\n');
+  console.log('Running Campaign Dry-Run Endpoint Tests (via admin-diagnostics)...\n');
 
   // 1. GET: 405
   const t1 = await simulateRequest({ method: 'GET' });

@@ -33,6 +33,22 @@
     {
       "source": "/api/leaderboard-recover",
       "destination": "/api/leaderboard?__action=recover"
+    },
+    {
+      "source": "/api/email-test",
+      "destination": "/api/admin-diagnostics?__action=email-test"
+    },
+    {
+      "source": "/api/email-reset",
+      "destination": "/api/admin-diagnostics?__action=email-reset"
+    },
+    {
+      "source": "/api/campaign-dry-run",
+      "destination": "/api/admin-diagnostics?__action=campaign-dry-run"
+    },
+    {
+      "source": "/api/flash-lite-test",
+      "destination": "/api/admin-diagnostics?__action=flash-test"
     }
   ]
 }
