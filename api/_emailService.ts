@@ -1,5 +1,13 @@
 import { getAdminFirestore } from './_firebaseAdmin.js';
+import { evaluatePremiumAccess } from './_premiumValidity.js';
 import crypto from 'crypto';
+
+function isValidEmail(email: unknown): boolean {
+  if (typeof email !== 'string') return false;
+  const trimmed = email.trim();
+  if (trimmed.length < 5 || trimmed.length > 254) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+}
 
 function escapeHtml(str: string): string {
   if (!str) return '';
@@ -146,6 +154,10 @@ export interface SendCampaignParams {
 }
 
 export async function sendCampaignEmailWithGuards(params: SendCampaignParams): Promise<{ success: boolean; error?: string }> {
+  if (!isValidEmail(params.to)) {
+    return { success: false, error: 'INVALID_RECIPIENT_EMAIL' };
+  }
+
   const db = getAdminFirestore();
   if (!db) {
     return { success: false, error: 'DATABASE_NOT_INITIALIZED' };
@@ -154,7 +166,7 @@ export async function sendCampaignEmailWithGuards(params: SendCampaignParams): P
   const userRef = db.collection('users').doc(params.uid);
   const historyRef = userRef.collection('campaign_history').doc(params.campaignId);
 
-  // 1. Transactional Atomic Reservation & LGPD Check
+  // 1. Transactional Atomic Reservation, LGPD & Premium Check
   try {
     const acquireResult = await db.runTransaction(async (transaction) => {
       const userDoc = await transaction.get(userRef);
@@ -165,6 +177,11 @@ export async function sendCampaignEmailWithGuards(params: SendCampaignParams): P
       const emailConsent = Boolean(userData?.consents?.email);
       if (!emailConsent) {
         return { status: 'ERROR' as const, error: 'LGPD_CONSENT_REQUIRED' };
+      }
+
+      const premiumEvaluation = evaluatePremiumAccess(userData);
+      if (premiumEvaluation.isPremium === true) {
+        return { status: 'ERROR' as const, error: 'USER_HAS_ACTIVE_PREMIUM' };
       }
 
       const historyDoc = await transaction.get(historyRef);
