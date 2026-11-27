@@ -1,6 +1,12 @@
 {
   "installCommand": "bun install",
   "buildCommand": "bun run build",
+  "crons": [
+    {
+      "path": "/api/campaign-dispatch",
+      "schedule": "0 9 * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!api/|icons/|manifest\\.webmanifest|sw\\.js|workbox-.*|assets/).*)",
