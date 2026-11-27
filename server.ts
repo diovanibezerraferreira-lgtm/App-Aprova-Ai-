@@ -195,6 +195,18 @@ async function startServer() {
     }
   });
 
+  app.all('/api/admin-conversion', async (req, res) => {
+    try {
+      const { default: handler } = await import('./api/admin-conversion.js');
+      await handler(req, res);
+    } catch (err: any) {
+      console.error('Error in /api/admin-conversion:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: err.message || 'Internal server error' });
+      }
+    }
+  });
+
   app.all('/api/leaderboard-recover', async (req, res) => {
     try {
       const { default: handler } = await import('./api/leaderboard.js');

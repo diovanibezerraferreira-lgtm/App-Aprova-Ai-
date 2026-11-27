@@ -21,6 +21,7 @@ import { ProfileView } from './views/ProfileView';
 import { HelpSupportView } from './views/HelpSupportView';
 import { SubscriptionHistoryView } from './views/SubscriptionHistoryView';
 import { StudyPlanView } from './views/StudyPlanView';
+import { AdminConversionView } from './views/AdminConversionView';
 
 function AppContent() {
   const {
@@ -243,6 +244,10 @@ function AppContent() {
 
         {activeTab === 'suporte' && (
           <HelpSupportView onSelectTab={setActiveTab} />
+        )}
+
+        {activeTab === 'admin-conversao' && (
+          <AdminConversionView />
         )}
       </main>
 

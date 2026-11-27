@@ -168,6 +168,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <span>Plano de Estudos</span>
                     </button>
                     <button
+                      onClick={() => handleNavClick('admin-conversao')}
+                      className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700 border-t border-slate-100"
+                    >
+                      <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      <span>Central de Conversão</span>
+                    </button>
+                    <button
                       onClick={() => handleNavClick('suporte')}
                       className="w-full text-left px-3 py-2 hover:bg-slate-50 flex items-center gap-2 text-slate-700"
                     >

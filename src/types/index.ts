@@ -193,4 +193,5 @@ export type ActiveTab =
   | 'premium'
   | 'perfil'
   | 'assinatura'
-  | 'suporte';
+  | 'suporte'
+  | 'admin-conversao';
