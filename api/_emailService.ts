@@ -151,6 +151,9 @@ export interface SendCampaignParams {
   bodyHtml?: string;
   ctaText?: string;
   from?: string;
+  // Optional test dependency overrides for isolated testing
+  _testDb?: any;
+  _testFetch?: typeof fetch;
 }
 
 export async function sendCampaignEmailWithGuards(params: SendCampaignParams): Promise<{ success: boolean; error?: string }> {
@@ -158,7 +161,7 @@ export async function sendCampaignEmailWithGuards(params: SendCampaignParams): P
     return { success: false, error: 'INVALID_RECIPIENT_EMAIL' };
   }
 
-  const db = getAdminFirestore();
+  const db = params._testDb || getAdminFirestore();
   if (!db) {
     return { success: false, error: 'DATABASE_NOT_INITIALIZED' };
   }
@@ -168,7 +171,7 @@ export async function sendCampaignEmailWithGuards(params: SendCampaignParams): P
 
   // 1. Transactional Atomic Reservation, LGPD & Premium Check
   try {
-    const acquireResult = await db.runTransaction(async (transaction) => {
+    const acquireResult = await db.runTransaction(async (transaction: any) => {
       const userDoc = await transaction.get(userRef);
       if (!userDoc.exists) {
         return { status: 'ERROR' as const, error: 'USER_NOT_FOUND' };
@@ -250,9 +253,11 @@ export async function sendCampaignEmailWithGuards(params: SendCampaignParams): P
   const fromEmail = params.from || process.env.RESEND_FROM_EMAIL || 'Aprova Direito <noreply@aprovadireito.com.br>';
   const idempotencyKey = `campaign-${params.campaignId}-${params.uid}`;
 
+  const fetchFn = params._testFetch || fetch;
+
   // 2. Dispatch via Resend API with Idempotency-Key header
   try {
-    const response = await fetch('https://api.resend.com/emails', {
+    const response = await fetchFn('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
